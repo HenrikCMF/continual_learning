@@ -3,9 +3,9 @@ import time
 import json
 with open("configs.json", "r") as file:
     configs = json.load(file)
-local_IP=configs['baseip']
+local_IP=configs['edgeip']
 PORT=configs['PORT']
-rec_ip=configs['edgeip']
+rec_ip=configs['baseip']
 com_obj=TCP_COM(local_IP, PORT, rec_ip, PORT)
 
 while True:
