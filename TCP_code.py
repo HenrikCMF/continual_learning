@@ -9,6 +9,7 @@ class TCP_COM():
 
 
     def send_file(self, file_path):
+        print("sending file")
         """Handles sending files to the other party."""
         while True:
             file_name = os.path.basename(file_path)
@@ -32,6 +33,7 @@ class TCP_COM():
                             client_socket.sendall(chunk)
 
                     print("File sent successfully!")
+                    break
             except Exception as e:
                 print(f"Error while sending file: {e}")
 
