@@ -11,7 +11,7 @@ def retry_until_success(func):
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
                     if is_method:
-                        result = func(self_or_cls,client_socket,*args, **kwargs)
+                        result = func(self_or_cls,client_socket,*args[1:], **kwargs)
                     else:
                         result = func(client_socket,*args, **kwargs)
             except Exception as e:
