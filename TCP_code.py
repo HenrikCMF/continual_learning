@@ -3,43 +3,41 @@ import threading
 import os
 import struct
 import time
+from enum import Enum
+from utils import retry_until_success, threaded
+class telegram_type(Enum):
+    PING=1
+    DUMMY=2
+    FILE=3
+
 class TCP_COM():
     def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH):
-        threading.Thread(target=self.__receive_file, args=(MY_HOST, MY_PORT), daemon=True).start()
+        #threading.Thread(target=self.__receive_file, args=(MY_HOST, MY_PORT), daemon=True).start()
+        self.__receive_file(MY_HOST, MY_PORT)
         self.TAR_IP=TARGET_HOST
         self.TAR_PORT=TARGET_PORT
         self.in_path=REC_FILE_PATH
 
-    def send_file(self, file_path):
-        print("sending file")
-        """Handles sending files to the other party."""
-        while True:
-            file_name = os.path.basename(file_path)
-            file_size = os.path.getsize(file_path)
+    @retry_until_success
+    def send_file(self, client_socket, file_path):
+        client_socket.connect((self.TAR_IP, self.TAR_PORT))
+        file_name = os.path.basename(file_path)
+        file_size = os.path.getsize(file_path)
+        print(f"Connected to {self.TAR_IP}:{self.TAR_PORT}")
 
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-                    client_socket.connect((self.TAR_IP, self.TAR_PORT))
-                    print(f"Connected to {self.TAR_IP}:{self.TAR_PORT}")
+        # Send file metadata
+        client_socket.sendall(f"{telegram_type.FILE}:{file_name}:{file_size}".encode())
+        ack = client_socket.recv(1024).decode()
+        if ack != "READY":
+            raise Exception("Not ready")
 
-                    # Send file metadata
-                    client_socket.sendall(f"{file_name}:{file_size}".encode())
-                    ack = client_socket.recv(1024).decode()
-                    if ack != "READY":
-                        print("Server not ready to receive. Aborting.")
-                        continue
-
-                    # Send file content
-                    with open(file_path, "rb") as f:
-                        while chunk := f.read(1024):
-                            client_socket.sendall(chunk)
-
-                    print("File sent successfully!")
-                    break
-            except Exception as e:
-                print(f"Error while sending file: {e}")
+        # Send file content
+        with open(file_path, "rb") as f:
+            while chunk := f.read(1024):
+                client_socket.sendall(chunk)
 
 
+    @threaded
     def __receive_file(self,listen_host, listen_port):
         """Handles receiving files from the other party."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
@@ -71,8 +69,6 @@ class TCP_COM():
                     print(f"File '{file_name}' received successfully!")
                 except Exception as e:
                     pass
-                finally:
-                    conn.close()
 
     def meas_PDP(self):
 
@@ -81,7 +77,7 @@ class TCP_COM():
             # Here we assume a common layout: 7 unsigned chars followed by 21 unsigned ints.
             # Total size expected = 7 + 21*4 = 91 bytes (it might be padded to 104 bytes, so we request 104).
             fmt = "B" * 7 + "I" * 21
-            buf = sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 92)
+            buf = sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 104)
             return struct.unpack(fmt, buf)
         s = socket.create_connection((self.TAR_IP, self.TAR_PORT))
         # Send minimal data to trigger some activity

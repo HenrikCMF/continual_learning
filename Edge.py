@@ -22,6 +22,5 @@ class edge_device(TCP_COM):
 
 
 bs=edge_device("received")
-bs.pdp_test()
 bs.send_file("307.jpg")
 bs.receive_file()
