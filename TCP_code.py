@@ -4,7 +4,7 @@ import os
 import struct
 import time
 from enum import Enum
-from utils import retry_until_success, threaded
+from utils import retry_transmission_handler, threaded
 class telegram_type(Enum):
     PING=1
     DUMMY=2
@@ -19,7 +19,7 @@ class TCP_COM():
         self.device=device
         self.edge_devices=[]
 
-    @retry_until_success
+    @retry_transmission_handler
     def send_file(self, client_socket, file_path):
         client_socket.connect((self.TAR_IP, self.TAR_PORT))
         file_name = os.path.basename(file_path)
