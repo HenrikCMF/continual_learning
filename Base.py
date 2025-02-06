@@ -13,9 +13,9 @@ class base_station(TCP_COM):
     
     def receive_file(self, waittime=10):
         time.sleep(waittime)
-        self.send_file("307.jpg")
+        #self.send_file("307.jpg")
 
 
 bs=base_station("received")
-#bs.send_file("307.jpg")
+bs.send_file("307.jpg")
 bs.receive_file()
