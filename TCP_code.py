@@ -20,6 +20,7 @@ class TCP_COM():
 
     @retry_until_success
     def send_file(self, client_socket, file_path):
+        print(1)
         client_socket.connect((self.TAR_IP, self.TAR_PORT))
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
