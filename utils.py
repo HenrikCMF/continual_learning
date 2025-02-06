@@ -14,6 +14,7 @@ def retry_until_success(func):
                         result = func(self_or_cls,client_socket,*args[1:], **kwargs)
                     else:
                         result = func(client_socket,*args, **kwargs)
+                    break
             except Exception as e:
                 print(e)
                 time.sleep(0.1)

@@ -9,7 +9,7 @@ class base_station(TCP_COM):
         self.edgePORT=configs['edgePORT']
         self.basePORT=configs['basePORT']
         self.rec_ip=configs['edgeip']
-        super().__init__(self.local_IP, self.basePORT, self.rec_ip, self.edgePORT, REC_FILE_PATH)
+        super().__init__(self.local_IP, self.basePORT, self.rec_ip, self.edgePORT, REC_FILE_PATH, "bs")
     
     def receive_file(self, waittime=10):
         time.sleep(waittime)
