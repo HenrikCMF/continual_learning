@@ -81,7 +81,7 @@ class TCP_COM():
             # Here we assume a common layout: 7 unsigned chars followed by 21 unsigned ints.
             # Total size expected = 7 + 21*4 = 91 bytes (it might be padded to 104 bytes, so we request 104).
             fmt = "B" * 7 + "I" * 21
-            buf = sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 104)
+            buf = sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 92)
             return struct.unpack(fmt, buf)
         s = socket.create_connection((self.TAR_IP, self.TAR_PORT))
         # Send minimal data to trigger some activity
