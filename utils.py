@@ -9,6 +9,7 @@ def retry_until_success(func):
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
                     result = func(client_socket,*args, **kwargs)
             except Exception as e:
+                print(e)
                 time.sleep(0.1)
     return wrapper
 
