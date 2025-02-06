@@ -3,12 +3,17 @@ import time
 import functools
 import threading
 def retry_until_success(func):
-    @staticmethod
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        self_or_cls = args[0] if args else None
+        is_method = hasattr(self_or_cls, '__class__')
         while True:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-                    result = func(client_socket,*args, **kwargs)
+                    if is_method:
+                        result = func(self_or_cls,client_socket,*args, **kwargs)
+                    else:
+                        result = func(client_socket,*args, **kwargs)
             except Exception as e:
                 print(e)
                 time.sleep(0.1)
