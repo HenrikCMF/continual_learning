@@ -1,6 +1,8 @@
 import socket
 import threading
 import os
+import struct
+import time
 class TCP_COM():
     def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH):
         threading.Thread(target=self.__receive_file, args=(MY_HOST, MY_PORT), daemon=True).start()
@@ -71,6 +73,30 @@ class TCP_COM():
                     print(f"Error while receiving file: {e}")
                 finally:
                     conn.close()
+
+    def meas_PDP(self):
+
+        def get_tcp_info(sock):
+            # The tcp_info struct layout may vary by kernel version.
+            # Here we assume a common layout: 7 unsigned chars followed by 21 unsigned ints.
+            # Total size expected = 7 + 21*4 = 91 bytes (it might be padded to 104 bytes, so we request 104).
+            fmt = "B" * 7 + "I" * 21
+            buf = sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 104)
+            return struct.unpack(fmt, buf)
+        s = socket.create_connection((self.TAR_IP, self.TAR_PORT))
+        # Send minimal data to trigger some activity
+        s.send(b"Yo Homie, its ya boi Tony")
+
+        # Give it a little time to process the request and possibly retransmit if needed.
+        time.sleep(0.5)
+
+        info = get_tcp_info(s)
+
+        # NOTE: The index for tcpi_total_retrans may vary.
+        # In many kernels, it is the 19th element (index 18) in the unpacked tuple.
+        tcpi_total_retrans = info[18]
+        print("Total retransmissions:", tcpi_total_retrans)
+        s.close()
 
 if __name__ == "__main__":
     # Configure your local and target details
