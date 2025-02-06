@@ -70,7 +70,7 @@ class TCP_COM():
 
                     print(f"File '{file_name}' received successfully!")
                 except Exception as e:
-                    print(f"Error while receiving file: {e}")
+                    pass
                 finally:
                     conn.close()
 
