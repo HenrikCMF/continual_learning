@@ -53,8 +53,8 @@ class TCP_COM():
                         continue
                 elif self.device=="bs":
                     if addr not in self.edge_devices:
-                        self.edge_devices.append(addr)
-                        print("added", addr)
+                        self.edge_devices.append(addr[0])
+                        print("added", addr[0])
                 print(f"Connection established with {addr}")
 
                 try:

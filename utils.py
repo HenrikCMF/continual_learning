@@ -2,12 +2,13 @@ import socket
 import time
 import functools
 import threading
-def retry_until_success(func):
+def retry_transmission_handler(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         self_or_cls = args[0] if args else None
         is_method = hasattr(self_or_cls, '__class__')
-        while True:
+        i=0
+        while i<10:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
                     if is_method:
@@ -18,6 +19,7 @@ def retry_until_success(func):
             except Exception as e:
                 print(e)
                 time.sleep(0.1)
+            i+=1
     return wrapper
 
 def threaded(func):
