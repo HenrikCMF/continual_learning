@@ -95,6 +95,7 @@ class TCP_COM():
         # NOTE: The index for tcpi_total_retrans may vary.
         # In many kernels, it is the 19th element (index 18) in the unpacked tuple.
         tcpi_total_retrans = info[18]
+        print("32-35", info[32],info[33],info[34],info[35],)
         print("Total retransmissions:", tcpi_total_retrans)
         s.close()
 
