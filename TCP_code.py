@@ -54,7 +54,7 @@ class TCP_COM():
                 try:
                     # Receive file metadata
                     metadata = conn.recv(1024).decode()
-                    file_name, file_size = metadata.split(":")
+                    type, file_name, file_size = metadata.split(":")
                     file_size = int(file_size)
                     conn.sendall("READY".encode())
 
