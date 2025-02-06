@@ -22,16 +22,18 @@ class TCP_COM():
     def send_file(self, client_socket, file_path):
         print(1)
         client_socket.connect((self.TAR_IP, self.TAR_PORT))
+        print(2)
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
         print(f"Connected to {self.TAR_IP}:{self.TAR_PORT}")
 
         # Send file metadata
         client_socket.sendall(f"{telegram_type.FILE}:{file_name}:{file_size}".encode())
+        print(3)
         ack = client_socket.recv(1024).decode()
         if ack != "READY":
             raise Exception("Not ready")
-
+        print(4)
         # Send file content
         with open(file_path, "rb") as f:
             while chunk := f.read(1024):
