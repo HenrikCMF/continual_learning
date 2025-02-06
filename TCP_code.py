@@ -2,11 +2,11 @@ import socket
 import threading
 import os
 class TCP_COM():
-    def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT):
-        threading.Thread(target=self.receive_file, args=(MY_HOST, MY_PORT), daemon=True).start()
+    def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH):
+        threading.Thread(target=self.__receive_file, args=(MY_HOST, MY_PORT), daemon=True).start()
         self.TAR_IP=TARGET_HOST
         self.TAR_PORT=TARGET_PORT
-
+        self.in_path=REC_FILE_PATH
 
     def send_file(self, file_path):
         print("sending file")
@@ -38,7 +38,7 @@ class TCP_COM():
                 print(f"Error while sending file: {e}")
 
 
-    def receive_file(self,listen_host, listen_port):
+    def __receive_file(self,listen_host, listen_port):
         """Handles receiving files from the other party."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.bind((listen_host, listen_port))
@@ -57,7 +57,7 @@ class TCP_COM():
                     conn.sendall("READY".encode())
 
                     # Receive file content
-                    with open(f"received_{file_name}", "wb") as f:
+                    with open(os.path.join(self.in_path,f"received_{file_name}"), "wb") as f:
                         received_size = 0
                         while received_size < file_size:
                             data = conn.recv(1024)
