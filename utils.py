@@ -3,6 +3,7 @@ import time
 import functools
 import threading
 def retry_until_success(func):
+    @staticmethod
     def wrapper(*args, **kwargs):
         while True:
             try:
