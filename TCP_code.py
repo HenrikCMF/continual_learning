@@ -11,28 +11,26 @@ class telegram_type(Enum):
     FILE=3
 
 class TCP_COM():
-    def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH):
-        #threading.Thread(target=self.__receive_file, args=(MY_HOST, MY_PORT), daemon=True).start()
+    def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device):
         self.__receive_file(MY_HOST, MY_PORT)
         self.TAR_IP=TARGET_HOST
         self.TAR_PORT=TARGET_PORT
         self.in_path=REC_FILE_PATH
+        self.device=device
+        self.edge_devices=[]
 
     @retry_until_success
     def send_file(self, client_socket, file_path):
         client_socket.connect((self.TAR_IP, self.TAR_PORT))
-        print(2)
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
         print(f"Connected to {self.TAR_IP}:{self.TAR_PORT}")
 
         # Send file metadata
         client_socket.sendall(f"{telegram_type.FILE}:{file_name}:{file_size}".encode())
-        print(3)
         ack = client_socket.recv(1024).decode()
         if ack != "READY":
             raise Exception("Not ready")
-        print(4)
         # Send file content
         with open(file_path, "rb") as f:
             while chunk := f.read(1024):
@@ -46,9 +44,17 @@ class TCP_COM():
             server_socket.bind((listen_host, listen_port))
             server_socket.listen(5)
             print(f"Server listening on {listen_host}:{listen_port}")
-
             while True:
+
                 conn, addr = server_socket.accept()
+                if self.device=="edge":
+                    if addr!=self.TAR_IP:
+                        server_socket.detach()
+                        continue
+                elif self.device=="bs":
+                    if addr not in self.edge_devices:
+                        self.edge_devices.append(addr)
+                        print("added", addr)
                 print(f"Connection established with {addr}")
 
                 try:
