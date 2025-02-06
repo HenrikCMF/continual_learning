@@ -17,5 +17,5 @@ class base_station(TCP_COM):
 
 
 bs=base_station("received")
-bs.send_file("307.jpg")
+#bs.send_file("307.jpg")
 bs.receive_file()
