@@ -16,6 +16,10 @@ class edge_device(TCP_COM):
         time.sleep(waittime)
         self.send_file("307.jpg")
 
+    def pdp_test(self):
+        for i in range(20):
+            self.meas_PDP()
+
 
 bs=edge_device("received")
 bs.send_file("307.jpg")
