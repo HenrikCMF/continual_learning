@@ -175,7 +175,7 @@ class TCP_COM():
         except subprocess.CalledProcessError:
             # Happens if the interface doesn't exist or there's an iw error.
             return None
-
+#com
 
 if __name__ == "__main__":
     # Configure your local and target details
