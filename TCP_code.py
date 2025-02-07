@@ -147,6 +147,7 @@ class TCP_COM():
                 if ENABLE_ARTIFICIAL_DROPS:
                     random_number = random.random()
                     if random_number<0.2:
+                        data.decode()
                         continue
                 if data:
                     count += 1
@@ -154,6 +155,7 @@ class TCP_COM():
                         print(f"Received: {data.decode()} from {addr}")
             except:
                 print("timed out")
+                break
 
         sock.close()
         pdr = count / expected_packets
