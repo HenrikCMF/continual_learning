@@ -109,6 +109,7 @@ class TCP_COM():
 
     def measure_PDR(self, num_packets):
         #Call edge device to listen for UDP packets
+        print("PDR measure")
         self.send_open_udp(packet_num=num_packets)
         time.sleep(0.01)
 
