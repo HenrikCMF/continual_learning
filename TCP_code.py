@@ -161,7 +161,7 @@ class TCP_COM():
     def get_rssi_via_iw(self, interface="wlan0"):
         """Returns the current RSSI (dBm) for a given wireless interface, or None if unavailable."""
         try:
-            cmd = ["iw", "dev", interface, "link"]
+            cmd = ["iw", "wdev", interface, "link"]
             output = subprocess.check_output(cmd, text=True).strip()
             print(output)
             # Example output line to parse might look like:
