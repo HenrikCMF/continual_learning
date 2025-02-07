@@ -15,12 +15,9 @@ class edge_device(TCP_COM):
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, "edge")
 
     def receive_file(self, waittime=10):
-        time.sleep(waittime)
-        self.send_file("307.jpg")
-
-    def pdp_test(self):
-        for i in range(20):
-            self.meas_PDP()
+        while True:
+            time.sleep(waittime)
+            self.send_file("307.jpg")
 
 
 bs=edge_device("received")
