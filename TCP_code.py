@@ -176,7 +176,7 @@ class TCP_COM():
             print("interface", interface)
             if interface:
                 output=get_signal_level(interface)
-                return output
+                return output[-5,-2]
             else:
                 return None
         except subprocess.CalledProcessError:
