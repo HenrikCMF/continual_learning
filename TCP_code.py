@@ -71,8 +71,9 @@ class TCP_COM():
         print(f"File '{file_name}' received successfully!")
 
     def handle_PDR_req(self, file_size, file_name):
+        file_size=float(file_size)
         if file_size!=0:
-            self.PDR=float(file_size)
+            self.PDR=file_size
             print("RECEIVED PDR:", self.PDR)
         else:
             pdr=self.receive_packets(int(file_name))
@@ -102,8 +103,8 @@ class TCP_COM():
                     metadata = conn.recv(1024).decode()
                     type, file_name, file_size = metadata.split(":")
                     print(" received:", type, file_name, file_size)
-                    file_size = int(file_size)
                     if telegram_type(int(type))==telegram_type.FILE:
+                        file_size = int(file_size)
                         self.__receive_file(conn, file_name, file_size)
                     elif telegram_type(int(type))==telegram_type.PDR:
                         self.handle_PDR_req(file_size, file_name)
