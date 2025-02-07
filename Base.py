@@ -14,7 +14,9 @@ class base_station(TCP_COM):
         super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, "bs")
     
     def receive_file(self, waittime=10):
-        time.sleep(waittime)
+        while True:
+            time.sleep(waittime)
+            self.measure_PDR(100)
         #self.send_file("307.jpg")
 
     def distribute_model(self, model):
@@ -25,4 +27,4 @@ class base_station(TCP_COM):
 
 bs=base_station("received")
 #bs.send_file("307.jpg")
-bs.receive_file()
+bs.receive_file(12)
