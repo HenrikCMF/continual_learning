@@ -3,6 +3,8 @@ import time
 import json
 
 class edge_device(TCP_COM):
+    def update():
+        pass
     def __init__(self, REC_FILE_PATH):
         with open("configs.json", "r") as file:
             configs = json.load(file)
