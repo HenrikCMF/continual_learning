@@ -88,7 +88,7 @@ class TCP_COM():
 
                 conn, addr = server_socket.accept()
                 if self.device=="edge":
-                    if addr!=self.TAR_IP:
+                    if addr[0]!=self.TAR_IP:
                         print("not target IP")
                         conn.close()
                         continue
