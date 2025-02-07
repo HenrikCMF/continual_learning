@@ -32,6 +32,7 @@ class TCP_COM():
 
     @retry_transmission_handler
     def send_open_udp(self, client_socket, val=0, packet_num=0):
+        print("sending to", self.TAR_IP, self.TAR_PORT_TCP)
         client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
         print(f"Connected to {self.TAR_IP}:{self.TAR_PORT_TCP}")
         file_name=packet_num
@@ -40,6 +41,7 @@ class TCP_COM():
 
     @retry_transmission_handler
     def send_file(self, client_socket, file_path):
+        print("sending to", self.TAR_IP, self.TAR_PORT_TCP)
         client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
@@ -87,6 +89,7 @@ class TCP_COM():
                 conn, addr = server_socket.accept()
                 if self.device=="edge":
                     if addr!=self.TAR_IP:
+                        print("not target IP")
                         conn.close()
                         continue
                 elif self.device=="bs":
