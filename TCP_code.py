@@ -7,6 +7,7 @@ from enum import Enum
 import subprocess
 import re
 from utils import retry_transmission_handler, threaded
+import random
 class telegram_type(Enum):
     PDR=1
     DUMMY=2
@@ -94,7 +95,7 @@ class TCP_COM():
                         conn.close()
                         continue
                 elif self.device=="bs":
-                    if addr not in self.edge_devices:
+                    if addr[0] not in self.edge_devices:
                         self.edge_devices.append(addr[0])
                         print("added", addr[0])
                 print(f"Connection established with {addr}")
@@ -135,6 +136,7 @@ class TCP_COM():
         """
         Listens for UDP packets on (host, port) and counts how many arrive.
         """
+        ENABLE_ARTIFICIAL_DROPS=True
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.MY_IP, self.MY_PORT_UDP))
         sock.settimeout(2)
@@ -142,6 +144,10 @@ class TCP_COM():
         while count < expected_packets:
             try:
                 data, addr = sock.recvfrom(1024)  # Block until a packet arrives
+                if ENABLE_ARTIFICIAL_DROPS:
+                    random_number = random.random()
+                    if random_number<0.2:
+                        continue
                 if data:
                     count += 1
                     if count%20==0:
