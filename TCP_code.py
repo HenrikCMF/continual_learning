@@ -158,18 +158,23 @@ class TCP_COM():
         self.send_open_udp(val=pdr)
         return pdr
 
-    def get_rssi_via_iw(self, interface="wlan0"):
+    def get_rssi_via_iw(self):
         """Returns the current RSSI (dBm) for a given wireless interface, or None if unavailable."""
+        def get_wireless_interface():
+            result = subprocess.run(["iwconfig"], capture_output=True, text=True)
+            interfaces = re.findall(r"(\w+)\s+IEEE 802.11", result.stdout)
+            return interfaces[0] if interfaces else None
         try:
-            cmd = ["iw", "wdev", interface, "link"]
-            output = subprocess.check_output(cmd, text=True).strip()
-            print(output)
-            # Example output line to parse might look like:
-            #   "signal: -55 dBm"
-            # Use a regex to find "signal: <value>"
-            match = re.search(r"signal:\s+(-?\d+)\s+dBm", output)
-            if match:
-                return int(match.group(1))
+            interface=get_wireless_interface()
+            print("interface", interface)
+            if interface:
+                cmd = ["iwconfig", interface, "|", "grep", "'Signal level'"]
+                output = subprocess.check_output(cmd, text=True).strip()
+                print(output)
+                # Example output line to parse might look like:
+                #   "signal: -55 dBm"
+                # Use a regex to find "signal: <value>"
+                return output
             else:
                 return None
         except subprocess.CalledProcessError:
