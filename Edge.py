@@ -19,7 +19,7 @@ class edge_device(TCP_COM):
             time.sleep(waittime)
             self.send_file("307.jpg")
 
-
+#fd
 bs=edge_device("received")
 bs.send_file("307.jpg")
 bs.receive_file()
