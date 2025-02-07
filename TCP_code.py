@@ -55,7 +55,7 @@ class TCP_COM():
             while chunk := f.read(1024):
                 client_socket.sendall(chunk)
 
-    def receive_file(self, conn, file_name, file_size):
+    def __receive_file(self, conn, file_name, file_size):
         conn.sendall("READY".encode())
         with open(os.path.join(self.in_path,f"received_{file_name}"), "wb") as f:
             received_size = 0
@@ -101,7 +101,7 @@ class TCP_COM():
                     print(" received:", type, file_name, file_size)
                     file_size = int(file_size)
                     if telegram_type(int(type))==telegram_type.FILE:
-                        self.receive_file(conn, file_name, file_size)
+                        self.__receive_file(conn, file_name, file_size)
                     elif telegram_type(int(type))==telegram_type.PDR:
                         self.handle_PDR_req(file_size, file_name)
                 except Exception as e:
