@@ -33,20 +33,16 @@ class TCP_COM():
 
     @retry_transmission_handler
     def send_open_udp(self, client_socket, val=0, packet_num=0):
-        print("sending to", self.TAR_IP, self.TAR_PORT_TCP)
         client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
-        print(f"Connected to {self.TAR_IP}:{self.TAR_PORT_TCP}")
         file_name=packet_num
         file_size=val
         client_socket.sendall(f"{telegram_type.PDR.value}:{file_name}:{file_size}".encode())
 
     @retry_transmission_handler
     def send_file(self, client_socket, file_path):
-        print("sending to", self.TAR_IP, self.TAR_PORT_TCP)
         client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
-        print(f"Connected to {self.TAR_IP}:{self.TAR_PORT_TCP}")
 
         # Send file metadata
         client_socket.sendall(f"{telegram_type.FILE.value}:{file_name}:{file_size}".encode())
@@ -98,7 +94,6 @@ class TCP_COM():
                     if addr[0] not in self.edge_devices:
                         self.edge_devices.append(addr[0])
                         print("added", addr[0])
-                print(f"Connection established with {addr}")
                 try:
                     # Receive file metadata
                     metadata = conn.recv(1024).decode()
