@@ -7,10 +7,12 @@ class edge_device(TCP_COM):
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.local_IP=configs['edgeip']
-        self.edgePORT=configs['edgePORT']
+        self.edgePORT_TCP=configs['edgePORT_TCP']
+        self.edgePORT_UDP=configs['edgePORT_UDP']
         self.basePORT=configs['basePORT']
         self.rec_ip=configs['baseip']
-        super().__init__(self.local_IP, self.edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, "edge")
+        edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
+        super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, "edge")
 
     def receive_file(self, waittime=10):
         time.sleep(waittime)

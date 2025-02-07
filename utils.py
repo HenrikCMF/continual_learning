@@ -29,3 +29,11 @@ def threaded(func):
         thread.start()
         return thread  # Return the thread in case the caller wants to manage it
     return wrapper
+
+def timed(func):
+    def wrapper(*args, **kwargs):
+        start=time.time()
+        func(*args, **kwargs)
+        stop=time.time()
+        return stop-start
+    return wrapper

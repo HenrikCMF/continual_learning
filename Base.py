@@ -6,14 +6,21 @@ class base_station(TCP_COM):
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.local_IP=configs['baseip']
-        self.edgePORT=configs['edgePORT']
+        self.edgePORT_TCP=configs['edgePORT_TCP']
+        self.edgePORT_UDP=configs['edgePORT_UDP']
         self.basePORT=configs['basePORT']
         self.rec_ip=configs['edgeip']
-        super().__init__(self.local_IP, self.basePORT, self.rec_ip, self.edgePORT, REC_FILE_PATH, "bs")
+        edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
+        super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, "bs")
     
     def receive_file(self, waittime=10):
         time.sleep(waittime)
         #self.send_file("307.jpg")
+
+    def distribute_model(self, model):
+        for i in self.edge_devices:
+            self.TAR_IP=i
+            self.send_file(model)
 
 
 bs=base_station("received")

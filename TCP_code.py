@@ -4,6 +4,8 @@ import os
 import struct
 import time
 from enum import Enum
+import subprocess
+import re
 from utils import retry_transmission_handler, threaded
 class telegram_type(Enum):
     PING=1
@@ -12,19 +14,27 @@ class telegram_type(Enum):
 
 class TCP_COM():
     def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device):
-        self.__receive_file(MY_HOST, MY_PORT)
+        
         self.TAR_IP=TARGET_HOST
-        self.TAR_PORT=TARGET_PORT
+        if device=="edge":
+            self.MY_PORT_TCP=MY_PORT[0]
+            self.MY_PORT_UDP=MY_PORT[1]
+            self.TAR_PORT_TCP=TARGET_PORT
+        else:
+            self.TAR_PORT_TCP=TARGET_PORT[0]
+            self.TAR_PORT_UDP=TARGET_PORT[1]
+            self.MY_PORT_TCP=MY_PORT
+        self.__TCP_receive_file(MY_HOST, self.MY_PORT_TCP)
         self.in_path=REC_FILE_PATH
         self.device=device
         self.edge_devices=[]
 
     @retry_transmission_handler
     def send_file(self, client_socket, file_path):
-        client_socket.connect((self.TAR_IP, self.TAR_PORT))
+        client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
-        print(f"Connected to {self.TAR_IP}:{self.TAR_PORT}")
+        print(f"Connected to {self.TAR_IP}:{self.TAR_PORT_TCP}")
 
         # Send file metadata
         client_socket.sendall(f"{telegram_type.FILE}:{file_name}:{file_size}".encode())
@@ -38,7 +48,7 @@ class TCP_COM():
 
 
     @threaded
-    def __receive_file(self,listen_host, listen_port):
+    def __TCP_receive_file(self,listen_host, listen_port):
         """Handles receiving files from the other party."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.bind((listen_host, listen_port))
@@ -49,7 +59,7 @@ class TCP_COM():
                 conn, addr = server_socket.accept()
                 if self.device=="edge":
                     if addr!=self.TAR_IP:
-                        server_socket.detach()
+                        conn.close()
                         continue
                 elif self.device=="bs":
                     if addr not in self.edge_devices:
@@ -63,45 +73,40 @@ class TCP_COM():
                     type, file_name, file_size = metadata.split(":")
                     file_size = int(file_size)
                     conn.sendall("READY".encode())
+                    if type==telegram_type.FILE:
+                        # Receive file content
+                        with open(os.path.join(self.in_path,f"received_{file_name}"), "wb") as f:
+                            received_size = 0
+                            while received_size < file_size:
+                                data = conn.recv(1024)
+                                if not data:
+                                    break
+                                f.write(data)
+                                received_size += len(data)
 
-                    # Receive file content
-                    with open(os.path.join(self.in_path,f"received_{file_name}"), "wb") as f:
-                        received_size = 0
-                        while received_size < file_size:
-                            data = conn.recv(1024)
-                            if not data:
-                                break
-                            f.write(data)
-                            received_size += len(data)
-
-                    print(f"File '{file_name}' received successfully!")
+                        print(f"File '{file_name}' received successfully!")
                 except Exception as e:
                     pass
 
-    def meas_PDP(self):
+    
+    def get_rssi_via_iw(self, interface="wlan0"):
+        """Returns the current RSSI (dBm) for a given wireless interface, or None if unavailable."""
+        try:
+            cmd = ["iw", "dev", interface, "link"]
+            output = subprocess.check_output(cmd, text=True).strip()
+            
+            # Example output line to parse might look like:
+            #   "signal: -55 dBm"
+            # Use a regex to find "signal: <value>"
+            match = re.search(r"signal:\s+(-?\d+)\s+dBm", output)
+            if match:
+                return int(match.group(1))
+            else:
+                return None
+        except subprocess.CalledProcessError:
+            # Happens if the interface doesn't exist or there's an iw error.
+            return None
 
-        def get_tcp_info(sock):
-            # The tcp_info struct layout may vary by kernel version.
-            # Here we assume a common layout: 7 unsigned chars followed by 21 unsigned ints.
-            # Total size expected = 7 + 21*4 = 91 bytes (it might be padded to 104 bytes, so we request 104).
-            fmt = "B" * 7 + "I" * 21
-            buf = sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 104)
-            return struct.unpack(fmt, buf)
-        s = socket.create_connection((self.TAR_IP, self.TAR_PORT))
-        # Send minimal data to trigger some activity
-        s.send(b"Yo Homie, its ya boi Tony")
-
-        # Give it a little time to process the request and possibly retransmit if needed.
-        time.sleep(0.5)
-
-        info = get_tcp_info(s)
-
-        # NOTE: The index for tcpi_total_retrans may vary.
-        # In many kernels, it is the 19th element (index 18) in the unpacked tuple.
-        tcpi_total_retrans = info[18]
-        print("32-35", info[32],info[33],info[34],info[35],)
-        print("Total retransmissions:", tcpi_total_retrans)
-        s.close()
 
 if __name__ == "__main__":
     # Configure your local and target details
