@@ -37,7 +37,7 @@ class TCP_COM():
         print(f"Connected to {self.TAR_IP}:{self.TAR_PORT_TCP}")
 
         # Send file metadata
-        client_socket.sendall(f"{telegram_type.FILE}:{file_name}:{file_size}".encode())
+        client_socket.sendall(f"{telegram_type.FILE.value}:{file_name}:{file_size}".encode())
         ack = client_socket.recv(1024).decode()
         if ack != "READY":
             raise Exception("Not ready")
@@ -71,9 +71,12 @@ class TCP_COM():
                     # Receive file metadata
                     metadata = conn.recv(1024).decode()
                     type, file_name, file_size = metadata.split(":")
+                    print(" received:", type, file_name, file_size)
                     file_size = int(file_size)
                     conn.sendall("READY".encode())
-                    if type==telegram_type.FILE:
+                    print(0)
+                    if telegram_type(int(type))==telegram_type.FILE:
+                        print(1)
                         # Receive file content
                         with open(os.path.join(self.in_path,f"received_{file_name}"), "wb") as f:
                             received_size = 0
@@ -86,7 +89,7 @@ class TCP_COM():
 
                         print(f"File '{file_name}' received successfully!")
                 except Exception as e:
-                    pass
+                    print(e)
 
     
     def get_rssi_via_iw(self, interface="wlan0"):
