@@ -17,6 +17,7 @@ class edge_device(TCP_COM):
     def receive_file(self, waittime=10):
         while True:
             time.sleep(waittime)
+            print("RSSI",self.get_rssi_via_iw())
             self.send_file("307.jpg")
 
 #fd
