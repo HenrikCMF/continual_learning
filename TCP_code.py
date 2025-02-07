@@ -164,16 +164,18 @@ class TCP_COM():
             result = subprocess.run(["iwconfig"], capture_output=True, text=True)
             interfaces = re.findall(r"(\w+)\s+IEEE 802.11", result.stdout)
             return interfaces[0] if interfaces else None
+        def get_signal_level(interface):
+            cmd = f"iwconfig {interface} | grep 'Signal level'"
+            try:
+                output = subprocess.check_output(cmd, shell=True, text=True).strip()
+                return output
+            except subprocess.CalledProcessError:
+                return None
         try:
             interface=get_wireless_interface()
             print("interface", interface)
             if interface:
-                cmd = ["iwconfig", interface, "|", "grep", "'Signal level'"]
-                output = subprocess.check_output(cmd, text=True).strip()
-                print(output)
-                # Example output line to parse might look like:
-                #   "signal: -55 dBm"
-                # Use a regex to find "signal: <value>"
+                output=get_signal_level
                 return output
             else:
                 return None
