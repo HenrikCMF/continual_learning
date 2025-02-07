@@ -177,7 +177,8 @@ class TCP_COM():
             if interface:
                 output=get_signal_level(interface)
                 match = re.search(r"Signal level=(-?\d+)", output)
-                return float(match)
+                print(match)
+                return float(match.group(1))
             else:
                 return None
         except subprocess.CalledProcessError:
