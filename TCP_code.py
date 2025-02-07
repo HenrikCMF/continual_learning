@@ -163,7 +163,7 @@ class TCP_COM():
         try:
             cmd = ["iw", "dev", interface, "link"]
             output = subprocess.check_output(cmd, text=True).strip()
-            
+            print(output)
             # Example output line to parse might look like:
             #   "signal: -55 dBm"
             # Use a regex to find "signal: <value>"
