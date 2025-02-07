@@ -175,7 +175,7 @@ class TCP_COM():
             interface=get_wireless_interface()
             print("interface", interface)
             if interface:
-                output=get_signal_level
+                output=get_signal_level(interface)
                 return output
             else:
                 return None
