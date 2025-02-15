@@ -158,6 +158,7 @@ class TCP_COM():
         self.send_open_udp(val=pdr)
         return pdr
 
+    #Replace with mmcli for cell connections 
     def get_rssi_via_iw(self):
         """Returns the current RSSI (dBm) for a given wireless interface, or None if unavailable."""
         def get_wireless_interface():
@@ -177,7 +178,6 @@ class TCP_COM():
             if interface:
                 output=get_signal_level(interface)
                 match = re.search(r"Signal level=(-?\d+)", output)
-                print(match)
                 return float(match.group(1))
             else:
                 return None
