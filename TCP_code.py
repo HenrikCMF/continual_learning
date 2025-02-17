@@ -158,7 +158,7 @@ class TCP_COM():
         self.send_open_udp(val=pdr)
         return pdr
 
-    #Replace with mmcli for cell connections 
+    #Replace with mmcli for cell connections
     def get_rssi_via_iw(self):
         """Returns the current RSSI (dBm) for a given wireless interface, or None if unavailable."""
         def get_wireless_interface():
