@@ -53,8 +53,8 @@ def quantize_8_bit(model, example_data, location):
         f.write(quantlite)
 
 def get_pruning_wrapper(model, sparsity, epochs, batch_size, num_training_samples):
-    total_steps=num_training_samples/batch_size*epochs
-    start_step=total_steps/2
+    total_steps=int(num_training_samples/batch_size*epochs)
+    start_step=int(total_steps/2)
     pruning_params = {
     'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
         initial_sparsity=0.0,    # start training with 0% sparsity
