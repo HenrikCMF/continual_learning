@@ -2,6 +2,7 @@ import socket
 import time
 import functools
 import threading
+import numpy as np
 def retry_transmission_handler(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -37,3 +38,31 @@ def timed(func):
         stop=time.time()
         return stop-start
     return wrapper
+
+class MinMaxScaler:
+    def __init__(self, feature_range=(0, 1)):
+        self.min_ = None
+        self.max_ = None
+        self.feature_range = feature_range
+
+    def fit(self, X):
+        """Compute the min and max values for scaling"""
+        self.min_ = np.min(X, axis=0)
+        self.max_ = np.max(X, axis=0)
+
+    def transform(self, X):
+        """Scale the input X based on the computed min-max values"""
+        X_scaled = (X - self.min_) / (self.max_ - self.min_)
+        X_scaled = X_scaled * (self.feature_range[1] - self.feature_range[0]) + self.feature_range[0]
+        return X_scaled
+
+    def fit_transform(self, X):
+        """Fit and transform the data"""
+        self.fit(X)
+        return self.transform(X)
+
+    def inverse_transform(self, X_scaled):
+        """Reverse the scaling transformation"""
+        X = (X_scaled - self.feature_range[0]) / (self.feature_range[1] - self.feature_range[0])
+        X = X * (self.max_ - self.min_) + self.min_
+        return X
