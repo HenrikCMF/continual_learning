@@ -7,6 +7,7 @@ from utils import MinMaxScaler
 import _quantize_model as qm
 import os
 import joblib
+from sklearn.metrics import mean_squared_error
 class IoT_model():
     
     def __init__(self, initial_data):
@@ -32,7 +33,7 @@ class IoT_model():
         self.interpreter.invoke()
         output_data = np.reshape(self.interpreter.get_tensor(self.output_details[0]['index']),(self.dec_out_shape[1],-1))
         output_data=output_data.reshape(1,-1)
-        return list(self.unscale_data(output_data[0]))
+        return list(output_data[0])
     
     def inference_on_batch(self, data):
         data=np.array(data)
@@ -88,6 +89,8 @@ class IoT_model():
         x_random=self.make_representative_data(data)
         qm.quantize_8_bit(model,x_random, path)
 
+    def calc_mse(self, data):
+        mse = mean_squared_error(self.scale_data(data), self.inference_on_batch(data))
 
     def train_initial_model(self):
         X, y = self.prepare_training_data()
@@ -107,12 +110,13 @@ class IoT_model():
         model.compile(optimizer="adam", loss="mse")
         model.fit(data, data, epochs=1, batch_size=128)
         model.save(os.path.join("models", "autoencoder.h5"))
+        X, y = self.prepare_training_data()
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 
 
-make_model=IoT_model("datasets/initial_data.csv")
-make_model.train_initial_model()
-make_model.load_model()
-df=pd.read_csv('datasets/initial_data.csv').drop(columns=["timestamp", "machine_status"])
-print(make_model.inference_on_batch(df))
+#make_model=IoT_model("datasets/initial_data.csv")
+#make_model.train_initial_model()
+#make_model.load_model()
+#df=pd.read_csv('datasets/initial_data.csv').drop(columns=["timestamp", "machine_status"])
+#print(make_model.inference_on_batch(df))
 

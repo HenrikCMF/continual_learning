@@ -3,6 +3,7 @@ import time
 import functools
 import threading
 import numpy as np
+import pandas as pd
 def retry_transmission_handler(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -38,6 +39,38 @@ def timed(func):
         stop=time.time()
         return stop-start
     return wrapper
+
+def make_initial_data(path):
+    df=pd.read_csv(path)
+    sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
+    df = df.drop(columns=sensors_to_drop)
+
+    sensor_cols = df.columns[df.isnull().any()].tolist()
+    df[sensor_cols] = df[sensor_cols].interpolate(method='linear')
+
+    # If any remaining NaNs, use forward/backward fill
+    df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
+    df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
+    y=df["machine_status"]
+    X=df.drop(columns=['machine_status'])
+    first_broken_idx = y[y == "BROKEN"].index[0]
+    df.iloc[:first_broken_idx-200].to_csv("initial_data.csv",index=False)
+
+def make_sensor_data(path):
+    df=pd.read_csv(path)
+    sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
+    df = df.drop(columns=sensors_to_drop)
+
+    sensor_cols = df.columns[df.isnull().any()].tolist()
+    df[sensor_cols] = df[sensor_cols].interpolate(method='linear')
+
+    # If any remaining NaNs, use forward/backward fill
+    df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
+    df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
+    y=df["machine_status"]
+    X=df.drop(columns=['machine_status'])
+    first_broken_idx = y[y == "BROKEN"].index[0]
+    df.iloc[first_broken_idx-200:].to_csv("data_to_be_measured.csv",index=False)
 
 class MinMaxScaler:
     def __init__(self, feature_range=(0, 1)):
