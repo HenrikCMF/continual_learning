@@ -3,5 +3,15 @@
     "baseip":"192.168.1.107",
     "edgePORT_TCP":5000,
     "edgePORT_UDP":7000,
-    "basePORT":6000
+    "basePORT":6000,
+    "edgeNET_INTERFACE":"wlan0",
+    "baseNET_INTERFACE":"enp8s0",
+    "use_config_network_control":true,
+    "bandwidth_limit_kbps": 8,
+    "burst_limit_kbps": 16,
+    "buffering_latency_ms": 400,
+    "packet_loss_pct":5,
+    "base_delay_ms":250,
+    "jitter_ms":50
+
 }

@@ -1,8 +1,10 @@
 from TCP_code import TCP_COM
 import json
 import time
+from network_control import network_control
 class base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH):
+        self.device_type="bs"
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.local_IP=configs['baseip']
@@ -10,8 +12,17 @@ class base_station(TCP_COM):
         self.edgePORT_UDP=configs['edgePORT_UDP']
         self.basePORT=configs['basePORT']
         self.rec_ip=configs['edgeip']
+        nc=network_control()
+        if configs['use_config_network_control']==True:
+            rate_kbps=configs['bandwidth_limit_kbps']
+            burst_kbps=configs['burst_limit_kbps']
+            latency_ms=configs['buffering_latency_ms']
+            packet_loss_pct=configs['packet_loss_pct']
+            delay_ms=configs['base_delay_ms']
+            jitter_ms=configs['jitter_ms']
+            nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
-        super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, "bs")
+        super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type)
     
     def receive_file(self, waittime=10):
         while True:
