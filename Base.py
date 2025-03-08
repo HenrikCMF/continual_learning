@@ -30,7 +30,7 @@ class base_station(TCP_COM):
     def receive_file(self, waittime=10):
         while True:
             time.sleep(waittime)
-            self.measure_PDR(100)
+            #self.measure_PDR(100)
         #self.send_file("307.jpg")
 
     def distribute_model(self, model):

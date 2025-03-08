@@ -132,7 +132,7 @@ class TCP_COM():
         """
         Listens for UDP packets on (host, port) and counts how many arrive.
         """
-        ENABLE_ARTIFICIAL_DROPS=True
+        ENABLE_ARTIFICIAL_DROPS=False
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.MY_IP, self.MY_PORT_UDP))
         sock.settimeout(2)

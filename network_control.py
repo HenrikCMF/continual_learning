@@ -39,7 +39,7 @@ class network_control():
         """
 
         # Convert Kbps to bits per second (tc requires bits)
-        rate_bits = (rate * 1000) // 8
+        rate_bits = (rate * 1000)
         burst_bytes = (burst * 1000) // 8
         # Remove any existing rules
         subprocess.run(f"sudo tc qdisc del dev {self.interface} root", shell=True, stderr=subprocess.DEVNULL)
