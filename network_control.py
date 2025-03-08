@@ -16,7 +16,7 @@ class network_control():
         #self.jitter_ms=configs['jitter_ms']
 
 
-    def set_network_conditions(self, rate, burst, latency=None, p_loss=None, delay=None, jitter=None):
+    def set_network_conditions(self, rate, burst, latency, p_loss=None, delay=None, jitter=None):
         """
         Configures network conditions on a given interface using tc.
 
@@ -43,13 +43,12 @@ class network_control():
         burst_bytes = (burst * 1000) // 8
         # Remove any existing rules
         subprocess.run(f"sudo tc qdisc del dev {self.interface} root", shell=True, stderr=subprocess.DEVNULL)
-        print(1)
         # Apply TBF (Token Bucket Filter) for bandwidth limitation
         tbf_command=f"sudo tc qdisc add dev {self.interface} root handle 1: tbf rate {rate_bits}bit burst {burst_bytes}"
     
         # Only add latency to TBF if specified
-        if latency is not None:
-            tbf_command += f" latency {latency}ms"
+        #if latency is not None:
+        tbf_command += f" latency {latency}ms"
         subprocess.run(tbf_command, shell=True)
         # Apply Netem for delay and packet loss under TBF
         if p_loss or delay:
@@ -72,7 +71,3 @@ class network_control():
         subprocess.run(f"sudo tc qdisc del dev {self.interface} root", shell=True)
         print(f"Reset network conditions on {self.interface}.")
     
-
-obj=network_control(device_type='bs')
-#obj.set_network_conditions()
-obj.reset_network_conditions()
