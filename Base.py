@@ -17,10 +17,10 @@ class base_station(TCP_COM):
             rate_kbps=configs['bandwidth_limit_kbps']
             burst_kbps=configs['burst_limit_kbps']
             latency_ms=configs['buffering_latency_ms']
-            #packet_loss_pct=configs['packet_loss_pct']
+            packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
             #jitter_ms=configs['jitter_ms']
-            packet_loss_pct=None
+            #packet_loss_pct=None
             delay_ms=None
             jitter_ms=None
             self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
