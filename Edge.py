@@ -28,9 +28,9 @@ class edge_device(TCP_COM):
         while True:
             time.sleep(waittime)
             print("RSSI",self.get_rssi_via_iw())
-            self.send_file("test_files/PEPE.jpg")
+            self.send_file("test_files/PEPE.jpeg")
 
 #fd
 bs=edge_device("received")
-bs.send_file("test_files/PEPE.jpg")
+bs.send_file("test_files/PEPE.jpeg")
 bs.receive_file()
