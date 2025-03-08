@@ -1,10 +1,10 @@
 {
-    "edgeip":"192.168.1.198",
-    "baseip":"192.168.1.107",
+    "edgeip":"192.168.0.108",
+    "baseip":"192.168.0.6",
     "edgePORT_TCP":5000,
     "edgePORT_UDP":7000,
     "basePORT":6000,
-    "edgeNET_INTERFACE":"wlan0",
+    "edgeNET_INTERFACE":"wlp61s0",
     "baseNET_INTERFACE":"enp8s0",
     "use_config_network_control":true,
     "bandwidth_limit_kbps": 8,
