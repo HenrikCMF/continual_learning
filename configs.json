@@ -10,7 +10,7 @@
     "bandwidth_limit_kbps": 80,
     "burst_limit_kbps": 160,
     "buffering_latency_ms": 4000,
-    "packet_loss_pct":5,
+    "packet_loss_pct":30,
     "base_delay_ms":250,
     "jitter_ms":50
 
