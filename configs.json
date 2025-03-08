@@ -6,7 +6,7 @@
     "basePORT":6000,
     "edgeNET_INTERFACE":"wlp61s0",
     "baseNET_INTERFACE":"enp8s0",
-    "use_config_network_control":false,
+    "use_config_network_control":true,
     "bandwidth_limit_kbps": 8,
     "burst_limit_kbps": 16,
     "buffering_latency_ms": 400,
