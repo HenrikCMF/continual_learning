@@ -65,8 +65,8 @@ class network_control():
                 if jitter is not None:
                     netem_command += f" {jitter}ms"
         
-        subprocess.run(netem_command, shell=True)
-        
+            subprocess.run(netem_command, shell=True)
+
     def reset_network_conditions(self):
         """Removes all traffic control settings from the specified network interface."""
         subprocess.run(f"sudo tc qdisc del dev {self.interface} root", shell=True)
