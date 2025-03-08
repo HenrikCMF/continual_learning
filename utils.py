@@ -4,6 +4,7 @@ import functools
 import threading
 import numpy as np
 import pandas as pd
+import json
 def retry_transmission_handler(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -99,3 +100,22 @@ class MinMaxScaler:
         X = (X_scaled - self.feature_range[0]) / (self.feature_range[1] - self.feature_range[0])
         X = X * (self.max_ - self.min_) + self.min_
         return X
+    
+    def generate_avro_schema(datalength, filename):
+        schema = {
+            "type": "record",
+            "name": "SensorData",
+            "fields": [
+                {"name": "timestamp", "type": "string"}
+            ]
+        }
+        
+        # Add 50 sensor data fields with numeric names
+        for i in range(datalength):
+            schema["fields"].append({"name": str(i), "type": "float"})
+        
+        # Write schema to file
+        with open(filename, "w") as f:
+            json.dump(schema, f, indent=4)
+        
+        print(f"Avro schema written to {filename}")

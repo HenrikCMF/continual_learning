@@ -32,6 +32,10 @@ class edge_device(TCP_COM):
             time.sleep(waittime)
             print("RSSI",self.get_rssi_via_iw())
             self.send_file("test_files/PEPE.jpeg")
+    
+    def get_sample(self, waittime):
+        #should fetch the next sample in the dataset
+        pass
 
 #fd
 bs=edge_device("received")
