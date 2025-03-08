@@ -56,6 +56,7 @@ class TCP_COM():
 
     def __receive_file(self, conn, file_name, file_size):
         conn.sendall("READY".encode())
+        start=time.time()
         with open(os.path.join(self.in_path,f"received_{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
@@ -64,8 +65,8 @@ class TCP_COM():
                     break
                 f.write(data)
                 received_size += len(data)
-
-        print(f"File '{file_name}' received successfully!")
+        stop=time.time()
+        print(f"File '{file_name}' received, took: ", stop-start)
 
     def handle_PDR_req(self, file_size, file_name):
         file_size=float(file_size)
