@@ -10,6 +10,7 @@ import os
 from queue import Queue
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
+        self.total_sent_data=0
         self.device_type="edge"
         with open("configs.json", "r") as file:
             configs = json.load(file)
@@ -50,10 +51,10 @@ class edge_device(TCP_COM):
         timestamp_buffer=[]
         while True:
             s, t=self.get_sample()
-            if self.index%10000==0:
+            if self.index%10000==0: #Replace with model MSE wrapper
                 sample_buffer.append(s)
                 timestamp_buffer.append(t)
-            if len(timestamp_buffer)>5 or self.index==self.len_of_dataset:
+            if len(timestamp_buffer)>5 or self.index==self.len_of_dataset: #Replace 5 with variable network parameter
                 sample_buffer=np.array(sample_buffer)
                 filename=os.path.join(
                     'test_files',
@@ -61,6 +62,7 @@ class edge_device(TCP_COM):
                     )
                 print(timestamp_buffer)
                 AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(sample_buffer), codec='deflate')
+                self.total_sent_data+=os.path.getsize(filename)
                 self.send_file(filename)
                 sample_buffer=[]
                 timestamp_buffer=[]
