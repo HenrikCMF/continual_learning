@@ -39,12 +39,13 @@ class edge_device(TCP_COM):
         sensors=np.shape(self.data)[1]
         generate_avro_schema(sensors, "test_files/avro_"+str(sensors)+'.avsc')
 
-    def receive_file(self, waittime=10):
+    def run(self, waittime=10):
+        sample_buffer=[]
         while True:
-            time.sleep(waittime)
-            #print("RSSI",self.get_rssi_via_iw())
             #self.send_file("test_files/PEPE.jpeg")
             s=self.get_sample()
+            sample_buffer.append(s)
+            print(np.shape(sample_buffer))
     
     def get_sample(self):
         #should fetch the next sample in the dataset
@@ -55,5 +56,6 @@ class edge_device(TCP_COM):
 
 #fd
 bs=edge_device("received")
-bs.send_file("test_files/PEPE.jpeg")
-bs.receive_file()
+bs.run()
+#bs.send_file("test_files/PEPE.jpeg")
+#bs.receive_file()
