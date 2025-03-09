@@ -50,7 +50,7 @@ class edge_device(TCP_COM):
             s, t=self.get_sample()
             sample_buffer.append(s)
             timestamp_buffer.append(t)
-            if len(timestamp_buffer)>51 or self.index==self.len_of_dataset:
+            if len(timestamp_buffer)>50000 or self.index==self.len_of_dataset:
                 sample_buffer=np.array(sample_buffer)
                 filename=os.path.join(
                     'test_files',
