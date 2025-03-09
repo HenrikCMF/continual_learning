@@ -37,7 +37,7 @@ class edge_device(TCP_COM):
         print(self.data.head())
         self.index=0
         sensors=np.shape(self.data)[1]
-        generate_avro_schema(sensors, "testfiles_avro_"+str(sensors)+'.avsc')
+        generate_avro_schema(sensors, "test_files/avro_"+str(sensors)+'.avsc')
 
     def receive_file(self, waittime=10):
         while True:
