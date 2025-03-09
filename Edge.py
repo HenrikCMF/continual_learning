@@ -59,6 +59,7 @@ class edge_device(TCP_COM):
                     'test_files',
                     str(timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
                     )
+                print(timestamp_buffer)
                 AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(sample_buffer), codec='deflate')
                 self.send_file(filename)
                 sample_buffer=[]
