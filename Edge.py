@@ -50,8 +50,10 @@ class edge_device(TCP_COM):
             sample_buffer.append(s)
             timestamp_buffer.append(t)
             if len(timestamp_buffer)>51:
+                sample_buffer=np.array(sample_buffer)
                 AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path='test_files/file1.avro', original_size=len(sample_buffer), codec='deflate')
                 self.send_file('test_files/file1.avro')
+                exit()
 
     
     def get_sample(self):
