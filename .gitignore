@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 *.jpg
+datasets/
 testfolder/
 my_dir/
 datasets/
