@@ -24,6 +24,7 @@ def save_AVRO_default(df2, timestamps, schemapath, accuracy, path, original_size
     #Save data in a list and write to a file
     for i in range(np.shape(df2)[0]):
         sensor_data= {f"{j}": round(df2[j][i], accuracy) for j in features}
+        print(timestamps[i])
         sensor_data['timestamp']=timestamps[i]
         measurement_list.append(sensor_data)
     with open(path, "wb") as out:
