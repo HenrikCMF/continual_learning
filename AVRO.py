@@ -12,8 +12,8 @@ def save_AVRO_default(df2, timestamps, schemapath, accuracy, path, original_size
     if not isinstance(df2, pd.DataFrame):
             df2 = pd.DataFrame(df2)
             w,l = np.shape(df2)
-            if w<l:
-                df2=np.transpose(df2) 
+            #if w<l:
+            #    df2=np.transpose(df2) 
     features=[]
     #Get feature names
     for i in df2:
