@@ -101,21 +101,36 @@ class MinMaxScaler:
         X = X * (self.max_ - self.min_) + self.min_
         return X
     
-    def generate_avro_schema(datalength, filename):
-        schema = {
-            "type": "record",
-            "name": "SensorData",
-            "fields": [
-                {"name": "timestamp", "type": "string"}
-            ]
-        }
-        
-        # Add 50 sensor data fields with numeric names
-        for i in range(datalength):
-            schema["fields"].append({"name": str(i), "type": "float"})
-        
-        # Write schema to file
-        with open(filename, "w") as f:
-            json.dump(schema, f, indent=4)
-        
-        print(f"Avro schema written to {filename}")
+def generate_avro_schema(datalength, filename):
+    schema = {
+        "type": "record",
+        "name": "SensorData",
+        "fields": [
+            {"name": "timestamp", "type": "string"}
+        ]
+    }
+    
+    # Add 50 sensor data fields with numeric names
+    for i in range(datalength):
+        schema["fields"].append({"name": str(i), "type": "float"})
+    
+    # Write schema to file
+    with open(filename, "w") as f:
+        json.dump(schema, f, indent=4)
+
+def make_dataset(fault_index, num):
+    df=pd.read_csv("datasets/sensor.csv")
+    #sensors_to_drop = ['Unnamed: 0', 'timestamp','sensor_15', 'sensor_50']
+    sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
+    df = df.drop(columns=sensors_to_drop)
+    sensor_cols = df.columns[df.isnull().any()].tolist()
+    df[sensor_cols] = df[sensor_cols].interpolate(method='linear')
+    # If any remaining NaNs, use forward/backward fill
+    df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
+    df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
+    y=df["machine_status"]
+    df=df.drop(columns=['machine_status'])
+    broken_idx = y[y == "BROKEN"].index[fault_index]
+    filename="test_files/initial_data"+str(num)+".csv"
+    df.iloc[broken_idx+200:].to_csv(filename,index=False)
+    return filename
