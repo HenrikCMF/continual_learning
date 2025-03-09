@@ -14,7 +14,7 @@ class telegram_type(Enum):
     FILE=3
 
 class TCP_COM():
-    def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device):
+    def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device, file_queue=None):
         self.MY_IP=MY_HOST
         self.TAR_IP=TARGET_HOST
         if device=="edge":
@@ -25,6 +25,7 @@ class TCP_COM():
             self.TAR_PORT_TCP=TARGET_PORT[0]
             self.TAR_PORT_UDP=TARGET_PORT[1]
             self.MY_PORT_TCP=MY_PORT
+        self.file_Q=file_queue
         self.__TCP_receive(MY_HOST, self.MY_PORT_TCP)
         self.in_path=REC_FILE_PATH
         self.device=device
@@ -57,7 +58,7 @@ class TCP_COM():
     def __receive_file(self, conn, file_name, file_size):
         conn.sendall("READY".encode())
         start=time.time()
-        with open(os.path.join(self.in_path,f"received_{file_name}"), "wb") as f:
+        with open(os.path.join(self.in_path,f"r_{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
                 data = conn.recv(1024)
@@ -66,6 +67,7 @@ class TCP_COM():
                 f.write(data)
                 received_size += len(data)
         stop=time.time()
+        self.file_Q.put((str(os.path.join(self.in_path,f"r_{file_name}")),stop-start))
         print(f"File '{file_name}' received, took: ", stop-start)
 
     def handle_PDR_req(self, file_size, file_name):

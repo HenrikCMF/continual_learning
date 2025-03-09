@@ -77,10 +77,10 @@ def load_AVRO_file(path):
     timestamps=data_decompressed['timestamp'].values
     timestamplist=[]
     #If the timestamps were saved in arrays, unwrap them
-    if schematype.get('name')!='Deflate':
-        for i in range(len(timestamps)):
-            timestamplist.extend(timestamps[i])
-        timestamps=timestamplist
+    #if schematype.get('name')!='Deflate':
+    #    for i in range(len(timestamps)):
+    #        timestamplist.extend(timestamps[i])
+    #    timestamps=timestamplist
     timestamps=pd.DataFrame(timestamps)
     data_decompressed=data_decompressed.drop(columns=['timestamp'])
     return data_decompressed,timestamps, schematype.get('name'), metadata

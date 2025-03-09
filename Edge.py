@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import AVRO
 import os
+from queue import Queue
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.device_type="edge"
@@ -30,7 +31,8 @@ class edge_device(TCP_COM):
             jitter_ms=None
             self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
-        super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type)
+        self.file_Q=Queue()
+        super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
         self.filename=make_dataset(1, 1)
         df=pd.read_csv(self.filename)
         self.timestamps=df['timestamp']
@@ -48,9 +50,10 @@ class edge_device(TCP_COM):
         timestamp_buffer=[]
         while True:
             s, t=self.get_sample()
-            sample_buffer.append(s)
-            timestamp_buffer.append(t)
-            if len(timestamp_buffer)>50000 or self.index==self.len_of_dataset:
+            if self.index%10000==0:
+                sample_buffer.append(s)
+                timestamp_buffer.append(t)
+            if len(timestamp_buffer)>5 or self.index==self.len_of_dataset:
                 sample_buffer=np.array(sample_buffer)
                 filename=os.path.join(
                     'test_files',
