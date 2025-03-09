@@ -6,6 +6,7 @@ from utils import make_dataset, generate_avro_schema
 import pandas as pd
 import numpy as np
 import AVRO
+import os
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.device_type="edge"
@@ -38,6 +39,7 @@ class edge_device(TCP_COM):
         print(self.data.head())
         self.index=0
         sensors=np.shape(self.data)[1]
+        self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
 
@@ -45,15 +47,21 @@ class edge_device(TCP_COM):
         sample_buffer=[]
         timestamp_buffer=[]
         while True:
-            #self.send_file("test_files/PEPE.jpeg")
             s, t=self.get_sample()
             sample_buffer.append(s)
             timestamp_buffer.append(t)
-            if len(timestamp_buffer)>51:
+            if len(timestamp_buffer)>51 or self.index==self.len_of_dataset:
                 sample_buffer=np.array(sample_buffer)
-                AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path='test_files/file1.avro', original_size=len(sample_buffer), codec='deflate')
-                self.send_file('test_files/file1.avro')
-                exit()
+                filename=os.path.join(
+                    'test_files',
+                    str(timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
+                    )
+                AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(sample_buffer), codec='deflate')
+                self.send_file(filename)
+                sample_buffer=[]
+                timestamp_buffer=[]
+                if self.index==self.len_of_dataset:
+                    exit()
 
     
     def get_sample(self):
