@@ -5,6 +5,7 @@ from network_control import network_control
 from utils import make_dataset, generate_avro_schema
 import pandas as pd
 import numpy as np
+import AVRO
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.device_type="edge"
@@ -37,22 +38,27 @@ class edge_device(TCP_COM):
         print(self.data.head())
         self.index=0
         sensors=np.shape(self.data)[1]
-        generate_avro_schema(sensors, "test_files/avro_"+str(sensors)+'.avsc')
+        self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
+        generate_avro_schema(sensors, self.schema_path)
 
     def run(self, waittime=10):
         sample_buffer=[]
+        timestamp_buffer=[]
         while True:
             #self.send_file("test_files/PEPE.jpeg")
-            s=self.get_sample()
+            s, t=self.get_sample()
             sample_buffer.append(s)
-            print(np.shape(sample_buffer))
+            timestamp_buffer.append(t)
+            if len(timestamp_buffer)>51:
+                AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path='test_files/file1.avro', original_size=len(sample_buffer), codec='deflate')
+
     
     def get_sample(self):
         #should fetch the next sample in the dataset
         sample=self.data.iloc[self.index]
+        timestamp=self.timestamps.iloc[self.index]
         self.index+=1
-        print(sample)
-        return sample
+        return sample, timestamp
 
 #fd
 bs=edge_device("received")
