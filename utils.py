@@ -5,6 +5,7 @@ import threading
 import numpy as np
 import pandas as pd
 import json
+import os
 def retry_transmission_handler(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -41,7 +42,7 @@ def timed(func):
         return stop-start
     return wrapper
 
-def make_initial_data(path):
+def make_initial_data(path, out):
     df=pd.read_csv(path)
     sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
     df = df.drop(columns=sensors_to_drop)
@@ -55,7 +56,7 @@ def make_initial_data(path):
     y=df["machine_status"]
     X=df.drop(columns=['machine_status'])
     first_broken_idx = y[y == "BROKEN"].index[0]
-    df.iloc[:first_broken_idx-200].to_csv("initial_data.csv",index=False)
+    df.iloc[:first_broken_idx-200].to_csv(os.path.join(out,"initial_data.csv"),index=False)
 
 def make_sensor_data(path):
     df=pd.read_csv(path)
