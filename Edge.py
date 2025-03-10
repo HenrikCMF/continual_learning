@@ -67,7 +67,12 @@ class edge_device(TCP_COM):
                     s, t=self.get_sample()
                     mse=self.model.calc_mse(s)
                     mse_buff.append(mse)
-                    if mse>7:
+                    if self.index==self.len_of_dataset:
+                        done_sending=True
+                        print("done")
+                        plt.plot(mse_buff)
+                        plt.show()
+                    if mse>1:
                         print(t)
                         sample_buffer.append(s)
                         timestamp_buffer.append(t)
