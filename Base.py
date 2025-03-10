@@ -48,7 +48,6 @@ class base_station(TCP_COM):
                 self.file_Q.task_done()
                 time.sleep(waittime)
                 data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
-                print(timestamps)
                 self.distribute_model("models/autoencoder.tflite")
             except queue.Empty:
                 pass

@@ -56,7 +56,7 @@ class edge_device(TCP_COM):
                     self.received_model(file)
                 self.file_Q.task_done()
             except queue.Empty:
-                time.sleep(0.01)
+                time.sleep(0.003)
                 s, t=self.get_sample()
                 if self.index%10000==0: #Replace with model MSE wrapper
                     sample_buffer.append(s)
