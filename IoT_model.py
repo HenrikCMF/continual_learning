@@ -36,7 +36,7 @@ class IoT_model():
         return list(output_data[0])
     
     def inference_on_batch(self, data):
-        data=np.array(data)
+        data=np.array(data).reshape(-1,-1)
         results=[]
         print("data shape", np.shape(data))
         for i in range(np.shape(data)[0]):
