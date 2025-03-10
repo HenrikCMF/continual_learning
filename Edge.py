@@ -75,6 +75,8 @@ class edge_device(TCP_COM):
                     if self.index==self.len_of_dataset:
                         time.sleep(100)
                         exit()
+            except Exception as e:
+                print(e)
         
     def received_model(self, path):
         if not os.path.exists(self.model_path):
