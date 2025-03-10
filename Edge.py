@@ -51,8 +51,8 @@ class edge_device(TCP_COM):
         timestamp_buffer=[]
         while True:
             try:
-                file = self.file_Q.get(timeout=0)
-                print("checkd queue")
+                file, transmission_time= self.file_Q.get(timeout=0)
+                print(file)
                 if ".tflite" in file:
                     self.received_model(file)
                 self.file_Q.task_done()
