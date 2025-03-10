@@ -36,10 +36,10 @@ class IoT_model():
         return list(output_data[0])
     
     def inference_on_batch(self, data):
-        data=np.array(data).reshape(-1,-1)
+        data=np.array(data)
         results=[]
         print("data shape", np.shape(data))
-        for i in range(np.shape(data)[0]):
+        for i in range(np.shape(data)[1]):
             results.append(self.inference_on_model(i))
         return results
     
@@ -92,8 +92,8 @@ class IoT_model():
 
     def calc_mse(self, data):
         print(pd.DataFrame(self.scale_data(data)).head())
-        print(pd.DataFrame(self.inference_on_batch(data)).head())
-        mse_val = mean_squared_error(self.scale_data(data), self.inference_on_batch(data))
+        print(pd.DataFrame(self.inference_on_model(data)).head())
+        mse_val = mean_squared_error(self.scale_data(data), self.inference_on_model(data))
         return mse_val
 
     def train_initial_model(self):
