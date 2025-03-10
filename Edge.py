@@ -49,6 +49,7 @@ class edge_device(TCP_COM):
     def run(self, waittime=10):
         sample_buffer=[]
         timestamp_buffer=[]
+        done_sending=False
         while True:
             try:
                 file, transmission_time= self.file_Q.get(timeout=0)
@@ -57,24 +58,25 @@ class edge_device(TCP_COM):
                     self.received_model(file)
                 self.file_Q.task_done()
             except queue.Empty:
-                s, t=self.get_sample()
-                if self.index%10000==0: #Replace with model MSE wrapper
-                    sample_buffer.append(s)
-                    timestamp_buffer.append(t)
-                if len(timestamp_buffer)>5 or self.index==self.len_of_dataset: #Replace 5 with variable network parameter
-                    sample_buffer=np.array(sample_buffer)
-                    filename=os.path.join(
-                        'test_files',
-                        str(timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
-                        )
-                    AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(sample_buffer), codec='deflate')
-                    self.total_sent_data+=os.path.getsize(filename)
-                    self.send_file(filename)
-                    sample_buffer=[]
-                    timestamp_buffer=[]
-                    if self.index==self.len_of_dataset:
-                        time.sleep(100)
-                        exit()
+                if done_sending==False:
+                    s, t=self.get_sample()
+                    if self.index%10000==0: #Replace with model MSE wrapper
+                        sample_buffer.append(s)
+                        timestamp_buffer.append(t)
+                    if len(timestamp_buffer)>5 or self.index==self.len_of_dataset: #Replace 5 with variable network parameter
+                        sample_buffer=np.array(sample_buffer)
+                        filename=os.path.join(
+                            'test_files',
+                            str(timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
+                            )
+                        AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(sample_buffer), codec='deflate')
+                        self.total_sent_data+=os.path.getsize(filename)
+                        self.send_file(filename)
+                        sample_buffer=[]
+                        timestamp_buffer=[]
+                        if self.index==self.len_of_dataset:
+                            time.sleep(100)
+                            done_sending=True
             except Exception as e:
                 print(e)
         
