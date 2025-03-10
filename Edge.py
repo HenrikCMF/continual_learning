@@ -75,7 +75,6 @@ class edge_device(TCP_COM):
                         sample_buffer=[]
                         timestamp_buffer=[]
                         if self.index==self.len_of_dataset:
-                            time.sleep(100)
                             done_sending=True
             except Exception as e:
                 print(e)
