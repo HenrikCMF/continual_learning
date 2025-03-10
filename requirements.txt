@@ -8,3 +8,4 @@ tf-keras==2.18.0
 tflite==2.18.0
 tflite-runtime==2.14.0
 fastavro==1.10.0
+tensorflow-model-optimization
