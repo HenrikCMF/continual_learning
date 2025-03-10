@@ -10,6 +10,7 @@ import os
 import queue
 import shutil
 import IoT_model
+import matplotlib.pyplot as plt
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_sent_data=0
@@ -52,6 +53,7 @@ class edge_device(TCP_COM):
     def run(self, waittime=10):
         sample_buffer=[]
         timestamp_buffer=[]
+        mse_buff=[]
         done_sending=False
         while True:
             try:
@@ -63,7 +65,9 @@ class edge_device(TCP_COM):
             except queue.Empty:
                 if done_sending==False:
                     s, t=self.get_sample()
-                    if self.model.calc_mse(s)>7:
+                    mse=self.model.calc_mse(s)
+                    mse_buff.append(mse)
+                    if mse>7:
                         print(t)
                         sample_buffer.append(s)
                         timestamp_buffer.append(t)
@@ -80,6 +84,9 @@ class edge_device(TCP_COM):
                         timestamp_buffer=[]
                         if self.index==self.len_of_dataset:
                             done_sending=True
+                            print("done")
+                            plt.plot(mse_buff)
+                            plt.show()
             except Exception as e:
                 print(e)
         
