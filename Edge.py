@@ -63,7 +63,8 @@ class edge_device(TCP_COM):
             except queue.Empty:
                 if done_sending==False:
                     s, t=self.get_sample()
-                    if self.index%10000==0: #Replace with model MSE wrapper
+                    if self.model.calc_mse(s)>7:
+                        print(t)
                         sample_buffer.append(s)
                         timestamp_buffer.append(t)
                     if len(timestamp_buffer)>5 or self.index==self.len_of_dataset: #Replace 5 with variable network parameter
