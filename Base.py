@@ -3,9 +3,20 @@ import json
 import time
 import queue
 from network_control import network_control
+import IoT_model
 import AVRO
+import os
+from utils import make_initial_data
 class base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH):
+        self.total_data_sent=0
+        self.NEW_START=True
+        if self.NEW_START:
+            make_initial_data("datasets/sensor.csv", 'test_files')
+        init_data=os.path.join('test_files','initial_data.csv')
+        ml_model=IoT_model.IoT_model(init_data)
+        if self.NEW_START:
+            ml_model.train_initial_model()
         self.device_type="bs"
         with open("configs.json", "r") as file:
             configs = json.load(file)
@@ -38,6 +49,7 @@ class base_station(TCP_COM):
                 time.sleep(waittime)
                 data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
                 print(timestamps)
+                self.distribute_model("models/autoencoder.tflite")
             except queue.Empty:
                 pass
             #self.measure_PDR(100)
