@@ -52,11 +52,11 @@ class edge_device(TCP_COM):
         while True:
             try:
                 file = self.file_Q.get(timeout=0)
+                print("checkd queue")
                 if ".tflite" in file:
                     self.received_model(file)
                 self.file_Q.task_done()
             except queue.Empty:
-                time.sleep(0.003)
                 s, t=self.get_sample()
                 if self.index%10000==0: #Replace with model MSE wrapper
                     sample_buffer.append(s)
