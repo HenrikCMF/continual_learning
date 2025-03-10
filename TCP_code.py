@@ -31,6 +31,8 @@ class TCP_COM():
         self.device=device
         self.edge_devices=[]
         self.PDR=0
+        if not os.path.exists(self.in_path):
+            os.makedirs(self.in_path)
 
     @retry_transmission_handler
     def send_open_udp(self, client_socket, val=0, packet_num=0):
