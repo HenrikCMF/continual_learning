@@ -9,11 +9,12 @@ import AVRO
 import os
 import queue
 import shutil
+import IoT_model
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_sent_data=0
         self.device_type="edge"
-        self.model_path="model"
+        self.model_path="models"
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.local_IP=configs['edgeip']
@@ -45,6 +46,8 @@ class edge_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
+        self.model = IoT_model.IoT_model("test_files/initial_data.csv")
+        self.model.load_model()
 
     def run(self, waittime=10):
         sample_buffer=[]
@@ -84,6 +87,7 @@ class edge_device(TCP_COM):
             os.makedirs(self.model_path)
         destination_path=os.path.join(self.model_path, 'autoencoder.tflite')
         shutil.move(path, destination_path)
+        self.model.load_model()
     
     def get_sample(self):
         #should fetch the next sample in the dataset
