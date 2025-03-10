@@ -10,7 +10,7 @@ from utils import make_initial_data
 class base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_data_sent=0
-        self.NEW_START=True
+        self.NEW_START=False
         if self.NEW_START:
             make_initial_data("datasets/sensor.csv", 'test_files')
         init_data=os.path.join('test_files','initial_data.csv')

@@ -38,8 +38,6 @@ class edge_device(TCP_COM):
         df=pd.read_csv(self.filename)
         self.timestamps=df['timestamp']
         self.data=df.drop(columns=['timestamp'])
-        print(self.timestamps.head())
-        print(self.data.head())
         self.index=0
         sensors=np.shape(self.data)[1]
         self.len_of_dataset=np.shape(self.data)[0]
@@ -60,14 +58,15 @@ class edge_device(TCP_COM):
                     'test_files',
                     str(timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
                     )
-                print(timestamp_buffer)
                 AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(sample_buffer), codec='deflate')
                 self.total_sent_data+=os.path.getsize(filename)
                 self.send_file(filename)
                 sample_buffer=[]
                 timestamp_buffer=[]
                 if self.index==self.len_of_dataset:
+                    time.sleep(100)
                     exit()
+        
 
     
     def get_sample(self):
