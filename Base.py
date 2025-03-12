@@ -44,15 +44,13 @@ class base_station(TCP_COM):
         super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type, self.file_Q)
     
     def append_to_initial_data(self, data, timestamps, init_data_path):
-        init_data=pd.read_csv(init_data_path)
+        init_data=pd.read_csv(init_data_path).drop(columns=["Unnamed: 0"], errors='ignore')
         timestamps=pd.DataFrame(timestamps)
         timestamps.columns=['timestamp']
-        df2 = pd.concat([timestamps, data], axis=1)
-        print(df2.head())
+        df2 = pd.concat([timestamps, data], axis=1).drop(columns=["Unnamed: 0"], errors='ignore')
         df2.columns=init_data.columns
-        df_combined = pd.concat([init_data, df2], ignore_index=True)
+        df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
         df_combined.to_csv(init_data_path)
-        print("updated CSV")
 
     def receive_file(self, waittime=10):
         while True:
