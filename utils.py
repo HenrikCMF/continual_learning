@@ -112,9 +112,9 @@ def generate_avro_schema(datalength, filename):
     }
     
     # Add 50 sensor data fields with numeric names
-    for i in range(datalength):
+    for i in range(datalength-1):
         schema["fields"].append({"name": str(i), "type": "float"})
-    
+    schema["fields"].append({"name": str(i), "type": "string"})
     # Write schema to file
     with open(filename, "w") as f:
         json.dump(schema, f, indent=4)
@@ -130,7 +130,7 @@ def make_dataset(fault_index, num):
     df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
     df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
     y=df["machine_status"]
-    df=df.drop(columns=['machine_status'])
+    #df=df.drop(columns=['machine_status'])
     broken_idx = y[y == "BROKEN"].index[fault_index]
     filename="test_files/initial_data"+str(num)+".csv"
     df.iloc[broken_idx+200:].to_csv(filename,index=False)
