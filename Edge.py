@@ -65,7 +65,7 @@ class edge_device(TCP_COM):
             except queue.Empty:
                 if done_sending==False:
                     s, t=self.get_sample()
-                    mse=self.model.calc_mse(s)
+                    mse=self.model.calc_mse(s.drop(columns=["machine_status"]))
                     mse_buff.append(mse)
                     if self.index==self.len_of_dataset:
                         print("done")
