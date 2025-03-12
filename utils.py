@@ -114,7 +114,7 @@ def generate_avro_schema(datalength, filename):
     # Add 50 sensor data fields with numeric names
     for i in range(datalength-1):
         schema["fields"].append({"name": str(i), "type": "float"})
-    schema["fields"].append({"name": str(i), "type": "string"})
+    schema["fields"].append({"name": str(i+1), "type": "string"})
     # Write schema to file
     with open(filename, "w") as f:
         json.dump(schema, f, indent=4)
