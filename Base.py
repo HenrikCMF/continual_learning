@@ -7,14 +7,16 @@ import IoT_model
 import AVRO
 import os
 from utils import make_initial_data
+import numpy as np
+import pandas as pd
 class base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_data_sent=0
-        self.NEW_START=False
+        self.NEW_START=True
         if self.NEW_START:
             make_initial_data("datasets/sensor.csv", 'test_files')
-        init_data=os.path.join('test_files','initial_data.csv')
-        ml_model=IoT_model.IoT_model(init_data)
+        self.init_data=os.path.join('test_files','initial_data.csv')
+        ml_model=IoT_model.IoT_model(self.init_data)
         if self.NEW_START:
             ml_model.train_initial_model()
         self.device_type="bs"
@@ -41,6 +43,15 @@ class base_station(TCP_COM):
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type, self.file_Q)
     
+    def append_to_initial_data(self, data, timestamps, init_data_path):
+        init_data=pd.read_csv(init_data_path)
+        timestamps=pd.DataFrame(timestamps)
+        df2 = pd.concat([timestamps, data], axis=1)
+        df2.columns=init_data.columns
+        df_combined = pd.concat([init_data, df2], ignore_index=True)
+        df_combined.to_csv(init_data_path)
+        print("updated CSV")
+
     def receive_file(self, waittime=10):
         while True:
             try:
@@ -48,7 +59,8 @@ class base_station(TCP_COM):
                 self.file_Q.task_done()
                 time.sleep(waittime)
                 data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
-                self.distribute_model("models/autoencoder.tflite")
+                self.append_to_initial_data(data, timestamps, self.init_data)
+                #self.distribute_model("models/autoencoder.tflite")
             except queue.Empty:
                 pass
             #self.measure_PDR(100)
