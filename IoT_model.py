@@ -91,7 +91,6 @@ class IoT_model():
         qm.quantize_8_bit(model,x_random, path)
 
     def calc_mse(self, data):
-        print(data)
         mse_val = mean_squared_error(self.scale_data(data), self.inference_on_model(data))
         return mse_val
 
