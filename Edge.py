@@ -66,15 +66,14 @@ class edge_device(TCP_COM):
                 if done_sending==False:
                     s, t=self.get_sample()
                     
-                    print(s.drop(columns=["machine_status"]).head())
-                    mse=self.model.calc_mse(s.drop(columns=["machine_status"]))
+                    for_mse=s.drop(columns=["machine_status"])
+                    mse=self.model.calc_mse(for_mse)
                     mse_buff.append(mse)
                     if self.index==self.len_of_dataset:
                         print("done")
                         plt.plot(mse_buff)
                         plt.show()
                     if mse>6:
-                        print(t)
                         sample_buffer.append(s)
                         timestamp_buffer.append(t)
                     if len(timestamp_buffer)>5 or self.index==self.len_of_dataset: #Replace 5 with variable network parameter
