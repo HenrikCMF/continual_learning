@@ -46,7 +46,9 @@ class base_station(TCP_COM):
     def append_to_initial_data(self, data, timestamps, init_data_path):
         init_data=pd.read_csv(init_data_path)
         timestamps=pd.DataFrame(timestamps)
+        timestamps.columns=['timestamp']
         df2 = pd.concat([timestamps, data], axis=1)
+        print(df2.head())
         df2.columns=init_data.columns
         df_combined = pd.concat([init_data, df2], ignore_index=True)
         df_combined.to_csv(init_data_path)
