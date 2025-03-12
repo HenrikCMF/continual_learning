@@ -66,7 +66,8 @@ class edge_device(TCP_COM):
                 if done_sending==False:
                     s, t=self.get_sample()
                     
-                    for_mse=s.drop(columns=["machine_status"])
+                    for_mse=s.drop(columns=['machine_status'])
+                    print(for_mse)
                     mse=self.model.calc_mse(for_mse)
                     mse_buff.append(mse)
                     if self.index==self.len_of_dataset:
