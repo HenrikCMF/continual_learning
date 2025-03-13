@@ -15,6 +15,7 @@ class telegram_type(Enum):
 
 class TCP_COM():
     def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device, file_queue=None):
+        self.time_transmitting=0
         self.MY_IP=MY_HOST
         self.TAR_IP=TARGET_HOST
         if device=="edge":
@@ -36,10 +37,12 @@ class TCP_COM():
 
     @retry_transmission_handler
     def send_open_udp(self, client_socket, val=0, packet_num=0):
+        start=time.time()
         client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
         file_name=packet_num
         file_size=val
         client_socket.sendall(f"{telegram_type.PDR.value}:{file_name}:{file_size}".encode())
+        self.time_transmitting+=time.time()-start
 
     @retry_transmission_handler
     def send_done_sending(self, client_socket, val=0, packet_num=0):
@@ -57,6 +60,7 @@ class TCP_COM():
 
     @retry_transmission_handler
     def send_file(self, client_socket, file_path):
+        start=time.time()
         client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
@@ -70,8 +74,10 @@ class TCP_COM():
         with open(file_path, "rb") as f:
             while chunk := f.read(1024):
                 client_socket.sendall(chunk)
+        self.time_transmitting+=time.time()-start
 
     def __receive_file(self, conn, file_name, file_size):
+        start=time.time()
         conn.sendall("READY".encode())
         start=time.time()
         with open(os.path.join(self.in_path,f"r_{file_name}"), "wb") as f:
@@ -84,15 +90,18 @@ class TCP_COM():
                 received_size += len(data)
         stop=time.time()
         self.file_Q.put((str(os.path.join(self.in_path,f"r_{file_name}")),stop-start))
+        self.time_transmitting+=time.time()-start
         print(f"File '{file_name}' received, took: ", stop-start)
 
     def handle_PDR_req(self, file_size, file_name):
+        start=time.time()
         file_size=float(file_size)
         if file_size!=0:
             self.PDR=file_size
             print("RECEIVED PDR:", self.PDR)
         else:
             pdr=self.receive_packets(int(file_name))
+        self.time_transmitting+=time.time()-start
 
     @threaded
     def __TCP_receive(self,listen_host, listen_port):
@@ -140,6 +149,7 @@ class TCP_COM():
         """
         Sends `num_packets` UDP packets to (host, port) with a small interval between them.
         """
+        start=time.time()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for i in range(num_packets):
             message = f"{i}".encode()
@@ -147,11 +157,13 @@ class TCP_COM():
             time.sleep(interval)
 
         sock.close()
+        self.time_transmitting+=time.time()-start
     
     def receive_packets(self, expected_packets=100):
         """
         Listens for UDP packets on (host, port) and counts how many arrive.
         """
+        start=time.time()
         ENABLE_ARTIFICIAL_DROPS=False
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.MY_IP, self.MY_PORT_UDP))
@@ -177,6 +189,7 @@ class TCP_COM():
         pdr = count / expected_packets
         print(f"PDR: {pdr*100:.2f}%")
         self.send_open_udp(val=pdr)
+        self.time_transmitting+=time.time()-start
         return pdr
 
     #Replace with mmcli for cell connections
