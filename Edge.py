@@ -61,9 +61,10 @@ class edge_device(TCP_COM):
     def get_important_important_batch(self):
         batch_not_found=True
         important_batches=0
+        print("Analyzing samples")
         while batch_not_found:
             mse, s, t = self.analyze_samples()
-            if mse>6:
+            if mse>4:
                 print("Found sample")
                 self.sample_buffer.append(s)
                 self.timestamp_buffer.append(t)
