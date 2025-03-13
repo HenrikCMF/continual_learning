@@ -38,7 +38,7 @@ class base_station(TCP_COM):
             #packet_loss_pct=None
             delay_ms=None
             jitter_ms=None
-            self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
+            #self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type, self.file_Q)
@@ -53,9 +53,15 @@ class base_station(TCP_COM):
         df_combined.to_csv(init_data_path)
 
     def receive_file(self, waittime=10):
+        start=time.time()
         while True:
             try:
                 file, transmission_time = self.file_Q.get(timeout=3)
+                if file=="DONE":
+                    print("done")
+                    print("Time elapsed: ", time.time()-start)
+                    print("Total data sent(KB): ", self.total_data_sent/1024)
+                    exit()
                 self.file_Q.task_done()
                 #time.sleep(waittime)
                 data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
