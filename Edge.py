@@ -64,6 +64,7 @@ class edge_device(TCP_COM):
         while batch_not_found:
             mse, s, t = self.analyze_samples()
             if mse>6:
+                print("Found sample")
                 self.sample_buffer.append(s)
                 self.timestamp_buffer.append(t)
                 for i in range(100):
@@ -101,6 +102,7 @@ class edge_device(TCP_COM):
                 self.file_Q.task_done()
                 self.get_important_important_batch()
             except queue.Empty:
+                print("waiting for model")
                 if self.index==self.len_of_dataset:
                     print("done")
                     plt.plot(self.mse_buff)

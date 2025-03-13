@@ -63,6 +63,7 @@ class base_station(TCP_COM):
                 self.append_to_initial_data(data, timestamps, self.init_data)
                 self.distribute_model("models/autoencoder.tflite")
             except queue.Empty:
+                print("waiting for data")
                 pass
             #self.measure_PDR(100)
         #self.send_file("307.jpg")
