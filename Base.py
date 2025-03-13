@@ -59,6 +59,7 @@ class base_station(TCP_COM):
 
     def receive_file(self, waittime=10):
         start=time.time()
+        self.distribute_model("models/autoencoder.tflite")
         while True:
             try:
                 file, transmission_time = self.file_Q.get(timeout=3)

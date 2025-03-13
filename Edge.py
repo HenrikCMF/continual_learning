@@ -11,6 +11,11 @@ import queue
 import shutil
 import IoT_model
 import matplotlib.pyplot as plt
+import warnings
+from sklearn.exceptions import ConvergenceWarning
+
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
+warnings.filterwarnings("ignore", module="sklearn")
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_sent_data=0
@@ -94,7 +99,7 @@ class edge_device(TCP_COM):
         self.timestamp_buffer=[]
         self.mse_buff=[]
         done_sending=False
-        self.get_important_important_batch()
+        #self.get_important_important_batch()
         while True:
             try:
                 file, transmission_time= self.file_Q.get(timeout=2)
