@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
-from utils import MinMaxScaler
+#from utils import MinMaxScaler
 import _quantize_model as qm
 import os
 import joblib
@@ -87,7 +87,7 @@ class IoT_model():
         return x_random
 
     def quantize_model(self, data,model, path):
-        x_random=self.make_representative_data(data)
+        x_random=self.make_representative_data(pd.DataFrame(data))
         qm.quantize_8_bit(model,x_random, path)
 
     def calc_mse(self, data):
@@ -109,14 +109,21 @@ class IoT_model():
 
     def improve_model(self, data):
         X, y = self.prepare_training_data()
-        new_data=self.scale_data(data)
-        old_data=np.random.choice(X, len(new_data), replace=False)
-        data = np.concatenate((new_data, old_data), axis=0)
-        model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
+        X=pd.DataFrame(X)
+        data=np.array(data)
+        new_data=self.scale_data(np.array(data))
+        old_data = X.sample(n=len(new_data), replace=False, random_state=42)
+        new_data=pd.DataFrame(new_data)
+        new_data.columns=old_data.columns
+        data= pd.concat([new_data,old_data], axis=0)
+        #data = np.concatenate((new_data, old_data), axis=1)
+        #with tf.keras.utils.custom_object_scope(tfmot.quantization.keras.quantize_scope()):
+        #    model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
+        with tfmot.quantization.keras.quantize_scope():
+            model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
         model.compile(optimizer="adam", loss="mse")
         model.fit(data, data, epochs=1, batch_size=128)
         model.save(os.path.join("models", "autoencoder.h5"))
-        
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 
 
@@ -126,3 +133,15 @@ class IoT_model():
 #df=pd.read_csv('datasets/initial_data.csv').drop(columns=["timestamp", "machine_status"])
 #print(make_model.inference_on_batch(df))
 
+#import AVRO
+#data,timestamps, type, metadata = AVRO.load_AVRO_file("received/r_2018-04-20-02-30-00.avro")
+#data=data.drop(data.columns[-1], axis=1)
+#init_data=os.path.join('test_files','initial_data.csv')
+#ml_model=IoT_model(init_data)
+#data=np.array(data).reshape(50,-1)
+#scaler = joblib.load(os.path.join("models", "scaler.pkl"))
+#res=ml_model.scale_data(data)#.improve_model(data.drop(data.columns[-1], axis=1))
+#print(pd.DataFrame(data))
+#res=scaler.transform(data)
+
+#print(res)
