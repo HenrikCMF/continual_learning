@@ -48,7 +48,7 @@ def timed(func):
     return wrapper
 
 def make_initial_data(path, out):
-    df=pd.read_csv(path).drop(columns=["Unnamed: 0"], errors='ignore')
+    df=pd.read_csv(path)
     sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
     df = df.drop(columns=sensors_to_drop)
 
@@ -64,7 +64,7 @@ def make_initial_data(path, out):
     df.iloc[:first_broken_idx-200].to_csv(os.path.join(out,"initial_data.csv"),index=False)
 
 def make_sensor_data(path):
-    df=pd.read_csv(path).drop(columns=["Unnamed: 0"], errors='ignore')
+    df=pd.read_csv(path)
     sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
     df = df.drop(columns=sensors_to_drop)
 
