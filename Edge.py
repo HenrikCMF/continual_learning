@@ -94,7 +94,7 @@ class edge_device(TCP_COM):
         self.get_important_important_batch()
         while True:
             try:
-                file, transmission_time= self.file_Q.get(timeout=0)
+                file, transmission_time= self.file_Q.get(timeout=2)
                 print(file)
                 if ".tflite" in file:
                     self.received_model(file)
