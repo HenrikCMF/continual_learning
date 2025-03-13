@@ -52,7 +52,7 @@ class edge_device(TCP_COM):
 
     def analyze_samples(self):
         s, t=self.get_sample()    
-        for_mse=np.array(s.drop('machine_status'))
+        for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
         mse=self.model.calc_mse(for_mse)
         self.mse_buff.append(mse)
         return mse, s, t
