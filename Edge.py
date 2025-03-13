@@ -112,14 +112,13 @@ class edge_device(TCP_COM):
                 print("waiting for model")
             except Exception as e:
                 print(e)
-            if self.index>self.len_of_dataset/10:
+            if self.index>self.len_of_dataset:
                 self.send_done_sending()
                 print("done")
                 print("Time elapsed: ", time.time()-start)
                 print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)
-                plt.plot(self.mse_buff)
-                plt.show()
+                self.make_end_plot(self.mse_buff)
                 exit()
         
     def received_model(self, path):
@@ -135,6 +134,33 @@ class edge_device(TCP_COM):
         timestamp=self.timestamps.iloc[self.index]
         self.index+=1
         return sample, timestamp
+    
+    def make_end_plot(self, mse):
+        file_path = "datasets/sensor.csv"
+        df = pd.read_csv(file_path)
+
+        # Ensure 'machine_status' column exists
+        if "machine_status" not in df.columns:
+            raise ValueError("Column 'machine_status' not found in dataset")
+
+        # Find indices where machine_status is 'BROKEN'
+        broken_indices = df.index[df["machine_status"] == "BROKEN"].tolist()
+        mse_buf = mse  
+
+        # Plot the mse_buf values
+        plt.figure(figsize=(10, 5))
+        plt.plot(mse_buf, label="Mean Squared Error")
+
+        # Plot vertical lines where 'machine_status' is 'BROKEN'
+        for idx in broken_indices:
+            plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == broken_indices[0] else "")
+
+        # Labels and legend
+        plt.xlabel("Index")
+        plt.ylabel("MSE Values")
+        plt.title("Singular Value Plot with BROKEN Machine Status")
+        plt.legend()
+        plt.show()
 
 #fd
 bs=edge_device("received")
