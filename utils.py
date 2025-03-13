@@ -141,4 +141,6 @@ def make_dataset(fault_index, num):
     return filename, broken_idx+200
 
 def remove_all_avro_files(path):
-    
+    directory = Path(path)
+    for file in directory.glob("*.avro"):
+        file.unlink()
