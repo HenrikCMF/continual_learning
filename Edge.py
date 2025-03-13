@@ -34,7 +34,7 @@ class edge_device(TCP_COM):
             #packet_loss_pct=None
             delay_ms=None
             jitter_ms=None
-            self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
+            #self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
@@ -89,6 +89,7 @@ class edge_device(TCP_COM):
 
 
     def run(self, waittime=10):
+        start=time.time()
         self.sample_buffer=[]
         self.timestamp_buffer=[]
         self.mse_buff=[]
@@ -106,6 +107,8 @@ class edge_device(TCP_COM):
                 print("waiting for model")
                 if self.index==self.len_of_dataset:
                     print("done")
+                    print("Time elapsed: ", time-time()-start)
+                    print("Total data sent(KB): ", self.total_sent_data/1024)
                     plt.plot(self.mse_buff)
                     plt.show()
                     exit()
