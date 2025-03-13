@@ -51,7 +51,7 @@ class TCP_COM():
     def handle_dummy_req(self,file_size, file_name):
         file_size=float(file_size)
         if file_name=="DONE":
-            self.file_Q.put(str("DONE"),0)
+            self.file_Q.put((str("DONE"),0))
             print("Received done")
 
 
