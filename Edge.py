@@ -105,9 +105,11 @@ class edge_device(TCP_COM):
                 self.get_important_important_batch()
             except queue.Empty:
                 print("waiting for model")
-                if self.index==self.len_of_dataset:
+                #if self.index==self.len_of_dataset:
+                if self.index>self.len_of_dataset/5:
+                    self.send_done_sending()
                     print("done")
-                    print("Time elapsed: ", time-time()-start)
+                    print("Time elapsed: ", time.time()-start)
                     print("Total data sent(KB): ", self.total_sent_data/1024)
                     plt.plot(self.mse_buff)
                     plt.show()
