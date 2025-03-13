@@ -57,7 +57,7 @@ class base_station(TCP_COM):
             try:
                 file, transmission_time = self.file_Q.get(timeout=0)
                 self.file_Q.task_done()
-                time.sleep(waittime)
+                #time.sleep(waittime)
                 data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
                 #self.ml_model.improve_model(data.drop(data.columns[-1], axis=1))
                 self.append_to_initial_data(data, timestamps, self.init_data)
