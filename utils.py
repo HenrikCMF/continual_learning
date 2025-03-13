@@ -135,8 +135,7 @@ def make_dataset(fault_index, num):
     df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
     df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
     y=df["machine_status"]
-    #df=df.drop(columns=['machine_status'])
     broken_idx = y[y == "BROKEN"].index[fault_index]
     filename="test_files/initial_data"+str(num)+".csv"
     df.iloc[broken_idx+200:].to_csv(filename,index=False)
-    return filename
+    return filename, broken_idx+200
