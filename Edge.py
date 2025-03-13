@@ -111,6 +111,7 @@ class edge_device(TCP_COM):
                 self.send_done_sending()
                 print("done")
                 print("Time elapsed: ", time.time()-start)
+                print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)
                 plt.plot(self.mse_buff)
                 plt.show()

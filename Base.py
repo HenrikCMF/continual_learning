@@ -60,7 +60,9 @@ class base_station(TCP_COM):
                 if file=="DONE":
                     print("done")
                     print("Time elapsed: ", time.time()-start)
+                    print("Transmitting time: ", self.time_transmitting)
                     print("Total data sent(KB): ", self.total_data_sent/1024)
+
                     exit()
                 self.file_Q.task_done()
                 #time.sleep(waittime)
@@ -75,6 +77,7 @@ class base_station(TCP_COM):
         #self.send_file("307.jpg")
 
     def distribute_model(self, model):
+        self.total_data_sent+=os.path.getsize(model)
         for i in self.edge_devices:
             self.TAR_IP=i
             self.send_file(model)
