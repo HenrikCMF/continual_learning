@@ -93,7 +93,7 @@ class IoT_model():
     def calc_mse(self, data):
         print(pd.DataFrame(self.scale_data(data)))
         print(pd.DataFrame(self.inference_on_model(data)))
-        mse_val = mean_squared_error(self.scale_data(data), self.inference_on_model(data))
+        mse_val = mean_squared_error(self.scale_data(data).T, self.inference_on_model(data))
         return mse_val
 
     def train_initial_model(self):
