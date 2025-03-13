@@ -43,7 +43,7 @@ class edge_device(TCP_COM):
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
-        self.filename=make_dataset(1, 1)
+        self.filename, self.start_offset=make_dataset(1, 1)
         df=pd.read_csv(self.filename)
         self.timestamps=df['timestamp']
         self.data=df.drop(columns=['timestamp'])
@@ -145,6 +145,10 @@ class edge_device(TCP_COM):
 
         # Find indices where machine_status is 'BROKEN'
         broken_indices = df.index[df["machine_status"] == "BROKEN"].tolist()
+
+    
+        adjusted_broken_indices = [idx - self.start_offset for idx in broken_indices if idx >= self.start_offset]
+
         mse_buf = mse  
 
         # Plot the mse_buf values
@@ -152,8 +156,9 @@ class edge_device(TCP_COM):
         plt.plot(mse_buf, label="Mean Squared Error")
 
         # Plot vertical lines where 'machine_status' is 'BROKEN'
-        for idx in broken_indices:
-            plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == broken_indices[0] else "")
+        for idx in adjusted_broken_indices:
+            plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == adjusted_broken_indices[0] else "")
+
 
         # Labels and legend
         plt.xlabel("Index")
