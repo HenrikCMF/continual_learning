@@ -2,7 +2,7 @@ from TCP_code import TCP_COM
 import time
 import json
 from network_control import network_control
-from utils import make_dataset, generate_avro_schema
+from utils import make_dataset, generate_avro_schema, remove_all_avro_files
 import pandas as pd
 import numpy as np
 import AVRO
@@ -119,7 +119,10 @@ class edge_device(TCP_COM):
                 print("Time elapsed: ", time.time()-start)
                 print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)
+                pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
+                self.send_file("test_files/mse_data.csv")
                 self.make_end_plot(self.mse_buff)
+                remove_all_avro_files('test_files')
                 exit()
         
     def received_model(self, path):

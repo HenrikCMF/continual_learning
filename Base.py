@@ -6,7 +6,7 @@ from network_control import network_control
 import IoT_model
 import AVRO
 import os
-from utils import make_initial_data
+from utils import make_initial_data, remove_all_avro_files
 import numpy as np
 import pandas as pd
 import warnings
@@ -67,7 +67,7 @@ class base_station(TCP_COM):
                     print("Time elapsed: ", time.time()-start)
                     print("Transmitting time: ", self.time_transmitting)
                     print("Total data sent(KB): ", self.total_data_sent/1024)
-
+                    remove_all_avro_files('received')
                     exit()
                 self.file_Q.task_done()
                 #time.sleep(waittime)
