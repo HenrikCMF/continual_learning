@@ -50,11 +50,48 @@ class edge_device(TCP_COM):
         self.model = IoT_model.IoT_model("test_files/initial_data.csv")
         self.model.load_model()
 
+    def analyze_samples(self):
+        s, t=self.get_sample()    
+        for_mse=s.drop('machine_status')
+        mse=self.model.calc_mse(for_mse)
+        self.mse_buff.append(mse)
+        return mse, s, t
+            
+
+    def get_important_important_batch(self):
+        batch_not_found=True
+        important_batches=0
+        while batch_not_found:
+            mse, s, t = self.analyze_samples()
+            if mse>4:
+                self.sample_buffer.append(s)
+                self.timestamp_buffer.append(t)
+                for i in range(100):
+                    s, t=self.get_sample()
+                    self.sample_buffer.append(s)
+                    self.timestamp_buffer.append(t)
+                important_batches+=1
+                if important_batches==1: #network parameter
+                    batch_not_found=False
+                    self.sample_buffer=np.array(self.sample_buffer)
+                    filename=os.path.join(
+                        'test_files',
+                        str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
+                        )
+                    AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(self.sample_buffer), codec='deflate')
+                    self.total_sent_data+=os.path.getsize(filename)
+                    self.send_file(filename)
+                    self.sample_buffer=[]
+                    self.timestamp_buffer=[]
+        return True
+
+
     def run(self, waittime=10):
-        sample_buffer=[]
-        timestamp_buffer=[]
-        mse_buff=[]
+        self.sample_buffer=[]
+        self.timestamp_buffer=[]
+        self.mse_buff=[]
         done_sending=False
+        self.get_important_important_batch()
         while True:
             try:
                 file, transmission_time= self.file_Q.get(timeout=0)
@@ -62,36 +99,13 @@ class edge_device(TCP_COM):
                 if ".tflite" in file:
                     self.received_model(file)
                 self.file_Q.task_done()
+                self.get_important_important_batch()
             except queue.Empty:
-                if done_sending==False:
-                    s, t=self.get_sample()
-                    
-                    for_mse=s.drop('machine_status')
-                    mse=self.model.calc_mse(for_mse)
-                    mse_buff.append(mse)
-                    if self.index==self.len_of_dataset:
-                        print("done")
-                        plt.plot(mse_buff)
-                        plt.show()
-                    if mse>6:
-                        sample_buffer.append(s)
-                        timestamp_buffer.append(t)
-                    if len(timestamp_buffer)>5 or self.index==self.len_of_dataset: #Replace 5 with variable network parameter
-                        sample_buffer=np.array(sample_buffer)
-                        filename=os.path.join(
-                            'test_files',
-                            str(timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
-                            )
-                        AVRO.save_AVRO_default(sample_buffer, timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(sample_buffer), codec='deflate')
-                        self.total_sent_data+=os.path.getsize(filename)
-                        self.send_file(filename)
-                        sample_buffer=[]
-                        timestamp_buffer=[]
-                        if self.index==self.len_of_dataset:
-                            done_sending=True
-                            print("done")
-                            plt.plot(mse_buff)
-                            plt.show()
+                if self.index==self.len_of_dataset:
+                    print("done")
+                    plt.plot(self.mse_buff)
+                    plt.show()
+                    exit()
             except Exception as e:
                 print(e)
         

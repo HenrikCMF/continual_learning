@@ -16,9 +16,9 @@ class base_station(TCP_COM):
         if self.NEW_START:
             make_initial_data("datasets/sensor.csv", 'test_files')
         self.init_data=os.path.join('test_files','initial_data.csv')
-        ml_model=IoT_model.IoT_model(self.init_data)
+        self.ml_model=IoT_model.IoT_model(self.init_data)
         if self.NEW_START:
-            ml_model.train_initial_model()
+            self.ml_model.train_initial_model()
         self.device_type="bs"
         with open("configs.json", "r") as file:
             configs = json.load(file)
@@ -59,8 +59,9 @@ class base_station(TCP_COM):
                 self.file_Q.task_done()
                 time.sleep(waittime)
                 data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
+                #self.ml_model.improve_model(data.drop(data.columns[-1], axis=1))
                 self.append_to_initial_data(data, timestamps, self.init_data)
-                #self.distribute_model("models/autoencoder.tflite")
+                self.distribute_model("models/autoencoder.tflite")
             except queue.Empty:
                 pass
             #self.measure_PDR(100)

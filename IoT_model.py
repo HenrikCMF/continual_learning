@@ -108,11 +108,15 @@ class IoT_model():
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 
     def improve_model(self, data):
+        X, y = self.prepare_training_data()
+        new_data=self.scale_data(data)
+        old_data=np.random.choice(X, len(new_data), replace=False)
+        data = np.concatenate((new_data, old_data), axis=0)
         model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
         model.compile(optimizer="adam", loss="mse")
         model.fit(data, data, epochs=1, batch_size=128)
         model.save(os.path.join("models", "autoencoder.h5"))
-        X, y = self.prepare_training_data()
+        
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 
 
