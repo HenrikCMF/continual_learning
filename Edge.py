@@ -63,7 +63,7 @@ class edge_device(TCP_COM):
         important_batches=0
         while batch_not_found:
             mse, s, t = self.analyze_samples()
-            if mse>4:
+            if mse>6:
                 self.sample_buffer.append(s)
                 self.timestamp_buffer.append(t)
                 for i in range(100):

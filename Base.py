@@ -55,7 +55,7 @@ class base_station(TCP_COM):
     def receive_file(self, waittime=10):
         while True:
             try:
-                file, transmission_time = self.file_Q.get(timeout=3)
+                file, transmission_time = self.file_Q.get(timeout=0)
                 self.file_Q.task_done()
                 time.sleep(waittime)
                 data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
