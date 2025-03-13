@@ -8,6 +8,11 @@ import _quantize_model as qm
 import os
 import joblib
 from sklearn.metrics import mean_squared_error
+import warnings
+from sklearn.exceptions import ConvergenceWarning
+
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
+warnings.filterwarnings("ignore", module="sklearn")
 class IoT_model():
     
     def __init__(self, initial_data):
@@ -49,7 +54,7 @@ class IoT_model():
         return self.scaler.inverse_transform(data)
 
     def prepare_training_data(self):
-        X=pd.read_csv(self.initial_data)
+        X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
         y=X['machine_status']
         X=X.drop(columns=["timestamp", "machine_status"])
         self.n_features = X.shape[1]  # number of sensors (~50)
@@ -108,7 +113,13 @@ class IoT_model():
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 
     def improve_model(self, data):
-        X, y = self.prepare_training_data()
+        X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
+        y=X['machine_status']
+        X=X.drop(columns=["timestamp", "machine_status"])
+        self.n_features = X.shape[1]  # number of sensors (~50)
+        self.n_samples = len(X)
+        self.scaler.fit(X)
+        X=self.scaler.transform(X)
         X=pd.DataFrame(X)
         data=np.array(data)
         new_data=self.scale_data(np.array(data))
