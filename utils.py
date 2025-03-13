@@ -8,7 +8,7 @@ import json
 import os
 import warnings
 from sklearn.exceptions import ConvergenceWarning
-
+from pathlib import Path
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 def retry_transmission_handler(func):
@@ -139,3 +139,6 @@ def make_dataset(fault_index, num):
     filename="test_files/initial_data"+str(num)+".csv"
     df.iloc[broken_idx+200:].to_csv(filename,index=False)
     return filename, broken_idx+200
+
+def remove_all_avro_files(path):
+    
