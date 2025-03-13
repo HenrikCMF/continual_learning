@@ -112,7 +112,7 @@ class edge_device(TCP_COM):
                 print("waiting for model")
             except Exception as e:
                 print(e)
-            if self.index>self.len_of_dataset:
+            if self.index>self.len_of_dataset/10:
                 self.send_done_sending()
                 print("done")
                 print("Time elapsed: ", time.time()-start)
