@@ -71,7 +71,7 @@ class edge_device(TCP_COM):
         print("Analyzing samples")
         while batch_not_found:
             mse, s, t = self.analyze_samples()
-            if mse>5:
+            if mse>3.5:
                 print("Found sample")
                 samples, timestamps= self.get_previous_100_samples()
                 self.sample_buffer.extend(samples)
