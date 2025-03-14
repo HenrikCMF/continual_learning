@@ -118,7 +118,7 @@ class IoT_model():
         X=X.drop(columns=["timestamp", "machine_status"])
         self.n_features = X.shape[1]  # number of sensors (~50)
         self.n_samples = len(X)
-        self.scaler.fit(X)
+        #self.scaler.fit(X)
         X=self.scaler.transform(X)
         X=pd.DataFrame(X)
         data=np.array(data)
@@ -133,7 +133,9 @@ class IoT_model():
         with tfmot.quantization.keras.quantize_scope():
             model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
         model.compile(optimizer="adam", loss="mse")
-        model.fit(data, data, epochs=1, batch_size=128)
+        num_epochs = max(5, min(100, int(8000 / len(data))))  # Scale epochs 
+        history =model.fit(data, data, epochs=num_epochs, batch_size=128)
+        print("Final loss after training:", history.history['loss'][-1])
         model.save(os.path.join("models", "autoencoder.h5"))
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 

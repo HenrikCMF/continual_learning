@@ -9,6 +9,7 @@ import os
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 from pathlib import Path
+import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 def retry_transmission_handler(func):
@@ -144,3 +145,40 @@ def remove_all_avro_files(path):
     directory = Path(path)
     for file in directory.glob("*.avro"):
         file.unlink()
+
+
+def make_end_plot(mse, offset):
+    file_path = "datasets/sensor.csv"
+    df = pd.read_csv(file_path)
+
+    # Ensure 'machine_status' column exists
+    if "machine_status" not in df.columns:
+        raise ValueError("Column 'machine_status' not found in dataset")
+
+    # Find indices where machine_status is 'BROKEN'
+    broken_indices = df.index[df["machine_status"] == "BROKEN"].tolist()
+    last_index = df.index[-1]
+    adjusted_broken_indices = [idx - offset for idx in broken_indices if idx >= offset]
+
+    mse_buf = mse  
+
+    # Plot the mse_buf values
+    plt.figure(figsize=(10, 5))
+    plt.plot(mse_buf, label="Mean Squared Error")
+
+    # Plot vertical lines where 'machine_status' is 'BROKEN'
+    for idx in adjusted_broken_indices:
+        plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == adjusted_broken_indices[0] else "")
+    plt.axvline(x=(last_index-offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
+
+
+    # Labels and legend
+    plt.xlabel("Index")
+    plt.ylabel("MSE Values")
+    plt.title("Singular Value Plot with BROKEN Machine Status")
+    plt.legend()
+    plt.show()
+
+#mse=pd.read_csv("datasets/No_model_updates_MSE.csv")
+#_, offset=make_dataset(1,1)
+#make_end_plot(mse.iloc[:,1], offset)
