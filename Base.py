@@ -71,10 +71,11 @@ class base_station(TCP_COM):
                     exit()
                 self.file_Q.task_done()
                 #time.sleep(waittime)
-                data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
-                #self.ml_model.improve_model(data.drop(data.columns[-1], axis=1))
-                self.append_to_initial_data(data, timestamps, self.init_data)
-                self.distribute_model("models/autoencoder.tflite")
+                if ".avro" in file:
+                    data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
+                    self.ml_model.improve_model(data.drop(data.columns[-1], axis=1))
+                    self.append_to_initial_data(data, timestamps, self.init_data)
+                    self.distribute_model("models/autoencoder.tflite")
             except queue.Empty:
                 print("waiting for data")
                 pass
