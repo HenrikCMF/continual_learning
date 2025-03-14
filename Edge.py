@@ -137,7 +137,7 @@ class edge_device(TCP_COM):
         self.model.load_model()
     
     def get_previous_100_samples(self):
-        sample=self.data.iloc[self.index-100:self.index].tolist()
+        sample=self.data.iloc[self.index-100:self.index].values.tolist()
         timestamp=self.timestamps.iloc[self.index-100:self.index].tolist()
         return sample, timestamp
 
