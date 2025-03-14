@@ -7,3 +7,4 @@ my_dir/
 datasets/datasets/sensor.csv
 *.avro
 initial_data.csv
+received/
