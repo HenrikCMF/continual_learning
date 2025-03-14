@@ -82,6 +82,7 @@ class edge_device(TCP_COM):
                     s, t=self.get_sample()
                     self.sample_buffer.append(s)
                     self.timestamp_buffer.append(t)
+                    self.mse_buff.append(self.mse_buff[-1])
                 important_batches+=1
                 if important_batches==1: #network parameter
                     batch_not_found=False
