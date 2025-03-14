@@ -10,7 +10,6 @@ import joblib
 from sklearn.metrics import mean_squared_error
 import warnings
 from sklearn.exceptions import ConvergenceWarning
-
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class IoT_model():
@@ -135,8 +134,9 @@ class IoT_model():
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
             return -mse if invert_loss else mse  # Negate the loss to maximize
         
-        with tfmot.quantization.keras.quantize_scope():
+        with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
+
         model.compile(optimizer="adam", loss=mse_loss)
         num_epochs = max(5, min(100, int(8000 / len(data))))  # Scale epochs 
         history =model.fit(data, data, epochs=num_epochs, batch_size=128)
