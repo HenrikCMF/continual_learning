@@ -62,7 +62,8 @@ class edge_device(TCP_COM):
         mse=self.model.calc_mse(for_mse)
         self.mse_buff.append(mse)
         return mse, s, t
-            
+
+
 
     def get_important_important_batch(self):
         batch_not_found=True
@@ -70,8 +71,11 @@ class edge_device(TCP_COM):
         print("Analyzing samples")
         while batch_not_found:
             mse, s, t = self.analyze_samples()
-            if mse>4:
+            if mse>5:
                 print("Found sample")
+                samples, timestamps= self.get_previous_100_samples()
+                self.sample_buffer.extend(samples)
+                self.timestamp_buffer.extend(timestamps)
                 self.sample_buffer.append(s)
                 self.timestamp_buffer.append(t)
                 for i in range(100):
@@ -114,13 +118,13 @@ class edge_device(TCP_COM):
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
+                pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
+                self.send_file("test_files/mse_data.csv")
                 self.send_done_sending()
                 print("done")
                 print("Time elapsed: ", time.time()-start)
                 print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)
-                pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
-                self.send_file("test_files/mse_data.csv")
                 self.make_end_plot(self.mse_buff)
                 remove_all_avro_files('test_files')
                 exit()
@@ -132,6 +136,11 @@ class edge_device(TCP_COM):
         shutil.move(path, destination_path)
         self.model.load_model()
     
+    def get_previous_100_samples(self):
+        sample=self.data.iloc[self.index-100:self.index].tolist()
+        timestamp=self.timestamps.iloc[self.index-100:self.index].tolist()
+        return sample, timestamp
+
     def get_sample(self):
         #should fetch the next sample in the dataset
         sample=self.data.iloc[self.index]
@@ -149,6 +158,7 @@ class edge_device(TCP_COM):
 
         # Find indices where machine_status is 'BROKEN'
         broken_indices = df.index[df["machine_status"] == "BROKEN"].tolist()
+        last_index = df.index[-1]
         adjusted_broken_indices = [idx - self.start_offset for idx in broken_indices if idx >= self.start_offset]
 
         mse_buf = mse  
@@ -160,6 +170,7 @@ class edge_device(TCP_COM):
         # Plot vertical lines where 'machine_status' is 'BROKEN'
         for idx in adjusted_broken_indices:
             plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == adjusted_broken_indices[0] else "")
+        plt.axvline(x=(last_index-self.start_offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
 
 
         # Labels and legend
