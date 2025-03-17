@@ -172,7 +172,8 @@ class edge_device(TCP_COM):
         for i, mse in enumerate(mse_buf):
             if fault_mask[i]:
                 # Inside fault zone
-                TP+=1
+                if mse>threshold:
+                    TP+=1
                 score += (mse - threshold)  # Positive if above 2, negative if below 2
             else:
                 # Outside fault zone
