@@ -119,8 +119,8 @@ class IoT_model():
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 
     def improve_model(self, data, invert_loss=False):
-        if invert_loss:
-            return None
+        #if invert_loss:
+        #    return None
         X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
         y=X['machine_status']
         X=X.drop(columns=["timestamp", "machine_status"])
@@ -150,7 +150,7 @@ class IoT_model():
 
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            return -mse if invert_loss else mse  # Negate the loss to maximize
+            return -0.1*mse if invert_loss else mse  # Negate the loss to maximize
         
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
