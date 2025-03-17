@@ -69,7 +69,7 @@ class edge_device(TCP_COM):
         batch_not_found=True
         important_batches=0
         print("Analyzing samples")
-        NUM_BUF_SAMPLES=200
+        NUM_BUF_SAMPLES=100
         while batch_not_found:
             mse, s, t = self.analyze_samples()
             if mse>2:
