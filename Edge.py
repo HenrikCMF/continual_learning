@@ -105,7 +105,12 @@ class edge_device(TCP_COM):
         self.timestamp_buffer=[]
         self.mse_buff=[]
         done_sending=False
-        self.get_important_important_batch()
+        #self.get_important_important_batch()
+        try:
+            self.Ready_to_start()
+            file, transmission_time = self.file_Q.get(timeout=3)
+        except queue.Empty:
+            time.sleep(1)
         while True:
             try:
                 file, transmission_time= self.file_Q.get(timeout=2)
