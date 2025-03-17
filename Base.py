@@ -18,8 +18,12 @@ class base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_data_sent=0
         self.NEW_START=True
+        self.faulty_data=os.path.join('test_files','faulty_data.csv')
         if self.NEW_START:
             make_initial_data("datasets/sensor.csv", 'test_files')
+            with open(self.faulty_data, 'w') as f:
+                f.write("")  # Write an empty string to create the file
+        
         self.init_data=os.path.join('test_files','initial_data.csv')
         self.ml_model=IoT_model.IoT_model(self.init_data)
         if self.NEW_START:
@@ -57,6 +61,22 @@ class base_station(TCP_COM):
         df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
         df_combined.to_csv(init_data_path)
 
+    def append_to_faulty_data(self, data, timestamps, init_data_path):
+        #init_data=pd.read_csv(init_data_path).drop(columns=["Unnamed: 0"], errors='ignore')
+        init_data_no_faults=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore')
+        empty=False
+        if os.path.getsize(init_data_path) <= 0:
+            empty=True
+            init_data=pd.DataFrame()
+        else:
+            init_data=pd.read_csv(init_data_path, on_bad_lines='skip').drop(columns=["Unnamed: 0"], errors='ignore')
+        timestamps=pd.DataFrame(timestamps)
+        timestamps.columns=['timestamp']
+        df2 = pd.concat([timestamps, data], axis=1).drop(columns=["Unnamed: 0"], errors='ignore')
+        df2.columns=init_data_no_faults.columns
+        df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
+        df_combined.to_csv(init_data_path)
+
     def receive_file(self, waittime=10):
         start=time.time()
         #Wait for X clients:
@@ -84,7 +104,10 @@ class base_station(TCP_COM):
                         print("INVERTED TRAINING")
                         invert_training=True
                     self.ml_model.improve_model(data.drop(data.columns[-1], axis=1), invert_training)
-                    self.append_to_initial_data(data, timestamps, self.init_data)
+                    if invert_training==False:
+                        self.append_to_initial_data(data, timestamps, self.init_data)
+                    else:
+                        self.append_to_faulty_data(data, timestamps, self.faulty_data)
                     self.distribute_model("models/autoencoder.tflite")
             except queue.Empty:
                 print("waiting for data")
