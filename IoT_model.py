@@ -118,6 +118,23 @@ class IoT_model():
         model.save(os.path.join("models", "autoencoder.h5"))
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 
+    def combine_new_with_random_old(self, X, new):
+        old_data = X.sample(n=len(new), replace=False, random_state=42)
+        new_data=pd.DataFrame(new)
+        new_data.columns=old_data.columns
+        data= pd.concat([new_data,old_data], axis=0)
+        return data
+    
+    def combine_faulty_with_random_old(self, new):
+        X_f=pd.read_csv("test_files/faulty_data.csv").drop(columns=["Unnamed: 0"], errors='ignore')
+        y_f=X_f['machine_status']
+        X_f=X_f.drop(columns=["timestamp", "machine_status"])
+        old_data = X_f.sample(n=len(new), replace=False, random_state=42)
+        new_data=pd.DataFrame(new)
+        new_data.columns=old_data.columns
+        data= pd.concat([new_data,old_data])
+        return data
+
     def improve_model(self, data, invert_loss=False):
         #if invert_loss:
         #    return None
@@ -131,26 +148,10 @@ class IoT_model():
         X=pd.DataFrame(X)
         data=np.array(data)
         new_data=self.scale_data(np.array(data))
-        
-        if invert_loss==False:
-            old_data = X.sample(n=len(new_data), replace=False, random_state=42)
-            new_data=pd.DataFrame(new_data)
-            new_data.columns=old_data.columns
-            data= pd.concat([new_data,old_data], axis=0)
-        elif os.path.getsize("test_files/faulty_data.csv") > 0:
-            X_f=pd.read_csv("test_files/faulty_data.csv").drop(columns=["Unnamed: 0"], errors='ignore')
-            y_f=X_f['machine_status']
-            X_f=X_f.drop(columns=["timestamp", "machine_status"])
-            old_data = X_f.sample(n=len(new_data), replace=False, random_state=42)
-            new_data=pd.DataFrame(new_data)
-            new_data.columns=old_data.columns
-            data= pd.concat([new_data,old_data])
-        else:
-            data=new_data
 
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            return -0.1*mse if invert_loss else mse  # Negate the loss to maximize
+            return -1*mse if invert_loss else mse  # Negate the loss to maximize
         
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
@@ -158,8 +159,16 @@ class IoT_model():
         model.compile(optimizer="adam", loss=mse_loss)
         num_epochs = max(5, min(100, int(4000 / len(data))))  # Scale epochs #8000
         if invert_loss==False:
-            num_epochs=int(num_epochs/1)
-        history =model.fit(data, data, epochs=num_epochs, batch_size=128)
+            num_epochs=int(num_epochs*1)
+        for _ in range(num_epochs):
+            if invert_loss==False:
+                data=self.combine_new_with_random_old(X, new_data)
+            elif os.path.getsize("test_files/faulty_data.csv") > 0:
+                data=self.combine_faulty_with_random_old(new_data)
+            else:
+                data=new_data
+            history =model.fit(data, data, epochs=1, batch_size=128)
+            
         print("Final loss after training:", history.history['loss'][-1])
         model.save(os.path.join("models", "autoencoder.h5"))
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
