@@ -68,17 +68,17 @@ class IoT_model():
         print("feats",self.n_features)
         inputs = tf.keras.Input(shape=(self.n_features,))
         # Encoder
-        encoded = tf.keras.layers.Dense(32, activation="relu")(inputs)
-        encoded = tf.keras.layers.Dense(16, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(8, activation="relu")(encoded)  # Bottleneck
-        decoded = tf.keras.layers.Dense(16, activation="relu")(encoded)
-        decoded = tf.keras.layers.Dense(32, activation="relu")(decoded)
+        #encoded = tf.keras.layers.Dense(32, activation="relu")(inputs)
+        #encoded = tf.keras.layers.Dense(16, activation="relu")(encoded)
+        #encoded = tf.keras.layers.Dense(8, activation="relu")(encoded)  # Bottleneck
+        #decoded = tf.keras.layers.Dense(16, activation="relu")(encoded)
+        #decoded = tf.keras.layers.Dense(32, activation="relu")(decoded)
 
-        #encoded = tf.keras.layers.Dense(64, activation="relu")(inputs)
-        #encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        #encoded = tf.keras.layers.Dense(10, activation="relu")(encoded)  # Bottleneck
-        #decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        #decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
+        encoded = tf.keras.layers.Dense(24, activation="relu")(inputs)
+        encoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)  # Bottleneck
+        decoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
+        decoded = tf.keras.layers.Dense(24, activation="relu")(decoded)
 
         decoded = tf.keras.layers.Dense(self.n_features, activation="linear")(decoded)
 
@@ -145,9 +145,9 @@ class IoT_model():
             model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
 
         model.compile(optimizer="adam", loss=mse_loss)
-        num_epochs = max(5, min(100, int(8000 / len(data))))  # Scale epochs
+        num_epochs = max(5, min(100, int(4000 / len(data))))  # Scale epochs #8000
         if invert_loss==False:
-            num_epochs=int(num_epochs/3)
+            num_epochs=int(num_epochs/1.5)
         history =model.fit(data, data, epochs=num_epochs, batch_size=128)
         print("Final loss after training:", history.history['loss'][-1])
         model.save(os.path.join("models", "autoencoder.h5"))

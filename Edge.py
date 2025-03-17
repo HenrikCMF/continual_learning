@@ -155,6 +155,8 @@ class edge_device(TCP_COM):
         return sample, timestamp
     
     def calculate_fault_detection_score(self, mse_buf, adjusted_broken_indices, threshold=2, window=100):
+        FP=0
+        TP=0
         score = 0
         mse_buf = np.array(mse_buf)
         fault_mask = np.zeros_like(mse_buf, dtype=bool)
@@ -169,12 +171,14 @@ class edge_device(TCP_COM):
         for i, mse in enumerate(mse_buf):
             if fault_mask[i]:
                 # Inside fault zone
+                TP+=1
                 score += (mse - threshold)  # Positive if above 2, negative if below 2
             else:
                 # Outside fault zone
                 if mse > threshold:
+                    FP+=1
                     score -= (mse - threshold)  # Penalty for high MSE outside fault zone
-        return score
+        return score, TP, FP
 
     def make_end_plot(self, mse):
         file_path = "datasets/sensor.csv"
@@ -192,8 +196,10 @@ class edge_device(TCP_COM):
         mse_buf = mse  
 
         try:
-            score=self.calculate_fault_detection_score(mse_buf=mse_buf, adjusted_broken_indices=adjusted_broken_indices)
+            score, TP, FP=self.calculate_fault_detection_score(mse_buf=mse_buf, adjusted_broken_indices=adjusted_broken_indices)
             print("Success SCORE: ", score)
+            print("TP: ", TP)
+            print("FP: ", FP)
         except Exception as e:
             print(e)
         
