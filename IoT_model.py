@@ -129,11 +129,20 @@ class IoT_model():
         X=pd.DataFrame(X)
         data=np.array(data)
         new_data=self.scale_data(np.array(data))
-        old_data = X.sample(n=len(new_data), replace=False, random_state=42)
-        new_data=pd.DataFrame(new_data)
-        new_data.columns=old_data.columns
+        
         if invert_loss==False:
+            old_data = X.sample(n=len(new_data), replace=False, random_state=42)
+            new_data=pd.DataFrame(new_data)
+            new_data.columns=old_data.columns
             data= pd.concat([new_data,old_data], axis=0)
+        elif os.path.getsize("test_files/faulty_data.csv") > 0:
+            X_f=pd.read_csv("test_files/faulty_data.csv").drop(columns=["Unnamed: 0"], errors='ignore')
+            y_f=X_f['machine_status']
+            X_f=X_f.drop(columns=["timestamp", "machine_status"])
+            old_data = X_f.sample(n=len(new_data), replace=False, random_state=42)
+            new_data=pd.DataFrame(new_data)
+            new_data.columns=old_data.columns
+            data= pd.concat([new_data,old_data])
         else:
             data=new_data
 
@@ -147,7 +156,7 @@ class IoT_model():
         model.compile(optimizer="adam", loss=mse_loss)
         num_epochs = max(5, min(100, int(4000 / len(data))))  # Scale epochs #8000
         if invert_loss==False:
-            num_epochs=int(num_epochs/1.5)
+            num_epochs=int(num_epochs/1)
         history =model.fit(data, data, epochs=num_epochs, batch_size=128)
         print("Final loss after training:", history.history['loss'][-1])
         model.save(os.path.join("models", "autoencoder.h5"))

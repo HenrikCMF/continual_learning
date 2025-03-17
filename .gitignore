@@ -8,3 +8,4 @@ datasets/datasets/sensor.csv
 *.avro
 initial_data.csv
 received/
+faulty_data.csv
