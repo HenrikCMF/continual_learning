@@ -69,16 +69,17 @@ class edge_device(TCP_COM):
         batch_not_found=True
         important_batches=0
         print("Analyzing samples")
+        NUM_BUF_SAMPLES=200
         while batch_not_found:
             mse, s, t = self.analyze_samples()
             if mse>2:
                 print("Found sample")
-                samples, timestamps= self.get_previous_100_samples()
+                samples, timestamps= self.get_previous_X_samples(NUM_BUF_SAMPLES)
                 self.sample_buffer.extend(samples)
                 self.timestamp_buffer.extend(timestamps)
                 self.sample_buffer.append(s)
                 self.timestamp_buffer.append(t)
-                for i in range(100):
+                for i in range(NUM_BUF_SAMPLES):
                     s, t=self.get_sample()
                     self.sample_buffer.append(s)
                     self.timestamp_buffer.append(t)
@@ -142,9 +143,9 @@ class edge_device(TCP_COM):
         shutil.move(path, destination_path)
         self.model.load_model()
     
-    def get_previous_100_samples(self):
-        sample=self.data.iloc[self.index-100:self.index].values.tolist()
-        timestamp=self.timestamps.iloc[self.index-100:self.index].tolist()
+    def get_previous_X_samples(self, X):
+        sample=self.data.iloc[self.index-X:self.index].values.tolist()
+        timestamp=self.timestamps.iloc[self.index-X:self.index].tolist()
         return sample, timestamp
 
     def get_sample(self):

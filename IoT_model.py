@@ -119,6 +119,8 @@ class IoT_model():
         self.quantize_model(X,model, os.path.join("models", "autoencoder"))
 
     def improve_model(self, data, invert_loss=False):
+        if invert_loss:
+            return None
         X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
         y=X['machine_status']
         X=X.drop(columns=["timestamp", "machine_status"])
