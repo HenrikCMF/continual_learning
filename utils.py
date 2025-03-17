@@ -138,8 +138,8 @@ def make_dataset(fault_index, num):
     y=df["machine_status"]
     broken_idx = y[y == "BROKEN"].index[fault_index]
     filename="test_files/initial_data"+str(num)+".csv"
-    df.iloc[broken_idx+200:].to_csv(filename,index=False)
-    return filename, broken_idx+200
+    df.iloc[broken_idx-100:].to_csv(filename,index=False)
+    return filename, broken_idx-100
 
 def remove_all_avro_files(path):
     directory = Path(path)
@@ -160,25 +160,29 @@ def make_end_plot(mse, offset):
     last_index = df.index[-1]
     adjusted_broken_indices = [idx - offset for idx in broken_indices if idx >= offset]
 
-    mse_buf = mse  
+    mse_buf = []
+    for i in range(len(mse)):
+        mse_buf.append(pd.read_csv(mse[i]).iloc[:,1])
 
     # Plot the mse_buf values
     plt.figure(figsize=(10, 5))
-    plt.plot(mse_buf, label="Mean Squared Error")
+    #for i in mse_buf:
+    
+    plt.plot(mse_buf[0], label="MSE, No Learning", alpha=0.8)
+    plt.plot(mse_buf[1], label="MSE, Continual Learning", alpha=0.8)
 
     # Plot vertical lines where 'machine_status' is 'BROKEN'
     for idx in adjusted_broken_indices:
-        plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == adjusted_broken_indices[0] else "")
-    plt.axvline(x=(last_index-offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
+        plt.axvline(x=idx, color='r', linestyle='--', alpha=0.3, label="Fault Instances" if idx == adjusted_broken_indices[0] else "")
+    #plt.axvline(x=(last_index-offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
 
 
     # Labels and legend
     plt.xlabel("Index")
     plt.ylabel("MSE Values")
-    plt.title("Singular Value Plot with BROKEN Machine Status")
+    plt.title("Model Reconstruction Error over dataset")
     plt.legend()
     plt.show()
-
-#mse=pd.read_csv("datasets/No_model_updates_MSE.csv")
+#files=("datasets/No_model_updates_MSE.csv",'datasets/r_mse_data.csv') 
 #_, offset=make_dataset(1,1)
-#make_end_plot(mse.iloc[:,1], offset)
+#make_end_plot(files, offset)
