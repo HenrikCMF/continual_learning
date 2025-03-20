@@ -85,7 +85,7 @@ class edge_device(TCP_COM):
                     self.timestamp_buffer.append(t)
                     self.mse_buff.append(self.mse_buff[-1])
                 important_batches+=1
-                if important_batches==3: #network parameter
+                if important_batches==5: #network parameter
                     batch_not_found=False
                     self.sample_buffer=np.array(self.sample_buffer)
                     filename=os.path.join(
