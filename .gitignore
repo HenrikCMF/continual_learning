@@ -9,3 +9,4 @@ datasets/datasets/sensor.csv
 initial_data.csv
 received/
 faulty_data.csv
+*.csv
