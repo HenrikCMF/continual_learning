@@ -151,15 +151,17 @@ class IoT_model():
 
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            return -1*mse if invert_loss else mse  # Negate the loss to maximize
+            return -0.3*mse if invert_loss else mse  # Negate the loss to maximize
         
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
 
         model.compile(optimizer="adam", loss=mse_loss)
-        num_epochs = max(5, min(100, int(4000 / len(data))))  # Scale epochs #8000
+        num_epochs = max(5, min(100, int(2000 / len(data))))  # Scale epochs #8000
         if invert_loss==False:
-            num_epochs=int(num_epochs*1)
+            num_epochs=int(num_epochs)
+        else:
+            num_epochs=int(num_epochs/2)
         for _ in range(num_epochs):
             if invert_loss==False:
                 data=self.combine_new_with_random_old(X, new_data)
