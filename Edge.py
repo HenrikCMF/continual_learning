@@ -92,7 +92,8 @@ class edge_device(TCP_COM):
                         'test_files',
                         str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
                         )
-                    AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=len(self.sample_buffer), codec='deflate')
+                    #comment
+                    AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
                     self.total_sent_data+=os.path.getsize(filename)
                     self.send_file(filename)
                     self.sample_buffer=[]
