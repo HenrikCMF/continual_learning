@@ -96,18 +96,19 @@ class base_station(TCP_COM):
                     remove_all_avro_files('received')
                     exit()
                 self.file_Q.task_done()
-                #time.sleep(waittime)
                 if ".avro" in file:
-                    invert_training=False
-                    data,timestamps, type, metadata = AVRO.load_AVRO_file(file)
-                    if data.iloc[:, -1].eq("BROKEN").any():
-                        print("INVERTED TRAINING")
-                        invert_training=True
-                    self.ml_model.improve_model(data.drop(data.columns[-1], axis=1), invert_training)
-                    if invert_training==False:
-                        self.append_to_initial_data(data, timestamps, self.init_data)
-                    else:
-                        self.append_to_faulty_data(data, timestamps, self.faulty_data)
+                    data,timestamps, type, batch_num = AVRO.load_AVRO_file(file)
+                    batches = np.array_split(data, batch_num)
+                    for i, batch in enumerate(batches):
+                        invert_training=False
+                        if batch.iloc[:, -1].eq("BROKEN").any():
+                            print("INVERTED TRAINING")
+                            invert_training=True
+                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training)
+                        if invert_training==False:
+                            self.append_to_initial_data(data, timestamps, self.init_data)
+                        else:
+                            self.append_to_faulty_data(data, timestamps, self.faulty_data)
                     self.distribute_model("models/autoencoder.tflite")
             except queue.Empty:
                 print("waiting for data")
