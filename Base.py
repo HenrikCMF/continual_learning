@@ -118,10 +118,14 @@ class base_station(TCP_COM):
         #self.send_file("307.jpg")
 
     def distribute_model(self, model):
-        self.total_data_sent+=os.path.getsize(model)
+        output_zip=model+'.zip'
+        input_file=model
+        with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(input_file, arcname=input_file)
+        self.total_data_sent+=os.path.getsize(output_zip)
         for i in self.edge_devices:
             self.TAR_IP=i
-            self.send_file(model)
+            self.send_file(output_zip)
 
 
 bs=base_station("received")
