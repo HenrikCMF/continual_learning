@@ -63,11 +63,8 @@ class base_station(TCP_COM):
         df_combined.to_csv(init_data_path)
 
     def append_to_faulty_data(self, data, timestamps, init_data_path):
-        #init_data=pd.read_csv(init_data_path).drop(columns=["Unnamed: 0"], errors='ignore')
         init_data_no_faults=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore')
-        empty=False
         if os.path.getsize(init_data_path) <= 0:
-            empty=True
             init_data=pd.DataFrame()
         else:
             init_data=pd.read_csv(init_data_path, on_bad_lines='skip').drop(columns=["Unnamed: 0"], errors='ignore')
@@ -123,9 +120,9 @@ class base_station(TCP_COM):
         with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(input_file, arcname=os.path.basename(input_file))
         self.total_data_sent+=os.path.getsize(output_zip)
-        for i in self.edge_devices:
-            self.TAR_IP=i
-            self.send_file(output_zip)
+        for ip, port in self.edge_devices:
+            #self.TAR_IP=ip
+            self.send_file(ip, port,output_zip)
 
 
 bs=base_station("received")
