@@ -145,7 +145,7 @@ class edge_device(TCP_COM):
         if '.zip' in path:
             with zipfile.ZipFile(path, 'r') as zipf:
                 print(1.1)
-                output_folder=str(path).split('/')
+                output_folder=str(path).split('/')[0]
                 print(1.2)
                 zipf.extractall(output_folder)
         print(2)
