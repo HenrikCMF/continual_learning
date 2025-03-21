@@ -88,7 +88,7 @@ class edge_device(TCP_COM):
         important_batches=0
         print("Analyzing samples")
         #NUM_BUF_SAMPLES=100
-        NUM_BUF_SAMPLES=100*(1-self.PDR) if self.use_PDR else 100
+        NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         while batch_not_found:
             mse, s, t = self.analyze_samples()
