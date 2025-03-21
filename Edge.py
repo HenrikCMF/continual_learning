@@ -4,6 +4,7 @@ import json
 from network_control import network_control
 from utils import make_dataset, generate_avro_schema, remove_all_avro_files
 import pandas as pd
+import zipfile
 import numpy as np
 import AVRO
 import os
@@ -117,7 +118,7 @@ class edge_device(TCP_COM):
             try:
                 file, transmission_time= self.file_Q.get(timeout=2)
                 print(file)
-                if ".tflite" in file:
+                if ".tflite" in file or '.zip' in file:
                     self.received_model(file)
                 self.file_Q.task_done()
                 self.get_important_important_batch()
@@ -140,8 +141,12 @@ class edge_device(TCP_COM):
     def received_model(self, path):
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
+        if '.zip' in path:
+            with zipfile.ZipFile(path, 'r') as zipf:
+                output_folder=str(path).split('/')
+                zipf.extractall(output_folder)
         destination_path=os.path.join(self.model_path, 'autoencoder.tflite')
-        shutil.move(path, destination_path)
+        shutil.move(os.path.join(output_folder, 'autoencoder.tflite'), destination_path)
         self.model.load_model()
     
     def get_previous_X_samples(self, X):

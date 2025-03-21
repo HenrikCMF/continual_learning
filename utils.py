@@ -168,8 +168,8 @@ def make_end_plot(mse, offset):
     plt.figure(figsize=(10, 5))
     #for i in mse_buf:
     
-    plt.plot(mse_buf[0], label="MSE, No Learning", alpha=0.8)
-    plt.plot(mse_buf[1], label="MSE, Continual Learning", alpha=0.8)
+    plt.plot(mse_buf[0], label="MSE, Continual Learning", alpha=0.8)
+    plt.plot(mse_buf[1], label="MSE, Continual Learning, 7 batches combined", alpha=0.8)
 
     # Plot vertical lines where 'machine_status' is 'BROKEN'
     for idx in adjusted_broken_indices:
@@ -183,6 +183,6 @@ def make_end_plot(mse, offset):
     plt.title("Model Reconstruction Error over dataset")
     plt.legend()
     plt.show()
-#files=("datasets/Original_data.csv",'datasets/low_epoch_with_inverse.csv') 
-#_, offset=make_dataset(0,1)
-#make_end_plot(files, offset)
+files=('datasets/low_epoch_with_inverse.csv',"datasets/7batches.csv") 
+_, offset=make_dataset(0,1)
+make_end_plot(files, offset)
