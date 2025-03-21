@@ -83,9 +83,10 @@ class base_station(TCP_COM):
         while clients<1:
             file, transmission_time = self.file_Q.get(timeout=None, block=True)
             clients+=1
-        self.distribute_model("models/autoencoder.tflite")
         if self.use_PDR:
             self.measure_PDR(100)
+        self.distribute_model("models/autoencoder.tflite")
+        
         while True:
             try:
                 file, transmission_time = self.file_Q.get(timeout=3)
