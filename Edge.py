@@ -85,6 +85,7 @@ class edge_device(TCP_COM):
             important_batches_tar = self.determine_batch_num()
         else:
             important_batches_tar=0
+        important_batches=0
         print("Analyzing samples")
         #NUM_BUF_SAMPLES=100
         NUM_BUF_SAMPLES=100*(1-self.PDR) if self.use_PDR else 100
