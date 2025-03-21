@@ -88,9 +88,10 @@ class IoT_model():
         return autoencoder
     
     def make_model_quantization_aware(self, model):
-        quantized_model = tfmot.quantization.keras.quantize_model(model)
-        quantized_model.compile(optimizer='adam',loss='mse')
-        return quantized_model
+        #quantized_model = tfmot.quantization.keras.quantize_model(model)
+        #quantized_model.compile(optimizer='adam',loss='mse')
+        #return quantized_model
+        return model
     
     def make_representative_data(self, X):
         index = np.random.choice(X.shape[0], 100, replace=False)
@@ -192,9 +193,10 @@ class IoT_model():
     def improve_model(self, data, invert_loss=False):
         #if invert_loss:
         #    return None
-        model, X=self.train_model(data, invert_loss, 0)
+        pruning_level=0.2
+        model, X=self.train_model(data, invert_loss, pruning_level)
         model.save(os.path.join("models", "autoencoder.h5"))
-        pruning_level=0
+        
         self.quantize_model(X,model, os.path.join("models", "autoencoder"), amount_of_pruning=pruning_level)
 
 

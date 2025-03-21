@@ -74,9 +74,9 @@ class TCP_COM():
             self.file_Q.put((str("READY"),0))
 
     @retry_transmission_handler
-    def send_file(self, client_socket, file_path):
+    def send_file(self, client_socket, TAR_IP, TAR_PORT,file_path):
         start=time.time()
-        client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
+        client_socket.connect((TAR_IP, TAR_PORT))
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
 
@@ -134,8 +134,8 @@ class TCP_COM():
                         continue
                 elif self.device=="bs":
                     if addr[0] not in self.edge_devices:
-                        self.edge_devices.append(addr[0])
-                        print("added", addr[0])
+                        self.edge_devices.append(addr[0], addr[1])
+                        print("added", addr[0], addr[1])
                 try:
                     # Receive file metadata
                     metadata = conn.recv(1024).decode()
@@ -156,7 +156,6 @@ class TCP_COM():
         print("PDR measure")
         self.send_open_udp(packet_num=num_packets)
         time.sleep(0.01)
-
         self.send_UDP_packets(num_packets=num_packets)
 
     def send_UDP_packets(self, num_packets=100, interval=0.001):
