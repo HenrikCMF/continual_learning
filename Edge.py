@@ -86,7 +86,7 @@ class edge_device(TCP_COM):
                     self.timestamp_buffer.append(t)
                     self.mse_buff.append(self.mse_buff[-1])
                 important_batches+=1
-                if important_batches==5: #network parameter
+                if important_batches==1: #network parameter
                     batch_not_found=False
                     self.sample_buffer=np.array(self.sample_buffer)
                     filename=os.path.join(
@@ -139,20 +139,14 @@ class edge_device(TCP_COM):
                 exit()
         
     def received_model(self, path):
-        print(1)
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
         if '.zip' in path:
             with zipfile.ZipFile(path, 'r') as zipf:
-                print(1.1)
                 output_folder=str(path).split('/')[0]
-                print(1.2)
                 zipf.extractall(output_folder)
-        print(2)
         destination_path=os.path.join(self.model_path, 'autoencoder.tflite')
-        print(3)
         shutil.move(os.path.join(output_folder, 'autoencoder.tflite'), destination_path)
-        print(4)
         self.model.load_model()
     
     def get_previous_X_samples(self, X):
