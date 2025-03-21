@@ -36,9 +36,9 @@ class TCP_COM():
             os.makedirs(self.in_path)
 
     @retry_transmission_handler
-    def send_open_udp(self, client_socket, val=0, packet_num=0):
+    def send_open_udp(self, client_socket, TAR_IP, val=0, packet_num=0):
         start=time.time()
-        client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
+        client_socket.connect((TAR_IP, self.TAR_PORT_TCP))
         file_name=packet_num
         file_size=val
         client_socket.sendall(f"{telegram_type.PDR.value}:{file_name}:{file_size}".encode())
@@ -153,12 +153,13 @@ class TCP_COM():
 
     def measure_PDR(self, num_packets):
         #Call edge device to listen for UDP packets
-        print("PDR measure")
-        self.send_open_udp(packet_num=num_packets)
-        time.sleep(0.01)
-        self.send_UDP_packets(num_packets=num_packets)
+        for ip in self.edge_devices:
+            print("PDR measure")
+            self.send_open_udp(ip, packet_num=num_packets)
+            time.sleep(0.01)
+            self.send_UDP_packets(ip, num_packets=num_packets)
 
-    def send_UDP_packets(self, num_packets=100, interval=0.001):
+    def send_UDP_packets(self, ip, num_packets=100, interval=0.001):
         """
         Sends `num_packets` UDP packets to (host, port) with a small interval between them.
         """
@@ -166,7 +167,7 @@ class TCP_COM():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for i in range(num_packets):
             message = f"{i}".encode()
-            sock.sendto(message, (self.TAR_IP, self.TAR_PORT_UDP))
+            sock.sendto(message, (ip, self.TAR_PORT_UDP))
             time.sleep(interval)
 
         sock.close()
@@ -201,7 +202,7 @@ class TCP_COM():
         sock.close()
         pdr = count / expected_packets
         print(f"PDR: {pdr*100:.2f}%")
-        self.send_open_udp(val=pdr)
+        self.send_open_udp(self.TAR_IP,val=pdr)
         self.time_transmitting+=time.time()-start
         return pdr
 

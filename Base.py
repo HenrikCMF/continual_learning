@@ -18,6 +18,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 class base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_data_sent=0
+        self.use_PDR=True
         self.NEW_START=True
         self.faulty_data=os.path.join('test_files','faulty_data.csv')
         if self.NEW_START:
@@ -83,6 +84,8 @@ class base_station(TCP_COM):
             file, transmission_time = self.file_Q.get(timeout=None, block=True)
             clients+=1
         self.distribute_model("models/autoencoder.tflite")
+        if self.use_PDR:
+            self.measure_PDR(100)
         while True:
             try:
                 file, transmission_time = self.file_Q.get(timeout=3)
@@ -95,6 +98,7 @@ class base_station(TCP_COM):
                     exit()
                 self.file_Q.task_done()
                 if ".avro" in file:
+                    self.measure_PDR(100)
                     data,timestamps, type, batch_num = AVRO.load_AVRO_file(file)
                     batches = np.array_split(data, batch_num)
                     for i, batch in enumerate(batches):
@@ -111,7 +115,7 @@ class base_station(TCP_COM):
             except queue.Empty:
                 print("waiting for data")
                 pass
-            #self.measure_PDR(100)
+            #
         #self.send_file("307.jpg")
 
     def distribute_model(self, model):
