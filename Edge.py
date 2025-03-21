@@ -19,6 +19,7 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
+        self.use_PDR=True
         self.total_sent_data=0
         self.device_type="edge"
         self.model_path="models"
@@ -64,13 +65,30 @@ class edge_device(TCP_COM):
         self.mse_buff.append(mse)
         return mse, s, t
 
-
+    def determine_batch_num(self):
+        match self.PDR:
+            case _ if self.PDR>0.95:
+                return 1
+            case _ if self.PDR>0.9:
+                return 2
+            case _ if self.PDR>0.85:
+                return 3
+            case _ if self.PDR>0.8:
+                return 4
+            case _:
+                return 5
+            
 
     def get_important_important_batch(self):
         batch_not_found=True
-        important_batches=0
+        if self.use_PDR:
+            important_batches = self.determine_batch_num()
+        else:
+            important_batches=0
         print("Analyzing samples")
-        NUM_BUF_SAMPLES=100
+        #NUM_BUF_SAMPLES=100
+        NUM_BUF_SAMPLES=100*(1-self.PDR) if self.use_PDR else 100
+        print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         while batch_not_found:
             mse, s, t = self.analyze_samples()
             if mse>2:
