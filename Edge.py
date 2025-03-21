@@ -67,13 +67,13 @@ class edge_device(TCP_COM):
 
     def determine_batch_num(self):
         match self.PDR:
-            case _ if self.PDR>0.95:
+            case _ if self.PDR<1-0.95:
                 return 1
-            case _ if self.PDR>0.9:
+            case _ if self.PDR<1-0.9:
                 return 2
-            case _ if self.PDR>0.85:
+            case _ if self.PDR<1-0.85:
                 return 3
-            case _ if self.PDR>0.8:
+            case _ if self.PDR>1-0.8:
                 return 4
             case _:
                 return 5
