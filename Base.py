@@ -8,6 +8,7 @@ import AVRO
 import os
 from utils import make_initial_data, remove_all_avro_files
 import numpy as np
+import zipfile
 import pandas as pd
 import warnings
 from sklearn.exceptions import ConvergenceWarning
