@@ -96,7 +96,7 @@ class edge_device(TCP_COM):
                     #comment
                     AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
                     self.total_sent_data+=os.path.getsize(filename)
-                    self.send_file(filename)
+                    self.send_file(self.TAR_IP, self.TAR_PORT_TCP,filename)
                     self.sample_buffer=[]
                     self.timestamp_buffer=[]
         return True
@@ -128,7 +128,7 @@ class edge_device(TCP_COM):
                 print(e)
             if self.index>=self.len_of_dataset:
                 pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
-                self.send_file("test_files/mse_data.csv")
+                self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
                 self.send_done_sending()
                 print("done")
                 print("Time elapsed: ", time.time()-start)

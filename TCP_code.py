@@ -134,8 +134,8 @@ class TCP_COM():
                         continue
                 elif self.device=="bs":
                     if addr[0] not in self.edge_devices:
-                        self.edge_devices.append(addr[0], addr[1])
-                        print("added", addr[0], addr[1])
+                        self.edge_devices.append(addr[0])
+                        print("added", addr[0])
                 try:
                     # Receive file metadata
                     metadata = conn.recv(1024).decode()

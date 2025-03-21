@@ -120,9 +120,9 @@ class base_station(TCP_COM):
         with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(input_file, arcname=os.path.basename(input_file))
         self.total_data_sent+=os.path.getsize(output_zip)
-        for ip, port in self.edge_devices:
+        for ip in self.edge_devices:
             #self.TAR_IP=ip
-            self.send_file(ip, port,output_zip)
+            self.send_file(ip, self.TAR_PORT_TCP,output_zip)
 
 
 bs=base_station("received")
