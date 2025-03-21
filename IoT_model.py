@@ -97,7 +97,8 @@ class IoT_model():
         x_random = X.iloc[index]
         return x_random
 
-    def quantize_model(self, data,model, path):
+    def quantize_model(self, data,model, path, amount_of_pruning=0):
+        
         x_random=self.make_representative_data(pd.DataFrame(data))
         qm.quantize_8_bit(model,x_random, path)
 
@@ -135,9 +136,7 @@ class IoT_model():
         data= pd.concat([new_data,old_data])
         return data
 
-    def improve_model(self, data, invert_loss=False):
-        #if invert_loss:
-        #    return None
+    def train_model(self, data, invert_loss=False, pruning_level=0):
         X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
         y=X['machine_status']
         X=X.drop(columns=["timestamp", "machine_status"])
@@ -148,32 +147,55 @@ class IoT_model():
         X=pd.DataFrame(X)
         data=np.array(data)
         new_data=self.scale_data(np.array(data))
-
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
             return -0.3*mse if invert_loss else mse  # Negate the loss to maximize
         
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
+        num_epochs = max(5, min(100, int(2000 / len(data))))
 
-        model.compile(optimizer="adam", loss=mse_loss)
-        num_epochs = max(5, min(100, int(2000 / len(data))))  # Scale epochs #8000
         if invert_loss==False:
             num_epochs=int(num_epochs)
         else:
             num_epochs=int(num_epochs/2)
-        for _ in range(num_epochs):
-            if invert_loss==False:
-                data=self.combine_new_with_random_old(X, new_data)
-            elif os.path.getsize("test_files/faulty_data.csv") > 0:
-                data=self.combine_faulty_with_random_old(new_data)
-            else:
-                data=new_data
-            history =model.fit(data, data, epochs=1, batch_size=128)
-            
-        print("Final loss after training:", history.history['loss'][-1])
+        #for _ in range(num_epochs):
+
+        if invert_loss==False:
+            data=self.combine_new_with_random_old(X, new_data)
+        elif os.path.getsize("test_files/faulty_data.csv") > 0:
+            data=self.combine_faulty_with_random_old(new_data)
+        else:
+            data=new_data
+
+        if pruning_level:
+            pruning_params = {
+                'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
+                    initial_sparsity=0.0,
+                    final_sparsity=pruning_level,
+                    begin_step=0,
+                    end_step=1000
+                )
+            }
+            # Wrap the pretrained model.
+            model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
+            model.compile(optimizer="adam", loss=mse_loss)
+            callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
+            history = model.fit(data, data, epochs=num_epochs, batch_size=128, callbacks=callbacks)
+            model = tfmot.sparsity.keras.strip_pruning(model)
+        else:
+            model.compile(optimizer="adam", loss=mse_loss)
+            history =model.fit(data, data, epochs=num_epochs, batch_size=128)
+        return model, X
+
+
+    def improve_model(self, data, invert_loss=False):
+        #if invert_loss:
+        #    return None
+        model, X=self.train_model(data, invert_loss, 0)
         model.save(os.path.join("models", "autoencoder.h5"))
-        self.quantize_model(X,model, os.path.join("models", "autoencoder"))
+        pruning_level=0
+        self.quantize_model(X,model, os.path.join("models", "autoencoder"), amount_of_pruning=pruning_level)
 
 
 #make_model=IoT_model("datasets/initial_data.csv")
