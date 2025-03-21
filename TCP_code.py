@@ -114,7 +114,7 @@ class TCP_COM():
             self.PDR=file_size
             print("RECEIVED PDR:", self.PDR)
         else:
-            pdr=self.receive_packets(int(file_name))
+            self.PDR=self.receive_packets(int(file_name))
         self.time_transmitting+=time.time()-start
 
     @threaded
