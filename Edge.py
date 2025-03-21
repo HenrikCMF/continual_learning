@@ -82,9 +82,9 @@ class edge_device(TCP_COM):
     def get_important_important_batch(self):
         batch_not_found=True
         if self.use_PDR:
-            important_batches = self.determine_batch_num()
+            important_batches_tar = self.determine_batch_num()
         else:
-            important_batches=0
+            important_batches_tar=0
         print("Analyzing samples")
         #NUM_BUF_SAMPLES=100
         NUM_BUF_SAMPLES=100*(1-self.PDR) if self.use_PDR else 100
@@ -104,7 +104,7 @@ class edge_device(TCP_COM):
                     self.timestamp_buffer.append(t)
                     self.mse_buff.append(self.mse_buff[-1])
                 important_batches+=1
-                if important_batches==1: #network parameter
+                if important_batches==important_batches_tar: #network parameter
                     batch_not_found=False
                     self.sample_buffer=np.array(self.sample_buffer)
                     filename=os.path.join(
