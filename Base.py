@@ -103,7 +103,8 @@ class base_station(TCP_COM):
                     exit()
                 self.file_Q.task_done()
                 if ".avro" in file:
-                    self.measure_PDR(100)
+                    if self.use_PDR:
+                        self.measure_PDR(100)
                     data,timestamps, type, batch_num = AVRO.load_AVRO_file(file)
                     batches = np.array_split(data, batch_num)
                     for i, batch in enumerate(batches):
@@ -114,7 +115,7 @@ class base_station(TCP_COM):
                             TP+=1
                         else:
                             FP+=1
-                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR)
+                        #self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
                         else:
