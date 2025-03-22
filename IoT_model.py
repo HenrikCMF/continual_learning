@@ -68,17 +68,17 @@ class IoT_model():
         print("feats",self.n_features)
         inputs = tf.keras.Input(shape=(self.n_features,))
         # Encoder
-        #encoded = tf.keras.layers.Dense(32, activation="relu")(inputs)
-        #encoded = tf.keras.layers.Dense(16, activation="relu")(encoded)
-        #encoded = tf.keras.layers.Dense(8, activation="relu")(encoded)  # Bottleneck
-        #decoded = tf.keras.layers.Dense(16, activation="relu")(encoded)
-        #decoded = tf.keras.layers.Dense(32, activation="relu")(decoded)
+        encoded = tf.keras.layers.Dense(12, activation="relu")(inputs)
+        encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(2, activation="relu")(encoded)  # Bottleneck
+        decoded = tf.keras.layers.Dense(6, activation="relu")(encoded)
+        decoded = tf.keras.layers.Dense(12, activation="relu")(decoded)
 
-        encoded = tf.keras.layers.Dense(24, activation="relu")(inputs)
-        encoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)  # Bottleneck
-        decoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
-        decoded = tf.keras.layers.Dense(24, activation="relu")(decoded)
+        #encoded = tf.keras.layers.Dense(24, activation="relu")(inputs)
+        #encoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
+        #encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)  # Bottleneck
+        #decoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
+        #decoded = tf.keras.layers.Dense(24, activation="relu")(decoded)
 
         decoded = tf.keras.layers.Dense(self.n_features, activation="linear")(decoded)
 
@@ -154,12 +154,12 @@ class IoT_model():
         
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
-        num_epochs = max(5, min(100, int(2000 / len(data))))
+        num_epochs = max(5, min(100, int(4000 / len(data))))
 
         if invert_loss==False:
             num_epochs=int(num_epochs)
         else:
-            num_epochs=int(num_epochs)
+            num_epochs=int(num_epochs/2)
         #for _ in range(num_epochs):
 
         if invert_loss==False:
