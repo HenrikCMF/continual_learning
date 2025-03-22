@@ -190,10 +190,10 @@ class IoT_model():
         return model, X
 
 
-    def improve_model(self, data, invert_loss=False):
+    def improve_model(self, data, invert_loss=False, pdr=0):
         #if invert_loss:
         #    return None
-        pruning_level=0.2
+        pruning_level=pdr
         model, X=self.train_model(data, invert_loss, pruning_level)
         model.save(os.path.join("models", "autoencoder.h5"))
         

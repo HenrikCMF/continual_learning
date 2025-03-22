@@ -4,6 +4,18 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
 
+def determine_quantization_level(quantconverter, level):
+    match level:
+        case 0 :
+            return quantconverter
+        case 1:
+            quantconverter.target_spec.supported_types = [tf.float16]
+            return quantconverter
+        case 2:
+            quantconverter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+            return quantconverter
+        case _:
+            return quantconverter
 
 def quantize_8_bit(model, example_data, location):
     def representative_data_gen():
@@ -13,7 +25,9 @@ def quantize_8_bit(model, example_data, location):
 
     quantconverter = tf.lite.TFLiteConverter.from_keras_model(model)
     quantconverter.optimizations = [tf.lite.Optimize.DEFAULT]
-    quantconverter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+
+    #quantconverter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    quantconverter = determine_quantization_level(quantconverter, 0)
     quantconverter.representative_dataset = representative_data_gen
     quantlite=quantconverter.convert()
     with open(location+".tflite", "wb") as f:
