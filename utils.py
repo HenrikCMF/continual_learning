@@ -170,7 +170,7 @@ def make_end_plot(mse, offset):
     
     plt.plot(mse_buf[0], label="MSE, Continual Learning", alpha=0.8)
     plt.plot(mse_buf[1], label="MSE, Continual Learning, 7 batches combined", alpha=0.8)
-
+    plt.ylim(None, 10)
     # Plot vertical lines where 'machine_status' is 'BROKEN'
     for idx in adjusted_broken_indices:
         plt.axvline(x=idx, color='r', linestyle='--', alpha=0.3, label="Fault Instances" if idx == adjusted_broken_indices[0] else "")
