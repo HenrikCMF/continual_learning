@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
-        self.use_PDR=True
+        self.use_PDR=False
         self.total_sent_data=0
         self.device_type="edge"
         self.model_path="models"
@@ -84,7 +84,7 @@ class edge_device(TCP_COM):
         if self.use_PDR:
             important_batches_tar = self.determine_batch_num()
         else:
-            important_batches_tar=0
+            important_batches_tar=1
         important_batches=0
         print("Analyzing samples")
         #NUM_BUF_SAMPLES=100
@@ -180,7 +180,7 @@ class edge_device(TCP_COM):
         self.index+=1
         return sample, timestamp
     
-    def calculate_fault_detection_score(self, mse_buf, adjusted_broken_indices, threshold=2, window=100):
+    def calculate_fault_detection_score(self, mse_buf, adjusted_broken_indices, threshold=2, window=5):
         FP=0
         TP=0
         score = 0

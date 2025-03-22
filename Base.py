@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 class base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_data_sent=0
-        self.use_PDR=True
+        self.use_PDR=False
         self.NEW_START=True
         self.faulty_data=os.path.join('test_files','faulty_data.csv')
         if self.NEW_START:
@@ -77,6 +77,8 @@ class base_station(TCP_COM):
         df_combined.to_csv(init_data_path)
 
     def receive_file(self, waittime=10):
+        TP=0
+        FP=0
         start=time.time()
         #Wait for X clients:
         clients=0
@@ -95,6 +97,8 @@ class base_station(TCP_COM):
                     print("Time elapsed: ", time.time()-start)
                     print("Transmitting time: ", self.time_transmitting)
                     print("Total data sent(KB): ", self.total_data_sent/1024)
+                    print("TP transmissions: ", TP)
+                    print("FP transmissions: ", FP)
                     remove_all_avro_files('received')
                     exit()
                 self.file_Q.task_done()
@@ -107,7 +111,10 @@ class base_station(TCP_COM):
                         if batch.iloc[:, -1].eq("BROKEN").any():
                             print("INVERTED TRAINING")
                             invert_training=True
-                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training)
+                            TP+=1
+                        else:
+                            FP+=1
+                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
                         else:
