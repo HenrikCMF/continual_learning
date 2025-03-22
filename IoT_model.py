@@ -23,7 +23,7 @@ class IoT_model():
     def load_model(self):
         self.scaler = joblib.load(os.path.join("models", "scaler.pkl"))
         tflite_model_path = "models/autoencoder.tflite"
-        self.interpreter = tf.lite.Interpreter(model_path=tflite_model_path), experimental_delegates=[]
+        self.interpreter = tf.lite.Interpreter(model_path=tflite_model_path, experimental_delegates=[])
         self.interpreter.allocate_tensors()
         # Get input and output details
         self.input_details = self.interpreter.get_input_details()
