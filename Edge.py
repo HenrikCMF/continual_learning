@@ -180,7 +180,7 @@ class edge_device(TCP_COM):
         self.index+=1
         return sample, timestamp
     
-    def calculate_fault_detection_score(self, mse_buf, adjusted_broken_indices, threshold=2, window=5):
+    def calculate_fault_detection_score(self, mse_buf, adjusted_broken_indices, threshold=2, window=100):
         FP=0
         TP=0
         score = 0
@@ -233,7 +233,7 @@ class edge_device(TCP_COM):
         # Plot the mse_buf values
         plt.figure(figsize=(10, 5))
         plt.plot(mse_buf, label="Mean Squared Error")
-
+        plt.ylim(None, 10)
         # Plot vertical lines where 'machine_status' is 'BROKEN'
         for idx in adjusted_broken_indices:
             plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == adjusted_broken_indices[0] else "")
