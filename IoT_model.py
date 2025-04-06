@@ -15,6 +15,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 class IoT_model():
     
     def __init__(self, initial_data):
+        self.model_name="autoencoder"
         print("TensorFlow version:", tf.__version__)
         print("TFMOT version:", tfmot.__version__)
         self.initial_data=initial_data
@@ -22,7 +23,7 @@ class IoT_model():
 
     def load_model(self):
         self.scaler = joblib.load(os.path.join("models", "scaler.pkl"))
-        tflite_model_path = "models/autoencoder.tflite"
+        tflite_model_path = "models/"+self.model_name+".tflite"
         self.interpreter = tf.lite.Interpreter(model_path=tflite_model_path, experimental_delegates=[])
         self.interpreter.allocate_tensors()
         # Get input and output details
@@ -53,8 +54,11 @@ class IoT_model():
         return self.scaler.inverse_transform(data)
 
     def prepare_training_data(self):
+        def binary_label(y):
+            return np.array([1 if label == 'BROKEN' else 0 for label in y])
         X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
         y=X['machine_status']
+        y=binary_label(y)
         X=X.drop(columns=["timestamp", "machine_status"])
         self.n_features = X.shape[1]  # number of sensors (~50)
         self.n_samples = len(X)
@@ -117,8 +121,8 @@ class IoT_model():
                 batch_size=256,
                 verbose=1
                 )
-        model.save(os.path.join("models", "autoencoder.h5"))
-        self.quantize_model(X,model, os.path.join("models", "autoencoder"))
+        model.save(os.path.join("models", self.model_name+".h5"))
+        self.quantize_model(X,model, os.path.join("models", self.model_name))
 
     def combine_new_with_random_old(self, X, new):
         old_data = X.sample(n=len(new), replace=False, random_state=42)
@@ -153,7 +157,7 @@ class IoT_model():
             return -0.3*mse if invert_loss else mse  # Negate the loss to maximize
         
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
-            model = tf.keras.models.load_model(os.path.join("models", "autoencoder.h5"))
+            model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
         num_epochs = max(5, min(100, int(4000 / len(data))))
 
         if invert_loss==False:
@@ -195,9 +199,9 @@ class IoT_model():
         #    return None
         pruning_level=pdr
         model, X=self.train_model(data, invert_loss, pruning_level)
-        model.save(os.path.join("models", "autoencoder.h5"))
+        model.save(os.path.join("models", self.model_name+".h5"))
         
-        self.quantize_model(X,model, os.path.join("models", "autoencoder"), amount_of_pruning=pruning_level)
+        self.quantize_model(X,model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level)
 
 
 #make_model=IoT_model("datasets/initial_data.csv")
