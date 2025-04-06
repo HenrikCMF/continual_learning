@@ -183,6 +183,32 @@ def make_end_plot(mse, offset):
     plt.title("Model Reconstruction Error over dataset")
     plt.legend()
     plt.show()
-#files=('datasets/low_epoch_with_inverse.csv',"datasets/7batches.csv") 
-#_, offset=make_dataset(0,1)
-#make_end_plot(files, offset)
+
+
+def inject_faults(x, y, fault_fraction=0.1, decrease_fraction=0.3, decrease_value=0.2):
+    # Create copies to avoid modifying original data
+    x_fault = x.copy()
+    y_fault = y.copy()
+
+    n_samples, n_features = x_fault.shape
+
+    # Determine number of samples to mark as faulty
+    n_faulty = int(n_samples * fault_fraction)
+    
+    # Randomly select indices for the samples that will become faulty
+    faulty_indices = np.random.choice(n_samples, size=n_faulty, replace=False)
+
+    for idx in faulty_indices:
+        # Mark the sample as faulty in y
+        y_fault[idx] = "BROKEN"
+        
+        # Determine the number of features to decrease; ensure at least one feature is selected
+        n_decrease = max(1, int(np.ceil(n_features * decrease_fraction)))
+        
+        # Randomly select feature indices in this sample
+        feature_indices = np.random.choice(n_features, size=n_decrease, replace=False)
+        
+        # Apply a 20% decrease on the selected features
+        x_fault[idx, feature_indices] *= (1 - decrease_value)
+    
+    return x_fault, y_fault

@@ -8,6 +8,7 @@ import _quantize_model as qm
 import os
 import joblib
 from sklearn.metrics import mean_squared_error
+from utils import inject_faults
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
@@ -53,18 +54,23 @@ class IoT_model():
     def unscale_data(self, data):
         return self.scaler.inverse_transform(data)
 
-    def prepare_training_data(self):
+    def prepare_training_data(self, should_inject_faults=False, fit_scaler=False):
         def binary_label(y):
             return np.array([1 if label == 'BROKEN' else 0 for label in y])
         X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
         y=X['machine_status']
+        if should_inject_faults:
+            X, y = inject_faults(X,y, fault_fraction=0.05)
+
         y=binary_label(y)
         X=X.drop(columns=["timestamp", "machine_status"])
         self.n_features = X.shape[1]  # number of sensors (~50)
         self.n_samples = len(X)
-        self.scaler.fit(X)
+        if fit_scaler:
+            self.scaler.fit(X)
         X=self.scaler.transform(X)
-        joblib.dump(self.scaler, os.path.join("models", "scaler.pkl"))
+        if fit_scaler:
+            joblib.dump(self.scaler, os.path.join("models", "scaler.pkl"))
         return X, y
 
 
@@ -112,7 +118,7 @@ class IoT_model():
         return mse_val
 
     def train_initial_model(self):
-        X, y = self.prepare_training_data()
+        X, y = self.prepare_training_data(fit_scaler=True)
         autoencoder = self.design_model_architecture()
         model = self.make_model_quantization_aware(autoencoder)
         history = model.fit(
@@ -142,13 +148,7 @@ class IoT_model():
         return data
 
     def train_model(self, data, invert_loss=False, pruning_level=0):
-        X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
-        y=X['machine_status']
-        X=X.drop(columns=["timestamp", "machine_status"])
-        self.n_features = X.shape[1]  # number of sensors (~50)
-        self.n_samples = len(X)
-        #self.scaler.fit(X)
-        X=self.scaler.transform(X)
+        X, y = self.prepare_training_data()
         X=pd.DataFrame(X)
         data=np.array(data)
         new_data=self.scale_data(np.array(data))

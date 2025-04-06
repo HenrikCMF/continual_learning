@@ -37,7 +37,7 @@ class mlp_classifier(IoT_model):
 
     def train_initial_model(self):
         # Optionally override training behavior here too
-        X, y = self.prepare_training_data()
+        X, y = self.prepare_training_data(should_inject_faults=True, fit_scaler=True)
         model = self.design_model_architecture()
         history = model.fit(
             X, y,
@@ -47,3 +47,37 @@ class mlp_classifier(IoT_model):
         )
         model.save(os.path.join("models", self.model_name+".h5"))
         self.quantize_model(X, model, os.path.join("models", self.model_name))
+
+    def train_model(self, data, invert_loss=False, pruning_level=0):
+        X, y = self.prepare_training_data()
+        X=pd.DataFrame(X)
+        data=np.array(data)
+        new_data=self.scale_data(np.array(data))
+        with tfmot.quantization.keras.quantize_scope():
+            model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
+        num_epochs = max(5, min(100, int(4000 / len(data))))
+
+
+        if os.path.getsize("test_files/faulty_data.csv") > 0:
+            new_data=self.combine_faulty_with_random_old(new_data)
+        data=self.combine_new_with_random_old(X, new_data)
+
+        if pruning_level:
+            pruning_params = {
+                'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
+                    initial_sparsity=0.0,
+                    final_sparsity=pruning_level,
+                    begin_step=0,
+                    end_step=1000
+                )
+            }
+            # Wrap the pretrained model.
+            model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
+            model.compile(optimizer="adam", loss='binary_crossentropy')
+            callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
+            history = model.fit(data, data, epochs=num_epochs, batch_size=128, callbacks=callbacks)
+            model = tfmot.sparsity.keras.strip_pruning(model)
+        else:
+            model.compile(optimizer="adam", loss='binary_crossentropy')
+            history =model.fit(data, data, epochs=num_epochs, batch_size=128)
+        return model, X
