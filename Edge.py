@@ -164,8 +164,8 @@ class edge_device(TCP_COM):
             with zipfile.ZipFile(path, 'r') as zipf:
                 output_folder=str(path).split('/')[0]
                 zipf.extractall(output_folder)
-        destination_path=os.path.join(self.model_path, 'autoencoder.tflite')
-        shutil.move(os.path.join(output_folder, 'autoencoder.tflite'), destination_path)
+        destination_path=os.path.join(self.model_path, 'model.tflite')
+        shutil.move(os.path.join(output_folder, 'model.tflite'), destination_path)
         self.model.load_model()
     
     def get_previous_X_samples(self, X):
@@ -233,7 +233,7 @@ class edge_device(TCP_COM):
         # Plot the mse_buf values
         plt.figure(figsize=(10, 5))
         plt.plot(mse_buf, label="Mean Squared Error")
-        plt.ylim(None, 10)
+        plt.ylim(-0.1, 10)
         # Plot vertical lines where 'machine_status' is 'BROKEN'
         for idx in adjusted_broken_indices:
             plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == adjusted_broken_indices[0] else "")

@@ -4,6 +4,7 @@ import time
 import queue
 from network_control import network_control
 import IoT_model
+from alternative_iot_models import mlp_classifier
 import AVRO
 import os
 from utils import make_initial_data, remove_all_avro_files
@@ -27,7 +28,8 @@ class base_station(TCP_COM):
                 f.write("")  # Write an empty string to create the file
         
         self.init_data=os.path.join('test_files','initial_data.csv')
-        self.ml_model=IoT_model.IoT_model(self.init_data)
+        #self.ml_model=IoT_model.IoT_model(self.init_data)
+        self.ml_model=mlp_classifier(self.init_data)
         if self.NEW_START:
             self.ml_model.train_initial_model()
         self.device_type="bs"
@@ -87,7 +89,7 @@ class base_station(TCP_COM):
             clients+=1
         if self.use_PDR:
             self.measure_PDR(100)
-        self.distribute_model("models/autoencoder.tflite")
+        self.distribute_model("models/"+self.ml_model.model_name+".tflite")
         
         while True:
             try:
@@ -120,7 +122,7 @@ class base_station(TCP_COM):
                             self.append_to_initial_data(data, timestamps, self.init_data)
                         else:
                             self.append_to_faulty_data(data, timestamps, self.faulty_data)
-                    self.distribute_model("models/autoencoder.tflite")
+                    self.distribute_model("models/"+self.ml_model.model_name+".tflite")
             except queue.Empty:
                 print("waiting for data")
                 pass
