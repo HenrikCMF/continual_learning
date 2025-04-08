@@ -94,11 +94,17 @@ class edge_device(TCP_COM):
         print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         while batch_not_found:
             rare, mse, s, t = self.analyze_samples()
+            self.samples_since_last_batch+=1
             if rare:
                 print("Found sample")
-                samples, timestamps= self.get_previous_X_samples(NUM_BUF_SAMPLES)
-                self.sample_buffer.extend(samples)
-                self.timestamp_buffer.extend(timestamps)
+                self.samples_since_last_batch-=1
+                samples, timestamps= self.get_previous_X_samples(min(NUM_BUF_SAMPLES, self.samples_since_last_batch))
+                self.samples_since_last_batch=0
+                try:
+                    self.sample_buffer.extend(samples)
+                    self.timestamp_buffer.extend(timestamps)
+                except:
+                    pass
                 self.sample_buffer.append(s)
                 self.timestamp_buffer.append(t)
                 for i in range(NUM_BUF_SAMPLES):
@@ -129,6 +135,7 @@ class edge_device(TCP_COM):
         self.timestamp_buffer=[]
         self.mse_buff=[]
         done_sending=False
+        self.samples_since_last_batch=0
         #self.get_important_important_batch()
         try:
             self.Ready_to_start()

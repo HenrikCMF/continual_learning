@@ -46,7 +46,6 @@ class mlp_classifier(IoT_model):
     def train_initial_model(self):
         # Optionally override training behavior here too
         X, y = self.prepare_training_data(should_inject_faults=True, fit_scaler=True)
-        print("Uniques in Y",np.unique(y))
         model = self.design_model_architecture()
         history = model.fit(
             X, y,
@@ -66,12 +65,13 @@ class mlp_classifier(IoT_model):
         new_data=self.scale_data(np.array(data))
         with tfmot.quantization.keras.quantize_scope():
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
-        num_epochs = max(5, min(100, int(4000 / len(data))))
+        num_epochs = max(5, min(100, int(2000 / len(data))))
         data_labels=binary_label(data_labels)
         if os.path.getsize("test_files/faulty_data.csv") > 0:
             new_data, data_labels=self.combine_faulty_with_random_old(new_data, data_labels)
         data, data_labels=self.combine_new_with_random_old(X,y, new_data, data_labels)
-        
+        values1, counts1 = np.unique(data_labels, return_counts=True)
+        print(dict(zip(values1, counts1)))
         print("about to train with input data of dim: ", np.shape(data), " with label number: ", np.shape(data_labels))
         if pruning_level:
             pruning_params = {
@@ -86,7 +86,7 @@ class mlp_classifier(IoT_model):
             model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
             model.compile(optimizer="adam", loss='binary_crossentropy')
             callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
-            history = model.fit(data, data, epochs=num_epochs, batch_size=128, callbacks=callbacks)
+            history = model.fit(data, data_labels, epochs=num_epochs, batch_size=128, callbacks=callbacks)
             model = tfmot.sparsity.keras.strip_pruning(model)
         else:
             model.compile(optimizer="adam", loss='binary_crossentropy')
