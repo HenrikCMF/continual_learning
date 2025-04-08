@@ -94,7 +94,7 @@ class TCP_COM():
     def __receive_file(self, conn, file_name, file_size):
         start=time.time()
         conn.sendall("READY".encode())
-        with open(os.path.join(self.in_path,f"r_{file_name}"), "wb") as f:
+        with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
                 data = conn.recv(1024)
@@ -103,7 +103,7 @@ class TCP_COM():
                 f.write(data)
                 received_size += len(data)
         stop=time.time()
-        self.file_Q.put((str(os.path.join(self.in_path,f"r_{file_name}")),stop-start))
+        self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),stop-start))
         self.time_transmitting+=time.time()-start
         print(f"File '{file_name}' received, took: ", stop-start)
 
