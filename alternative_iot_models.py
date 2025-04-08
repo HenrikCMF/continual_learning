@@ -16,10 +16,17 @@ warnings.filterwarnings("ignore", module="sklearn")
 
 class mlp_classifier(IoT_model):
     def __init__(self, initial_data):
-        self.model_name="MLP_binary"
-        # Inherit everything else
         super().__init__(initial_data)
+        self.model_name="MLP_binary"
+        self.trigger_threshold=0.5
     
+    def check_sample(self, data):
+        important=False
+        score = self.inference_on_model(data)
+        if score>self.trigger_threshold:
+            important=True
+        return important, score
+
     def design_model_architecture(self):
         print("Custom architecture with", self.n_features, "features")
         inputs = tf.keras.Input(shape=(self.n_features,))

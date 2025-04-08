@@ -61,9 +61,9 @@ class edge_device(TCP_COM):
     def analyze_samples(self):
         s, t=self.get_sample()    
         for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
-        mse=self.model.calc_mse(for_mse)
+        rare, mse=self.model.check_sample(for_mse)
         self.mse_buff.append(mse)
-        return mse, s, t
+        return rare, mse, s, t
 
     def determine_batch_num(self):
         match self.PDR:
@@ -91,8 +91,8 @@ class edge_device(TCP_COM):
         NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         while batch_not_found:
-            mse, s, t = self.analyze_samples()
-            if mse>2:
+            rare, mse, s, t = self.analyze_samples()
+            if rare:
                 print("Found sample")
                 samples, timestamps= self.get_previous_X_samples(NUM_BUF_SAMPLES)
                 self.sample_buffer.extend(samples)

@@ -17,6 +17,7 @@ class IoT_model():
     
     def __init__(self, initial_data):
         self.model_name="autoencoder"
+        self.trigger_threshold=2
         print("TensorFlow version:", tf.__version__)
         print("TFMOT version:", tfmot.__version__)
         self.initial_data=initial_data
@@ -113,9 +114,12 @@ class IoT_model():
         x_random=self.make_representative_data(pd.DataFrame(data))
         qm.quantize_8_bit(model,x_random, path)
 
-    def calc_mse(self, data):
+    def check_sample(self, data):
+        important=False
         mse_val = mean_squared_error(self.scale_data(data).T, self.inference_on_model(data))
-        return mse_val
+        if mse_val>self.trigger_threshold:
+            important=True
+        return important, mse_val
 
     def train_initial_model(self):
         X, y = self.prepare_training_data(fit_scaler=True)
