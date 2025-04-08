@@ -60,11 +60,11 @@ class IoT_model():
             return np.array([1 if label == 'BROKEN' else 0 for label in y])
         X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
         y=X['machine_status']
+        X=X.drop(columns=["timestamp", "machine_status"])
         if should_inject_faults:
             X, y = inject_faults(X,y, fault_fraction=0.05)
 
         y=binary_label(y)
-        X=X.drop(columns=["timestamp", "machine_status"])
         self.n_features = X.shape[1]  # number of sensors (~50)
         self.n_samples = len(X)
         if fit_scaler:

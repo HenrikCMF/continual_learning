@@ -158,6 +158,7 @@ class edge_device(TCP_COM):
                 exit()
         
     def received_model(self, path):
+        model_name=str(path).split('/')[-1].split('.')[0]
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
         if '.zip' in path:
@@ -165,7 +166,7 @@ class edge_device(TCP_COM):
                 output_folder=str(path).split('/')[0]
                 zipf.extractall(output_folder)
         destination_path=os.path.join(self.model_path, 'model.tflite')
-        shutil.move(os.path.join(output_folder, 'model.tflite'), destination_path)
+        shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
         self.model.load_model()
     
     def get_previous_X_samples(self, X):

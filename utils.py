@@ -190,25 +190,38 @@ def inject_faults(x, y, fault_fraction=0.1, decrease_fraction=0.3, decrease_valu
     x_fault = x.copy()
     y_fault = y.copy()
 
-    n_samples, n_features = x_fault.shape
+    # Determine shape and feature count based on type
+    if isinstance(x_fault, pd.DataFrame):
+        n_samples, n_features = x_fault.shape
+        is_df = True
+    else:
+        n_samples, n_features = x_fault.shape
+        is_df = False
 
     # Determine number of samples to mark as faulty
     n_faulty = int(n_samples * fault_fraction)
-    
+
     # Randomly select indices for the samples that will become faulty
     faulty_indices = np.random.choice(n_samples, size=n_faulty, replace=False)
 
     for idx in faulty_indices:
         # Mark the sample as faulty in y
-        y_fault[idx] = "BROKEN"
-        
-        # Determine the number of features to decrease; ensure at least one feature is selected
+        if isinstance(y_fault, pd.Series):
+            y_fault.iloc[idx] = "BROKEN"
+        else:
+            y_fault[idx] = "BROKEN"
+
+        # Determine the number of features to decrease
         n_decrease = max(1, int(np.ceil(n_features * decrease_fraction)))
-        
-        # Randomly select feature indices in this sample
+
+        # Randomly select feature indices
         feature_indices = np.random.choice(n_features, size=n_decrease, replace=False)
-        
-        # Apply a 20% decrease on the selected features
-        x_fault[idx, feature_indices] *= (1 - decrease_value)
-    
+
+        # Apply the decrease
+        if is_df:
+            cols = x_fault.columns[feature_indices]
+            x_fault.loc[idx, cols] *= (1 - decrease_value)
+        else:
+            x_fault[idx, feature_indices] *= (1 - decrease_value)
+
     return x_fault, y_fault

@@ -36,7 +36,7 @@ class mlp_classifier(IoT_model):
         x = tf.keras.layers.Dense(64, activation="relu")(x)
         x = tf.keras.layers.Dense(32, activation="relu")(x)  # Bottleneck
         x = tf.keras.layers.Dense(16, activation="relu")(x)
-        out=tf.keras.layers.Dense(1, activation='sigmoid')
+        out=tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
         autoencoder = tf.keras.Model(inputs, out)
         autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
@@ -45,10 +45,11 @@ class mlp_classifier(IoT_model):
     def train_initial_model(self):
         # Optionally override training behavior here too
         X, y = self.prepare_training_data(should_inject_faults=True, fit_scaler=True)
+        print("Uniques in Y",np.unique(y))
         model = self.design_model_architecture()
         history = model.fit(
             X, y,
-            epochs=10,  # shorter training for testing
+            epochs=20,  # shorter training for testing
             batch_size=128,
             verbose=1
         )
