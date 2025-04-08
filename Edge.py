@@ -243,7 +243,7 @@ class edge_device(TCP_COM):
         # Plot the mse_buf values
         plt.figure(figsize=(10, 5))
         plt.plot(mse_buf, label="Mean Squared Error")
-        plt.ylim(-0.1, 10)
+        plt.ylim(-0.1, min(10, max(mse_buf)))
         # Plot vertical lines where 'machine_status' is 'BROKEN'
         for idx in adjusted_broken_indices:
             plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == adjusted_broken_indices[0] else "")

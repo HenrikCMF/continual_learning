@@ -60,7 +60,10 @@ class mlp_classifier(IoT_model):
     def train_model(self, data, invert_loss=False, pruning_level=0):
         data_labels= data.iloc[:, -1]
         data = data.drop(data.columns[-1], axis=1)
-        X, y = self.prepare_training_data()
+        if os.path.getsize("test_files/faulty_data.csv") > 0:
+            X, y = self.prepare_training_data()
+        else:
+            X, y = self.prepare_training_data(should_inject_faults=True)
         X=pd.DataFrame(X)
         data=np.array(data)
         new_data=self.scale_data(np.array(data))
@@ -70,7 +73,7 @@ class mlp_classifier(IoT_model):
         data_labels=binary_label(data_labels)
         if os.path.getsize("test_files/faulty_data.csv") > 0:
             new_data, data_labels=self.combine_faulty_with_random_old(new_data, data_labels)
-        data, data_labels=self.combine_new_with_random_old(X,y, new_data, data_labels)
+        data, data_labels=self.combine_new_with_random_old(X,y, new_data, data_labels, num=len(new_data)/10)
         values1, counts1 = np.unique(data_labels, return_counts=True)
         print(dict(zip(values1, counts1)))
         print("about to train with input data of dim: ", np.shape(data), " with label number: ", np.shape(data_labels))

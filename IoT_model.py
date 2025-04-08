@@ -151,9 +151,9 @@ class IoT_model():
     #    data= pd.concat([new_data,old_data])
     #    return data
     
-    def combine_new_with_random_old(self, X, y, new, new_labels=None):
+    def combine_new_with_random_old(self, X, y, new, new_labels=None, num=100):
         # Sample old data and get corresponding labels
-        old_data = X.sample(n=len(new), replace=False, random_state=42)
+        old_data = X.sample(n=num, replace=False, random_state=42)
         old_indices = old_data.index
         if isinstance(y, pd.Series):
             old_labels = y.loc[old_indices]
@@ -180,6 +180,8 @@ class IoT_model():
         y_f = X_f['machine_status']
         X_f = X_f.drop(columns=["timestamp", "machine_status"])
         y_f=binary_label(y_f)
+        #set all labels to BROKEN to ensure more training data
+        y_f[:] = 1
         # Sample old data and get corresponding labels
         if len(new) > len(X_f):
             n_samples = len(new)
