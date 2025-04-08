@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
-#from utils import MinMaxScaler
+from utils import binary_label
 import _quantize_model as qm
 import os
 import joblib
@@ -57,6 +57,8 @@ class mlp_classifier(IoT_model):
         self.quantize_model(X, model, os.path.join("models", self.model_name))
 
     def train_model(self, data, invert_loss=False, pruning_level=0):
+        data_labels= data.iloc[:, -1]
+        data = data.drop(data.columns[-1], axis=1)
         X, y = self.prepare_training_data()
         X=pd.DataFrame(X)
         data=np.array(data)
@@ -64,12 +66,12 @@ class mlp_classifier(IoT_model):
         with tfmot.quantization.keras.quantize_scope():
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
         num_epochs = max(5, min(100, int(4000 / len(data))))
-
-
+        data_labels=binary_label(data_labels)
         if os.path.getsize("test_files/faulty_data.csv") > 0:
-            new_data=self.combine_faulty_with_random_old(new_data)
-        data=self.combine_new_with_random_old(X, new_data)
-
+            new_data, data_labels=self.combine_faulty_with_random_old(new_data, data_labels)
+        data, data_labels=self.combine_new_with_random_old(X,y, new_data, data_labels)
+        
+        print("about to train with input data of dim: ", np.shape(data), " with label number: ", np.shape(data_labels))
         if pruning_level:
             pruning_params = {
                 'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
@@ -87,5 +89,5 @@ class mlp_classifier(IoT_model):
             model = tfmot.sparsity.keras.strip_pruning(model)
         else:
             model.compile(optimizer="adam", loss='binary_crossentropy')
-            history =model.fit(data, data, epochs=num_epochs, batch_size=128)
+            history =model.fit(data, data_labels, epochs=num_epochs, batch_size=128)
         return model, X

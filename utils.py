@@ -184,6 +184,8 @@ def make_end_plot(mse, offset):
     plt.legend()
     plt.show()
 
+def binary_label(y):
+    return np.array([1 if label == 'BROKEN' else 0 for label in y])
 
 def inject_faults(x, y, fault_fraction=0.1, decrease_fraction=0.3, decrease_value=0.2):
     # Create copies to avoid modifying original data

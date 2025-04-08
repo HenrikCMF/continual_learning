@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
-#from utils import MinMaxScaler
+from utils import binary_label
 import _quantize_model as qm
 import os
 import joblib
@@ -134,24 +134,83 @@ class IoT_model():
         model.save(os.path.join("models", self.model_name+".h5"))
         self.quantize_model(X,model, os.path.join("models", self.model_name))
 
-    def combine_new_with_random_old(self, X, new):
-        old_data = X.sample(n=len(new), replace=False, random_state=42)
-        new_data=pd.DataFrame(new)
-        new_data.columns=old_data.columns
-        data= pd.concat([new_data,old_data], axis=0)
-        return data
+    #def combine_new_with_random_old(self, X, y, new, new_labels=None):
+    #    old_data = X.sample(n=len(new), replace=False, random_state=42)
+    #    new_data=pd.DataFrame(new)
+    #    new_data.columns=old_data.columns
+    #    data= pd.concat([new_data,old_data], axis=0)
+    #    return data
     
-    def combine_faulty_with_random_old(self, new):
-        X_f=pd.read_csv("test_files/faulty_data.csv").drop(columns=["Unnamed: 0"], errors='ignore')
-        y_f=X_f['machine_status']
-        X_f=X_f.drop(columns=["timestamp", "machine_status"])
-        old_data = X_f.sample(n=len(new), replace=False, random_state=42)
-        new_data=pd.DataFrame(new)
-        new_data.columns=old_data.columns
-        data= pd.concat([new_data,old_data])
+    #def combine_faulty_with_random_old(self, new, new_labels=None):
+    #    X_f=pd.read_csv("test_files/faulty_data.csv").drop(columns=["Unnamed: 0"], errors='ignore')
+    #    y_f=X_f['machine_status']
+    #    X_f=X_f.drop(columns=["timestamp", "machine_status"])
+    #    old_data = X_f.sample(n=len(new), replace=False, random_state=42)
+    #    new_data=pd.DataFrame(new)
+    #    new_data.columns=old_data.columns
+    #    data= pd.concat([new_data,old_data])
+    #    return data
+    
+    def combine_new_with_random_old(self, X, y, new, new_labels=None):
+        # Sample old data and get corresponding labels
+        old_data = X.sample(n=len(new), replace=False, random_state=42)
+        old_indices = old_data.index
+        if isinstance(y, pd.Series):
+            old_labels = y.loc[old_indices]
+        else:
+            old_labels = y[old_indices]
+
+        # Prepare new data
+        new_data = pd.DataFrame(new)
+        new_data.columns = old_data.columns
+
+        # Concatenate features
+        data = pd.concat([new_data, old_data], axis=0, ignore_index=True)
+
+        # If labels provided, concatenate with old labels
+        if new_labels is not None:
+            combined_labels = pd.Series(list(new_labels) + list(old_labels), name=y.name if hasattr(y, "name") else "label")
+            return data, combined_labels
+
+        return data
+
+    def combine_faulty_with_random_old(self, new, new_labels=None):
+        # Load and prepare faulty data
+        X_f = pd.read_csv("test_files/faulty_data.csv").drop(columns=["Unnamed: 0"], errors='ignore')
+        y_f = X_f['machine_status']
+        X_f = X_f.drop(columns=["timestamp", "machine_status"])
+        y_f=binary_label(y_f)
+        # Sample old data and get corresponding labels
+        if len(new) > len(X_f):
+            n_samples = len(new)
+            replace = True
+        else:
+            n_samples = len(new)
+            replace = False
+        old_data = X_f.sample(n=n_samples, replace=replace, random_state=42)
+
+        if isinstance(y_f, pd.Series):
+            old_labels = y_f.loc[old_data.index]
+        else:
+            old_labels = y_f[old_data.index]
+        #old_labels = y_f.loc[old_data.index]
+
+        # Prepare new data
+        new_data = pd.DataFrame(new)
+        new_data.columns = old_data.columns
+
+        # Concatenate features
+        data = pd.concat([new_data, old_data], ignore_index=True)
+
+        # If labels provided, concatenate with old labels
+        if new_labels is not None:
+            combined_labels = pd.Series(list(new_labels) + list(old_labels), name="machine_status")
+            return data, combined_labels
+
         return data
 
     def train_model(self, data, invert_loss=False, pruning_level=0):
+        data = data.drop(data.columns[-1], axis=1)
         X, y = self.prepare_training_data()
         X=pd.DataFrame(X)
         data=np.array(data)
