@@ -22,7 +22,7 @@ class mlp_classifier(IoT_model):
     
     def check_sample(self, data):
         important=False
-        score = self.inference_on_model(data)
+        score = self.inference_on_model(data)[0]
         print(score)
         if score>self.trigger_threshold:
             important=True
