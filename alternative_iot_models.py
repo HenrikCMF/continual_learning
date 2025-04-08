@@ -23,7 +23,8 @@ class mlp_classifier(IoT_model):
     def check_sample(self, data):
         important=False
         score = self.inference_on_model(data)[0]
-        print(score)
+        if score>0.1:
+            print(score)
         if score>self.trigger_threshold:
             important=True
         return important, score
@@ -49,7 +50,7 @@ class mlp_classifier(IoT_model):
         model = self.design_model_architecture()
         history = model.fit(
             X, y,
-            epochs=20,  # shorter training for testing
+            epochs=5,  # shorter training for testing
             batch_size=128,
             verbose=1
         )

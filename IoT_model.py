@@ -62,7 +62,7 @@ class IoT_model():
         y=X['machine_status']
         X=X.drop(columns=["timestamp", "machine_status"])
         if should_inject_faults:
-            X, y = inject_faults(X,y, fault_fraction=0.05)
+            X, y = inject_faults(X,y, fault_fraction=0.4)
 
         y=binary_label(y)
         self.n_features = X.shape[1]  # number of sensors (~50)
