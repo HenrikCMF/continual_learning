@@ -260,7 +260,8 @@ class IoT_model():
 
 
     def improve_model(self, data, invert_loss=False, pdr=0):
-        #if invert_loss:
+        #if invert_loss==False and os.path.getsize("test_files/faulty_data.csv") > 0:
+        #    return None
         #    return None
         pruning_level=pdr
         model, X=self.train_model(data, invert_loss, pruning_level)

@@ -34,10 +34,10 @@ class mlp_classifier(IoT_model):
         inputs = tf.keras.Input(shape=(self.n_features,))
         
         # Custom architecture (e.g., deeper encoder/decoder)
-        x = tf.keras.layers.Dense(256, activation="relu")(inputs)
+        x = tf.keras.layers.Dense(128, activation="relu")(inputs)
         x = tf.keras.layers.Dense(128, activation="relu")(x)
         x = tf.keras.layers.Dense(64, activation="relu")(x)  # Bottleneck
-        x = tf.keras.layers.Dense(64, activation="relu")(x)
+        x = tf.keras.layers.Dense(32, activation="relu")(x)
         out=tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
         autoencoder = tf.keras.Model(inputs, out)
@@ -69,11 +69,13 @@ class mlp_classifier(IoT_model):
         new_data=self.scale_data(np.array(data))
         with tfmot.quantization.keras.quantize_scope():
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
-        num_epochs = max(5, min(100, int(2000 / len(data))))
+        num_epochs = max(5, min(100, int(1000 / len(data))))
+        if invert_loss:
+            num_epochs*=5
         data_labels=binary_label(data_labels)
         if os.path.getsize("test_files/faulty_data.csv") > 0:
             new_data, data_labels=self.combine_faulty_with_random_old(new_data, data_labels)
-        data, data_labels=self.combine_new_with_random_old(X,y, new_data, data_labels, num=int(len(new_data)/10))
+        data, data_labels=self.combine_new_with_random_old(X,y, new_data, data_labels, num=int(len(new_data)/30))
         values1, counts1 = np.unique(data_labels, return_counts=True)
         print(dict(zip(values1, counts1)))
         print("about to train with input data of dim: ", np.shape(data), " with label number: ", np.shape(data_labels))
