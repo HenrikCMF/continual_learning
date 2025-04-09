@@ -28,8 +28,8 @@ class base_station(TCP_COM):
                 f.write("")  # Write an empty string to create the file
         
         self.init_data=os.path.join('test_files','initial_data.csv')
-        #self.ml_model=IoT_model.IoT_model(self.init_data)
-        self.ml_model=mlp_classifier(self.init_data)
+        self.ml_model=IoT_model.IoT_model(self.init_data)
+        #self.ml_model=mlp_classifier(self.init_data)
         if self.NEW_START:
             self.ml_model.train_initial_model()
         self.device_type="bs"

@@ -56,8 +56,8 @@ class edge_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        #self.model = IoT_model.IoT_model("test_files/initial_data.csv")
-        self.model = mlp_classifier("test_files/initial_data.csv")
+        self.model = IoT_model.IoT_model("test_files/initial_data.csv")
+        #self.model = mlp_classifier("test_files/initial_data.csv")
         #self.model.load_model()
 
     def analyze_samples(self):
@@ -242,7 +242,7 @@ class edge_device(TCP_COM):
         
         # Plot the mse_buf values
         plt.figure(figsize=(10, 5))
-        plt.plot(mse_buf, label="Model Output")
+        plt.plot(mse_buf, label="MSE of Model Output")
         plt.ylim(-0.1, min(10, max(mse_buf)))
         # Plot vertical lines where 'machine_status' is 'BROKEN'
         for idx in adjusted_broken_indices:
@@ -252,8 +252,8 @@ class edge_device(TCP_COM):
 
         # Labels and legend
         plt.xlabel("Index")
-        plt.ylabel("Model Output")
-        plt.title("Binary Fault Detector")
+        plt.ylabel("MSE of Model Output")
+        plt.title("Autoencoder")
         plt.legend()
         plt.show()
 
