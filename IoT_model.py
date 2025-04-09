@@ -127,7 +127,7 @@ class IoT_model():
         model = self.make_model_quantization_aware(autoencoder)
         history = model.fit(
                 X,X,
-                epochs=20,
+                epochs=10,
                 batch_size=256,
                 verbose=1
                 )
@@ -232,7 +232,7 @@ class IoT_model():
         #for _ in range(num_epochs):
 
         if invert_loss==False:
-            data=self.combine_new_with_random_old(X, new_data)
+            data=self.combine_new_with_random_old(X,y, new_data)
         elif os.path.getsize("test_files/faulty_data.csv") > 0:
             data=self.combine_faulty_with_random_old(new_data)
         else:
