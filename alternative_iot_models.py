@@ -34,10 +34,10 @@ class mlp_classifier(IoT_model):
         inputs = tf.keras.Input(shape=(self.n_features,))
         
         # Custom architecture (e.g., deeper encoder/decoder)
-        x = tf.keras.layers.Dense(128, activation="relu")(inputs)
-        x = tf.keras.layers.Dense(128, activation="relu")(x)
-        x = tf.keras.layers.Dense(64, activation="relu")(x)  # Bottleneck
-        x = tf.keras.layers.Dense(32, activation="relu")(x)
+        x = tf.keras.layers.Dense(64, activation="relu")(inputs)
+        x = tf.keras.layers.Dense(64, activation="relu")(x)
+        x = tf.keras.layers.Dense(32, activation="relu")(x)  # Bottleneck
+        x = tf.keras.layers.Dense(16, activation="relu")(x)
         out=tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
         autoencoder = tf.keras.Model(inputs, out)
@@ -69,9 +69,9 @@ class mlp_classifier(IoT_model):
         new_data=self.scale_data(np.array(data))
         with tfmot.quantization.keras.quantize_scope():
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
-        num_epochs = max(5, min(100, int(1000 / len(data))))
+        num_epochs = max(5, min(1000, int(1000 / len(data))))
         if invert_loss:
-            num_epochs*=5
+            num_epochs*=2
         data_labels=binary_label(data_labels)
         if os.path.getsize("test_files/faulty_data.csv") > 0:
             new_data, data_labels=self.combine_faulty_with_random_old(new_data, data_labels)

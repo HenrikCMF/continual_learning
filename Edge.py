@@ -246,14 +246,14 @@ class edge_device(TCP_COM):
         plt.ylim(-0.1, min(10, max(mse_buf)))
         # Plot vertical lines where 'machine_status' is 'BROKEN'
         for idx in adjusted_broken_indices:
-            plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="BROKEN" if idx == adjusted_broken_indices[0] else "")
-        plt.axvline(x=(last_index-self.start_offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
+            plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="Fault" if idx == adjusted_broken_indices[0] else "")
+        #plt.axvline(x=(last_index-self.start_offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
 
 
         # Labels and legend
         plt.xlabel("Index")
         plt.ylabel("Model Output")
-        plt.title("Model output through dataset with marked faults")
+        plt.title("Binary Fault Detector")
         plt.legend()
         plt.show()
 
