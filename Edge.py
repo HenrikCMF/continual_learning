@@ -99,7 +99,8 @@ class edge_device(TCP_COM):
                 #print("Found sample")
                 self.samples_since_last_batch-=1
                 print("Getting last :", min(NUM_BUF_SAMPLES, self.samples_since_last_batch), "samples")
-                samples, timestamps= self.get_previous_X_samples(min(NUM_BUF_SAMPLES, self.samples_since_last_batch))
+                #samples, timestamps= self.get_previous_X_samples(min(NUM_BUF_SAMPLES, self.samples_since_last_batch))
+                samples, timestamps= self.get_previous_X_samples(NUM_BUF_SAMPLES)
                 self.samples_since_last_batch=0
                 try:
                     self.sample_buffer.extend(samples)

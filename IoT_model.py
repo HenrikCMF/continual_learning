@@ -127,7 +127,7 @@ class IoT_model():
         model = self.make_model_quantization_aware(autoencoder)
         history = model.fit(
                 X,X,
-                epochs=10,
+                epochs=20,
                 batch_size=256,
                 verbose=1
                 )
