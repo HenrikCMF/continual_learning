@@ -17,7 +17,7 @@ class IoT_model():
     
     def __init__(self, initial_data):
         self.model_name="autoencoder"
-        self.trigger_threshold=2
+        self.trigger_threshold=1
         print("TensorFlow version:", tf.__version__)
         print("TFMOT version:", tfmot.__version__)
         self.initial_data=initial_data
@@ -79,11 +79,11 @@ class IoT_model():
         print("feats",self.n_features)
         inputs = tf.keras.Input(shape=(self.n_features,))
         # Encoder
-        encoded = tf.keras.layers.Dense(12, activation="relu")(inputs)
-        encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(2, activation="relu")(encoded)  # Bottleneck
-        decoded = tf.keras.layers.Dense(6, activation="relu")(encoded)
-        decoded = tf.keras.layers.Dense(12, activation="relu")(decoded)
+        encoded = tf.keras.layers.Dense(64, activation="relu")(inputs)
+        encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)  # Bottleneck
+        decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
+        decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
 
         #encoded = tf.keras.layers.Dense(24, activation="relu")(inputs)
         #encoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
@@ -223,12 +223,12 @@ class IoT_model():
         
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
-        num_epochs = max(5, min(100, int(4000 / len(data))))
+        num_epochs = max(5, min(100, int(2000 / len(data))))
 
         if invert_loss==False:
             num_epochs=int(num_epochs)
         else:
-            num_epochs=int(num_epochs*1.3)
+            num_epochs=int(num_epochs*3)
         #for _ in range(num_epochs):
 
         if invert_loss==False:
