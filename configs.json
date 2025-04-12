@@ -7,7 +7,7 @@
     "edgeNET_INTERFACE":"wlp61s0",
     "baseNET_INTERFACE":"enp8s0",
     "use_config_network_control":true,
-    "bandwidth_limit_kbps": 80,
+    "bandwidth_limit_kbps": 8,
     "burst_limit_kbps": 160,
     "buffering_latency_ms": 4000,
     "packet_loss_pct":10,
