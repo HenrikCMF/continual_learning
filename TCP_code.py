@@ -107,7 +107,7 @@ class TCP_COM():
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
-                #print(received_size)
+                print(received_size)
                 data = conn.recv(1024)
                 if not data:
                     break

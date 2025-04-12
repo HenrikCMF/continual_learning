@@ -141,6 +141,7 @@ class base_station(TCP_COM):
         for ip in self.edge_devices:
             #self.TAR_IP=ip
             #self.send_file(ip, self.TAR_PORT_TCP,output_zip)
+            print("Sending model")
             self.send_file(ip, self.TAR_PORT_TCP,model)
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
