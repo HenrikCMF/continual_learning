@@ -59,7 +59,7 @@ class TCP_COM():
         if file_name=="READY":
             conn.sendall("ACK".encode())
             self.file_Q.put((str("READY"),0))
-            print("Received done")
+            #print("Received done")
 
     @retry_transmission_handler
     def Ready_to_start(self, client_socket, val=0, packet_num=0):
@@ -92,8 +92,10 @@ class TCP_COM():
         self.time_transmitting+=time.time()-start
 
     def __receive_file(self, conn, file_name, file_size):
+        print("1")
         start=time.time()
         conn.sendall("READY".encode())
+        print("2")
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
@@ -102,6 +104,7 @@ class TCP_COM():
                     break
                 f.write(data)
                 received_size += len(data)
+        print("3")
         stop=time.time()
         print("putting in queue",(str(os.path.join(self.in_path,f"{file_name}")),stop-start))
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),stop-start))
@@ -143,6 +146,7 @@ class TCP_COM():
                     type, file_name, file_size = metadata.split(":")
                     print(" received:", type, file_name, file_size)
                     if telegram_type(int(type))==telegram_type.FILE:
+                        print("R- File")
                         file_size = int(file_size)
                         self.__receive_file(conn, file_name, file_size)
                     elif telegram_type(int(type))==telegram_type.PDR:
