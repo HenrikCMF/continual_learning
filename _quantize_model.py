@@ -4,31 +4,35 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
 
-def determine_quantization_level(quantconverter, level):
+def determine_quantization_level(quantconverter, level, example_data):
+    def representative_data_gen():
+        x=example_data
+        print("LEN OF X",len(x))
+        for i in range(len(x)):
+            yield [x[i:i+1].astype(np.float32)]
     match level:
         case 0 :
+            print("not compressing")
             return quantconverter
         case 1:
+            print("16bit")
             quantconverter.target_spec.supported_types = [tf.float16]
             return quantconverter
         case 2:
+            print("8bit")
             quantconverter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+            quantconverter.inference_input_type = tf.int8
+            quantconverter.inference_output_type = tf.int8
+            quantconverter.target_spec.supported_types = [tf.int8]
+            quantconverter.representative_dataset = representative_data_gen
             return quantconverter
         case _:
             return quantconverter
 
 def quantize_8_bit(model, example_data, location):
-    def representative_data_gen():
-        x=example_data
-        for i in range(len(x)):
-            yield [x[i:i+1].astype(np.float32)]
-
     quantconverter = tf.lite.TFLiteConverter.from_keras_model(model)
     quantconverter.optimizations = [tf.lite.Optimize.DEFAULT]
-
-    quantconverter = determine_quantization_level(quantconverter, 0)
-    #quantconverter = determine_quantization_level(quantconverter, 0)
-    quantconverter.representative_dataset = representative_data_gen
+    quantconverter = determine_quantization_level(quantconverter, 0, example_data)
     quantlite=quantconverter.convert()
     with open(location+".tflite", "wb") as f:
         f.write(quantlite)

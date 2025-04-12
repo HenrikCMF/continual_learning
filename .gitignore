@@ -11,3 +11,6 @@ received/
 faulty_data.csv
 *.csv
 *.avsc
+*.tflite
+*.h5
+*.zip

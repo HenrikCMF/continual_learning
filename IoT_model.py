@@ -105,7 +105,7 @@ class IoT_model():
         return model
     
     def make_representative_data(self, X):
-        index = np.random.choice(X.shape[0], 100, replace=False)
+        index = np.random.choice(X.shape[0], 1000, replace=False)
         x_random = X.iloc[index]
         return x_random
 
@@ -125,12 +125,20 @@ class IoT_model():
         X, y = self.prepare_training_data(fit_scaler=True)
         autoencoder = self.design_model_architecture()
         model = self.make_model_quantization_aware(autoencoder)
+        ############################
+        #pruning_params = {'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(initial_sparsity=0.0,final_sparsity=0.5,begin_step=0,end_step=1000)}
+        #model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
+        #model.compile(optimizer="adam", loss='mse')
+        #callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
+        ##################################
         history = model.fit(
                 X,X,
                 epochs=20,
                 batch_size=256,
-                verbose=1
+                verbose=1,
+                #callbacks=callbacks
                 )
+        #model = tfmot.sparsity.keras.strip_pruning(model)
         model.save(os.path.join("models", self.model_name+".h5"))
         self.quantize_model(X,model, os.path.join("models", self.model_name))
 

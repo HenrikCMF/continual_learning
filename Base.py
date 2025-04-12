@@ -50,7 +50,7 @@ class base_station(TCP_COM):
             #jitter_ms=configs['jitter_ms']
             delay_ms=None
             jitter_ms=None
-            self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
+            #self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type, self.file_Q)
@@ -140,8 +140,8 @@ class base_station(TCP_COM):
         self.total_data_sent+=os.path.getsize(output_zip)
         for ip in self.edge_devices:
             #self.TAR_IP=ip
-            #self.send_file(ip, self.TAR_PORT_TCP,output_zip)
-            self.send_file(ip, self.TAR_PORT_TCP,model)
+            self.send_file(ip, self.TAR_PORT_TCP,output_zip)
+            #self.send_file(ip, self.TAR_PORT_TCP,model)
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
