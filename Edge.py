@@ -154,13 +154,11 @@ class edge_device(TCP_COM):
                     pass
                 self.file_Q.task_done()
                 #self.get_important_important_batch()
-                self.index=10000000
             except queue.Empty:
                 print("waiting for model")
             except Exception as e:
                 print(e)
-            print("could pass to end", self.index>=self.len_of_dataset)
-            if self.index>=self.len_of_dataset:
+            if self.index>=self.len_of_dataset or True:
                 pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
                 #self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
                 self.send_done_sending()
