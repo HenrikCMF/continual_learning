@@ -264,6 +264,7 @@ class IoT_model():
         #    return None
         #    return None
         pruning_level=pdr
+        #pruning_level=50
         model, X=self.train_model(data, invert_loss, pruning_level)
         model.save(os.path.join("models", self.model_name+".h5"))
         

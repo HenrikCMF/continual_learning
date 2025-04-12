@@ -139,7 +139,7 @@ class edge_device(TCP_COM):
         done_sending=False
         self.samples_since_last_batch=0
         #self.get_important_important_batch()
-        
+        files_received=0
         try:
             self.Ready_to_start()
             file, transmission_time = self.file_Q.get(timeout=3)
@@ -148,13 +148,15 @@ class edge_device(TCP_COM):
         while True:
             try:
                 file, transmission_time= self.file_Q.get(timeout=2)
+                files_received+=1
                 print(file)
                 if ".tflite" in file or '.zip' in file:
                     #self.received_model(file)
                     pass
                 self.file_Q.task_done()
                 #self.get_important_important_batch()
-                self.index=1000000
+                self.send_ACK()
+                self.index+=50000
             except queue.Empty:
                 print("waiting for model")
             except Exception as e:
@@ -162,8 +164,12 @@ class edge_device(TCP_COM):
             if self.index>=self.len_of_dataset:
                 pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
                 #self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
-                self.send_done_sending()
+                try:
+                    self.send_done_sending()
+                except:
+                    print("Failed to send done")
                 print("done")
+                print("Received, ", files_received, "files")
                 print("Time elapsed: ", time.time()-start)
                 print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)

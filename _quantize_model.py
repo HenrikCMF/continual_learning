@@ -26,8 +26,8 @@ def quantize_8_bit(model, example_data, location):
     quantconverter = tf.lite.TFLiteConverter.from_keras_model(model)
     quantconverter.optimizations = [tf.lite.Optimize.DEFAULT]
 
-    #quantconverter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
     quantconverter = determine_quantization_level(quantconverter, 0)
+    #quantconverter = determine_quantization_level(quantconverter, 0)
     quantconverter.representative_dataset = representative_data_gen
     quantlite=quantconverter.convert()
     with open(location+".tflite", "wb") as f:

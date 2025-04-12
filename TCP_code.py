@@ -50,15 +50,25 @@ class TCP_COM():
         file_name="DONE"
         file_size=0
         client_socket.sendall(f"{telegram_type.DUMMY.value}:{file_name}:{file_size}".encode())
+
+    @retry_transmission_handler
+    def send_ACK(self, client_socket, val=0, packet_num=0):
+        client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
+        file_name="ACK"
+        file_size=0
+        client_socket.sendall(f"{telegram_type.DUMMY.value}:{file_name}:{file_size}".encode())
     
     def handle_dummy_req(self,conn, file_size, file_name):
         file_size=float(file_size)
         if file_name=="DONE":
             self.file_Q.put((str("DONE"),0))
             print("Received done")
-        if file_name=="READY":
+        elif file_name=="READY":
             conn.sendall("ACK".encode())
             self.file_Q.put((str("READY"),0))
+        elif file_name=="ACK":
+            conn.sendall("ACK".encode())
+            self.file_Q.put((str("ACK"),0))
             #print("Received done")
 
     @retry_transmission_handler
@@ -102,8 +112,8 @@ class TCP_COM():
             while received_size < file_size:
                 print(received_size)
                 data = conn.recv(1024)
-                #if not data:
-                #    break
+                if not data:
+                    break
                 f.write(data)
                 received_size += len(data)
         print("3")

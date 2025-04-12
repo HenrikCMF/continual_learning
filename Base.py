@@ -103,6 +103,8 @@ class base_station(TCP_COM):
                     remove_all_avro_files('received')
                     exit()
                 self.file_Q.task_done()
+                if "ACK" in file:
+                    self.distribute_model("models/"+self.ml_model.model_name+".tflite")
                 if ".avro" in file:
                     if self.use_PDR:
                         self.measure_PDR(100)
@@ -139,8 +141,8 @@ class base_station(TCP_COM):
         for ip in self.edge_devices:
             #self.TAR_IP=ip
             #self.send_file(ip, self.TAR_PORT_TCP,output_zip)
-            
-            self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
+            self.send_file(ip, self.TAR_PORT_TCP,model)
+            #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
 bs=base_station("received")
