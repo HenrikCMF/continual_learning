@@ -42,7 +42,7 @@ class edge_device(TCP_COM):
             #packet_loss_pct=None
             delay_ms=None
             jitter_ms=None
-            #self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
+            self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
@@ -138,7 +138,6 @@ class edge_device(TCP_COM):
         self.mse_buff=[]
         done_sending=False
         self.samples_since_last_batch=0
-        #self.get_important_important_batch()
         files_received=0
         try:
             self.Ready_to_start()
@@ -154,9 +153,9 @@ class edge_device(TCP_COM):
                     self.received_model(file)
                     #pass
                 self.file_Q.task_done()
-                self.get_important_important_batch()
-                #self.send_ACK()
-                #self.index+=50000
+                #self.get_important_important_batch()
+                self.send_ACK()
+                self.index+=50000
             except queue.Empty:
                 print("waiting for model")
             except Exception as e:
@@ -173,7 +172,7 @@ class edge_device(TCP_COM):
                 print("Time elapsed: ", time.time()-start)
                 print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)
-                self.make_end_plot(self.mse_buff)
+                #self.make_end_plot(self.mse_buff)
                 remove_all_avro_files('test_files')
                 exit()
         
