@@ -103,6 +103,7 @@ class TCP_COM():
                 f.write(data)
                 received_size += len(data)
         stop=time.time()
+        print("putting in queue",(str(os.path.join(self.in_path,f"{file_name}")),stop-start))
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),stop-start))
         self.time_transmitting+=time.time()-start
         #print(f"File '{file_name}' received, took: ", stop-start)
