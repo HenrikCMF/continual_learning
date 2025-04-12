@@ -102,9 +102,8 @@ class TCP_COM():
             while received_size < file_size:
                 print(received_size)
                 data = conn.recv(1024)
-                print(data)
-                if not data:
-                    break
+                #if not data:
+                #    break
                 f.write(data)
                 received_size += len(data)
         print("3")
