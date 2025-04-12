@@ -96,10 +96,13 @@ class TCP_COM():
         start=time.time()
         conn.sendall("READY".encode())
         print("2")
+        print("Opening", os.path.join(self.in_path,f"{file_name}"))
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
+                print(received_size)
                 data = conn.recv(1024)
+                print(data)
                 if not data:
                     break
                 f.write(data)
