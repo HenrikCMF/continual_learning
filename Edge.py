@@ -161,13 +161,13 @@ class edge_device(TCP_COM):
                 print(e)
             if self.index>=self.len_of_dataset:
                 pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
-                self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
+                #self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
                 self.send_done_sending()
                 print("done")
                 print("Time elapsed: ", time.time()-start)
                 print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)
-                self.make_end_plot(self.mse_buff)
+                #self.make_end_plot(self.mse_buff)
                 remove_all_avro_files('test_files')
                 exit()
         
