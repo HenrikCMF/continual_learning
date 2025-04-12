@@ -23,9 +23,9 @@ def determine_quantization_level(quantconverter, level, example_data):
             #
             quantconverter.optimizations = [tf.lite.Optimize.DEFAULT]
             quantconverter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-            quantconverter.inference_input_type = tf.int8
-            quantconverter.inference_output_type = tf.int8
-            quantconverter.target_spec.supported_types = [tf.int8]
+            #quantconverter.inference_input_type = tf.int8
+            #quantconverter.inference_output_type = tf.int8
+            #quantconverter.target_spec.supported_types = [tf.int8]
             quantconverter.representative_dataset = representative_data_gen
             #quantconverter._experimental_disable_per_channel = True
             #quantconverter._experimental_force_quantize = True
