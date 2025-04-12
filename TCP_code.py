@@ -105,7 +105,7 @@ class TCP_COM():
         stop=time.time()
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),stop-start))
         self.time_transmitting+=time.time()-start
-        print(f"File '{file_name}' received, took: ", stop-start)
+        #print(f"File '{file_name}' received, took: ", stop-start)
 
     def handle_PDR_req(self, file_size, file_name):
         start=time.time()
