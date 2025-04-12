@@ -79,17 +79,21 @@ class IoT_model():
         print("feats",self.n_features)
         inputs = tf.keras.Input(shape=(self.n_features,))
         # Encoder
-        encoded = tf.keras.layers.Dense(64, activation="relu")(inputs)
-        encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)  # Bottleneck
-        decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
-
-        #encoded = tf.keras.layers.Dense(24, activation="relu")(inputs)
-        #encoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
+        #encoded = tf.keras.layers.Dense(64, activation="relu")(inputs)
+        #encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
         #encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)  # Bottleneck
-        #decoded = tf.keras.layers.Dense(12, activation="relu")(encoded)
-        #decoded = tf.keras.layers.Dense(24, activation="relu")(decoded)
+        #decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
+        #decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
+
+        encoded = tf.keras.layers.Dense(512, activation="relu")(inputs)
+        encoded = tf.keras.layers.Dense(256, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(128, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(8, activation="relu")(encoded) 
+        decoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
+        decoded = tf.keras.layers.Dense(128, activation="relu")(encoded)
+        decoded = tf.keras.layers.Dense(256, activation="relu")(decoded)
+        decoded = tf.keras.layers.Dense(512, activation="relu")(decoded)
 
         decoded = tf.keras.layers.Dense(self.n_features, activation="linear")(decoded)
 
@@ -113,6 +117,7 @@ class IoT_model():
         
         x_random=self.make_representative_data(pd.DataFrame(data))
         qm.quantize_8_bit(model,x_random, path)
+        
 
     def check_sample(self, data):
         important=False
