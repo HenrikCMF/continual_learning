@@ -119,13 +119,14 @@ class edge_device(TCP_COM):
             rare, mse, s, t = self.analyze_samples()
             
 
-            print(f"Peak memory during inference: {peak_memory / 1024:.2f} KB")
+            
             self.samples_since_last_batch+=1
 
             if rare:
                 stop_tracking()
                 thread.join()
                 peak_memory = get_peak()
+                print(f"Peak memory during inference: {peak_memory / 1024:.2f} KB")
                 #print("Found sample")
                 self.samples_since_last_batch-=1
                 print("Getting last :", min(NUM_BUF_SAMPLES, self.samples_since_last_batch), "samples")
