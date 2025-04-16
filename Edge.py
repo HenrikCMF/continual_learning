@@ -92,16 +92,11 @@ class edge_device(TCP_COM):
         #NUM_BUF_SAMPLES=100
         NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
-        tracemalloc.start()
         while batch_not_found:
-            
             rare, mse, s, t = self.analyze_samples()
             self.samples_since_last_batch+=1
 
             if rare:
-                current, peak = tracemalloc.get_traced_memory()
-                print(f"Current memory: {current / 1024:.2f} KB; Peak: {peak / 1024:.2f} KB")
-                tracemalloc.stop()
                 #print("Found sample")
                 self.samples_since_last_batch-=1
                 print("Getting last :", min(NUM_BUF_SAMPLES, self.samples_since_last_batch), "samples")
@@ -178,7 +173,7 @@ class edge_device(TCP_COM):
                 print("Time elapsed: ", time.time()-start)
                 print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)
-                #self.make_end_plot(self.mse_buff)
+                self.make_end_plot(self.mse_buff)
                 remove_all_avro_files('test_files')
                 exit()
         

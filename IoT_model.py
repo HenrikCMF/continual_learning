@@ -33,6 +33,16 @@ class IoT_model():
         self.enc_in_shape=self.input_details[0]["shape_signature"]
         self.output_details = self.interpreter.get_output_details()
         self.dec_out_shape=self.output_details[0]["shape_signature"]
+
+
+        tensor_details = self.interpreter.get_tensor_details()
+        total_memory = 0
+        for tensor in tensor_details:
+            shape = tensor['shape']
+            dtype = tensor['dtype']
+            size = np.prod(shape) * np.dtype(dtype).itemsize
+            total_memory += size
+        print(f"Estimated total tensor memory: {total_memory / 1024:.2f} KB")
         
     def inference_on_model(self, data):
         data=np.array(self.scale_data(data))
