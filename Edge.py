@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 import psutil
+import threading
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class edge_device(TCP_COM):
@@ -60,6 +61,22 @@ class edge_device(TCP_COM):
         #self.model = mlp_classifier("test_files/initial_data.csv")
         #self.model.load_model()
 
+    def track_peak_memory(process, interval=0.005):
+        peak = 0
+        running = True
+
+        def run():
+            nonlocal peak
+            while running:
+                mem = process.memory_info().rss
+                peak = max(peak, mem)
+                time.sleep(interval)
+
+        thread = threading.Thread(target=run)
+        thread.start()
+        return thread, lambda: setattr(globals(), 'running', False), lambda: peak
+
+
     def analyze_samples(self):
         s, t=self.get_sample()    
         for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
@@ -94,10 +111,13 @@ class edge_device(TCP_COM):
         NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         while batch_not_found:
-            before = process.memory_info().rss
+            thread, stop_tracking, get_peak = self.track_peak_memory(process)
             rare, mse, s, t = self.analyze_samples()
-            after = process.memory_info().rss
-            print(f"Approx memory used by inference: {(after - before) / 1024:.2f} KB")
+            stop_tracking()
+            thread.join()
+            peak_memory = get_peak()
+
+            print(f"Peak memory during inference: {peak_memory / 1024:.2f} KB")
             self.samples_since_last_batch+=1
 
             if rare:
