@@ -156,8 +156,8 @@ class edge_device(TCP_COM):
                 files_received+=1
                 print(file)
                 if ".tflite" in file or '.zip' in file:
-                    #self.received_model(file)
-                    pass
+                    self.received_model(file)
+                    #pass
                 self.file_Q.task_done()
                 self.get_important_important_batch()
                 #self.send_ACK()
