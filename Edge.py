@@ -61,7 +61,7 @@ class edge_device(TCP_COM):
         #self.model = mlp_classifier("test_files/initial_data.csv")
         #self.model.load_model()
 
-    def track_peak_memory(process, interval=0.005):
+    def track_peak_memory(self,process, interval=0.005):
         peak = 0
         running = True
 
