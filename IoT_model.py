@@ -68,6 +68,7 @@ class IoT_model():
         self.n_features = X.shape[1]  # number of sensors (~50)
         self.n_samples = len(X)
         if fit_scaler:
+            print("FITTED SCALER")
             self.scaler.fit(X)
         X=self.scaler.transform(X)
         if fit_scaler:

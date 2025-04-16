@@ -107,7 +107,6 @@ class TCP_COM():
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
-                print(received_size)
                 data = conn.recv(1024)
                 if not data:
                     break
@@ -153,7 +152,6 @@ class TCP_COM():
                     type, file_name, file_size = metadata.split(":")
                     print(" received:", type, file_name, file_size)
                     if telegram_type(int(type))==telegram_type.FILE:
-                        print("R- File")
                         file_size = int(file_size)
                         self.__receive_file(conn, file_name, file_size)
                     elif telegram_type(int(type))==telegram_type.PDR:
