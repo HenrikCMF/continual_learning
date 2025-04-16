@@ -153,9 +153,9 @@ class edge_device(TCP_COM):
                     #self.received_model(file)
                     pass
                 self.file_Q.task_done()
-                #self.get_important_important_batch()
-                self.send_ACK()
-                self.index+=50000
+                self.get_important_important_batch()
+                #self.send_ACK()
+                #self.index+=50000
             except queue.Empty:
                 print("waiting for model")
             except Exception as e:

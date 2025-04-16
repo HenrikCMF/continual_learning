@@ -86,15 +86,13 @@ class IoT_model():
         #decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
         #decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
 
-        encoded = tf.keras.layers.Dense(512, activation="relu")(inputs)
-        encoded = tf.keras.layers.Dense(256, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(128, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(128, activation="relu")(inputs)
         encoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
         encoded = tf.keras.layers.Dense(8, activation="relu")(encoded) 
-        decoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
-        decoded = tf.keras.layers.Dense(128, activation="relu")(encoded)
-        decoded = tf.keras.layers.Dense(256, activation="relu")(decoded)
-        decoded = tf.keras.layers.Dense(512, activation="relu")(decoded)
+        decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
+        decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
+        decoded = tf.keras.layers.Dense(128, activation="relu")(decoded)
 
         decoded = tf.keras.layers.Dense(self.n_features, activation="linear")(decoded)
 
@@ -144,7 +142,7 @@ class IoT_model():
                 verbose=1,
                 #callbacks=callbacks
                 )
-        #model = tfmot.sparsity.keras.strip_pruning(model)
+        model = tfmot.sparsity.keras.strip_pruning(model)
         model.save(os.path.join("models", self.model_name+".h5"))
         self.quantize_model(X,model, os.path.join("models", self.model_name))
 

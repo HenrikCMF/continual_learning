@@ -140,9 +140,10 @@ class base_station(TCP_COM):
         self.total_data_sent+=os.path.getsize(output_zip)
         for ip in self.edge_devices:
             #self.TAR_IP=ip
-            #self.send_file(ip, self.TAR_PORT_TCP,output_zip)
             print("Sending model")
-            self.send_file(ip, self.TAR_PORT_TCP,model)
+            self.send_file(ip, self.TAR_PORT_TCP,output_zip)
+            
+            #self.send_file(ip, self.TAR_PORT_TCP,model)
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
