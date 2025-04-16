@@ -22,6 +22,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 
 def track_peak_memory(process, interval=0.005):
     when_start=process.memory_info().rss
+    print(when_start)
     stop_event = threading.Event()
     peak = {'value': 0}
 
@@ -114,14 +115,11 @@ class edge_device(TCP_COM):
         #NUM_BUF_SAMPLES=100
         NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
+        thread, stop_tracking, get_peak = track_peak_memory(process)
         while batch_not_found:
-            thread, stop_tracking, get_peak = track_peak_memory(process)
+            
             rare, mse, s, t = self.analyze_samples()
-            
-
-            
             self.samples_since_last_batch+=1
-
             if rare:
                 stop_tracking()
                 thread.join()
