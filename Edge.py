@@ -21,19 +21,18 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
 def track_peak_memory(process, interval=0.005):
-    peak = 0
-    running = True
+    stop_event = threading.Event()
+    peak = {'value': 0}
 
     def run():
-        nonlocal peak
-        while running:
+        while not stop_event.is_set():
             mem = process.memory_info().rss
-            peak = max(peak, mem)
+            peak['value'] = max(peak['value'], mem)
             time.sleep(interval)
 
     thread = threading.Thread(target=run)
     thread.start()
-    return thread, lambda: setattr(globals(), 'running', False), lambda: peak
+    return thread, stop_event.set, lambda: peak['value']
 
 
 class edge_device(TCP_COM):
