@@ -19,6 +19,23 @@ import psutil
 import threading
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
+
+def track_peak_memory(self,process, interval=0.005):
+    peak = 0
+    running = True
+
+    def run():
+        nonlocal peak
+        while running:
+            mem = process.memory_info().rss
+            peak = max(peak, mem)
+            time.sleep(interval)
+
+    thread = threading.Thread(target=run)
+    thread.start()
+    return thread, lambda: setattr(globals(), 'running', False), lambda: peak
+
+
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.use_PDR=False
@@ -61,20 +78,7 @@ class edge_device(TCP_COM):
         #self.model = mlp_classifier("test_files/initial_data.csv")
         #self.model.load_model()
 
-    def track_peak_memory(self,process, interval=0.005):
-        peak = 0
-        running = True
-
-        def run():
-            nonlocal peak
-            while running:
-                mem = process.memory_info().rss
-                peak = max(peak, mem)
-                time.sleep(interval)
-
-        thread = threading.Thread(target=run)
-        thread.start()
-        return thread, lambda: setattr(globals(), 'running', False), lambda: peak
+    
 
 
     def analyze_samples(self):
@@ -111,7 +115,7 @@ class edge_device(TCP_COM):
         NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         while batch_not_found:
-            thread, stop_tracking, get_peak = self.track_peak_memory(process)
+            thread, stop_tracking, get_peak = track_peak_memory(process)
             rare, mse, s, t = self.analyze_samples()
             stop_tracking()
             thread.join()
