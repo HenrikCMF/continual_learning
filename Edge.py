@@ -20,7 +20,7 @@ import threading
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
-def track_peak_memory(self,process, interval=0.005):
+def track_peak_memory(process, interval=0.005):
     peak = 0
     running = True
 
