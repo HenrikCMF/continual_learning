@@ -37,7 +37,6 @@ class IoT_model():
     def inference_on_model(self, data):
         data=np.array(self.scale_data(data))
         self.interpreter.set_tensor(self.input_details[0]['index'], np.reshape(data.astype(np.float32),(-1,self.enc_in_shape[1])))
-        #self.interpreter.set_tensor(self.input_details[0]['index'], np.reshape(data.astype(np.int8),(-1,self.enc_in_shape[1])))
         self.interpreter.invoke()
         output_data = np.reshape(self.interpreter.get_tensor(self.output_details[0]['index']),(self.dec_out_shape[1],-1))
         output_data=output_data.reshape(1,-1)

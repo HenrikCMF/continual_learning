@@ -15,7 +15,7 @@ from alternative_iot_models import mlp_classifier
 import matplotlib.pyplot as plt
 import warnings
 from sklearn.exceptions import ConvergenceWarning
-
+import tracemalloc
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class edge_device(TCP_COM):
@@ -42,7 +42,7 @@ class edge_device(TCP_COM):
             #packet_loss_pct=None
             delay_ms=None
             jitter_ms=None
-            self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
+            #self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
@@ -92,10 +92,16 @@ class edge_device(TCP_COM):
         #NUM_BUF_SAMPLES=100
         NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
+        tracemalloc.start()
         while batch_not_found:
+            
             rare, mse, s, t = self.analyze_samples()
             self.samples_since_last_batch+=1
+
             if rare:
+                current, peak = tracemalloc.get_traced_memory()
+                print(f"Current memory: {current / 1024:.2f} KB; Peak: {peak / 1024:.2f} KB")
+                tracemalloc.stop()
                 #print("Found sample")
                 self.samples_since_last_batch-=1
                 print("Getting last :", min(NUM_BUF_SAMPLES, self.samples_since_last_batch), "samples")

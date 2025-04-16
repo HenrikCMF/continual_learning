@@ -16,6 +16,7 @@ def determine_quantization_level(quantconverter, level, example_data):
             return quantconverter
         case 1:
             print("16bit")
+            quantconverter.optimizations = [tf.lite.Optimize.DEFAULT]
             quantconverter.target_spec.supported_types = [tf.float16]
             return quantconverter
         case 2:
