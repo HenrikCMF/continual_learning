@@ -15,7 +15,7 @@ from alternative_iot_models import mlp_classifier
 import matplotlib.pyplot as plt
 import warnings
 from sklearn.exceptions import ConvergenceWarning
-import tracemalloc
+import psutil
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class edge_device(TCP_COM):
@@ -82,6 +82,7 @@ class edge_device(TCP_COM):
             
 
     def get_important_important_batch(self):
+        process = psutil.Process()
         batch_not_found=True
         if self.use_PDR:
             important_batches_tar = self.determine_batch_num()
@@ -93,7 +94,10 @@ class edge_device(TCP_COM):
         NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         while batch_not_found:
+            before = process.memory_info().rss
             rare, mse, s, t = self.analyze_samples()
+            after = process.memory_info().rss
+            print(f"Approx memory used by inference: {(after - before) / 1024:.2f} KB")
             self.samples_since_last_batch+=1
 
             if rare:
