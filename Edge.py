@@ -20,22 +20,6 @@ import threading
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
-def track_peak_memory(process, interval=0.005):
-    when_start=process.memory_info().rss
-    stop_event = threading.Event()
-    peak = {'value': 0}
-
-    def run():
-        while not stop_event.is_set():
-            mem = process.memory_info().rss
-            peak['value'] = max(peak['value'], mem)
-            time.sleep(interval)
-
-    thread = threading.Thread(target=run)
-    thread.start()
-    return thread, stop_event.set, lambda: (peak['value']-when_start)
-
-
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.use_PDR=False
@@ -103,8 +87,6 @@ class edge_device(TCP_COM):
             
 
     def get_important_important_batch(self):
-        process = psutil.Process()
-        thread, stop_tracking, get_peak = track_peak_memory(process)
         batch_not_found=True
         if self.use_PDR:
             important_batches_tar = self.determine_batch_num()
@@ -121,11 +103,6 @@ class edge_device(TCP_COM):
             rare, mse, s, t = self.analyze_samples()
             self.samples_since_last_batch+=1
             if rare:
-                stop_tracking()
-                thread.join()
-                peak_memory = get_peak()
-                print(f"Peak memory during inference: {peak_memory / 1024:.2f} KB")
-                #print("Found sample")
                 self.samples_since_last_batch-=1
                 print("Getting last :", min(NUM_BUF_SAMPLES, self.samples_since_last_batch), "samples")
                 samples, timestamps= self.get_previous_X_samples(min(NUM_BUF_SAMPLES, self.samples_since_last_batch))
