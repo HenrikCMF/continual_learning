@@ -16,7 +16,7 @@ from sklearn.exceptions import ConvergenceWarning
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
-class base_station(TCP_COM):
+class Base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH):
         self.total_data_sent=0
         self.use_PDR=False
@@ -77,7 +77,7 @@ class base_station(TCP_COM):
         df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
         df_combined.to_csv(init_data_path)
 
-    def receive_file(self, waittime=10):
+    def run(self):
         TP=0
         FP=0
         start=time.time()
@@ -147,6 +147,6 @@ class base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
-bs=base_station("received")
+bs=Base_station("received")
 #bs.send_file("307.jpg")
-bs.receive_file(12)
+bs.run()

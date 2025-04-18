@@ -16,6 +16,8 @@ warnings.filterwarnings("ignore", module="sklearn")
 class IoT_model():
     
     def __init__(self, initial_data):
+        self.init_pruning=0.9#0.9
+        self.first_run=True
         self.model_name="autoencoder"
         self.trigger_threshold=0.5
         print("TensorFlow version:", tf.__version__)
@@ -34,16 +36,16 @@ class IoT_model():
         self.output_details = self.interpreter.get_output_details()
         self.dec_out_shape=self.output_details[0]["shape_signature"]
 
-
-        tensor_details = self.interpreter.get_tensor_details()
-        total_memory = 0
-        for tensor in tensor_details:
-            shape = tensor['shape']
-            dtype = tensor['dtype']
-            size = np.prod(shape) * np.dtype(dtype).itemsize
-            total_memory += size
-        
-        print(f"Estimated total tensor memory: {total_memory / 1024:.2f} KB")
+        if self.first_run:
+            tensor_details = self.interpreter.get_tensor_details()
+            total_memory = 0
+            for tensor in tensor_details:
+                shape = tensor['shape']
+                dtype = tensor['dtype']
+                size = np.prod(shape) * np.dtype(dtype).itemsize
+                total_memory += size
+            self.first_run=False
+            print(f"Estimated total tensor memory: {total_memory / 1024:.2f} KB")
 
 
         
@@ -139,19 +141,22 @@ class IoT_model():
         return important, mse_val
 
     def train_initial_model(self):
+        batch_size=256
+        epochs=20
         X, y = self.prepare_training_data(fit_scaler=True)
+        total_steps=int(len(y)/batch_size*epochs)
         autoencoder = self.design_model_architecture()
         model = self.make_model_quantization_aware(autoencoder)
         ############################
-        #pruning_params = {'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(initial_sparsity=0.0,final_sparsity=0.5,begin_step=0,end_step=1000)}
+        #pruning_params = {'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(initial_sparsity=0.0,final_sparsity=self.init_pruning,begin_step=0,end_step=total_steps)}
         #model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
         #model.compile(optimizer="adam", loss='mse')
         #callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
         ##################################
         history = model.fit(
                 X,X,
-                epochs=20,
-                batch_size=256,
+                epochs=epochs,
+                batch_size=batch_size,
                 verbose=1,
                 #callbacks=callbacks
                 )
@@ -263,38 +268,92 @@ class IoT_model():
             data=self.combine_faulty_with_random_old(new_data)
         else:
             data=new_data
+        batch_size=128
 
-        if pruning_level:
-            pruning_params = {
-                'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
-                    initial_sparsity=0.0,
-                    final_sparsity=pruning_level,
-                    begin_step=0,
-                    end_step=1000
-                )
-            }
+        #if pruning_level:
+        #    print(pruning_level)
+        #    total_steps=int(len(data)/batch_size*num_epochs)
+            #pruning_params = {'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(initial_sparsity=0.0,final_sparsity=pruning_level,begin_step=0,end_step=total_steps)}
             # Wrap the pretrained model.
-            model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
-            model.compile(optimizer="adam", loss=mse_loss)
-            callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
-            history = model.fit(data, data, epochs=num_epochs, batch_size=128, callbacks=callbacks)
-            model = tfmot.sparsity.keras.strip_pruning(model)
-        else:
-            model.compile(optimizer="adam", loss=mse_loss)
-            history =model.fit(data, data, epochs=num_epochs, batch_size=128)
+            #model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
+        #    model.compile(optimizer="adam", loss=mse_loss)
+        #    callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
+        #    history = model.fit(data, data, epochs=num_epochs, batch_size=batch_size, callbacks=callbacks)
+        #    model = tfmot.sparsity.keras.strip_pruning(model)
+        #else:
+        model.compile(optimizer="adam", loss=mse_loss)
+        history =model.fit(data, data, epochs=num_epochs, batch_size=batch_size)
         return model, X
 
+    #def prune_model(self, model,data, invert_loss=False, pruning_level=0):
+        def mse_loss(y_true, y_pred):
+            mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
+            return -0.3*mse if invert_loss else mse  # Negate the loss to maximize
+        batch_size=128
+        num_epochs=10
+        data = data.drop(data.columns[-1], axis=1)
+        data=self.scale_data(np.array(data))
+        #optimizer = tf.keras.optimizers.Adam(learning_rate=1e-10)  # Almost no learning
+        print(pruning_level)
+        total_steps=int(len(data)/batch_size*num_epochs)
+        #pruning_params = {'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(initial_sparsity=max(pruning_level-0.1,0),final_sparsity=pruning_level,begin_step=0,end_step=10)}
+        pruning_params = {'pruning_schedule': tfmot.sparsity.keras.ConstantSparsity(target_sparsity=0.9,    begin_step=0,    frequency=100)}
+        # Wrap the pretrained model.
+        model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
+        model.compile(optimizer="adam", loss=mse_loss)
+        callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
+        history = model.fit(data, data, epochs=num_epochs, batch_size=batch_size, callbacks=callbacks)
+        print("Global step:", tf.keras.backend.get_value(tfmot.sparsity.keras.pruning_scheduler._global_step))
+        for layer in model.layers:
+            if hasattr(layer, 'pruning_vars'):
+                pruning_vars = layer.pruning_vars
+                for var in pruning_vars:
+                    pass
+                    #print(var)
+
+
+        model = tfmot.sparsity.keras.strip_pruning(model)
+        return model
+    
+    def manual_prune_weights(self, model, sparsity=0.9):
+        """
+        Manually zero out the lowest X% magnitude weights in each trainable kernel.
+        :param model: a Keras model
+        :param sparsity: float between 0 and 1, e.g., 0.9 means prune 90% of lowest weights
+        :return: pruned model
+        """
+        for layer in model.layers:
+            weights = layer.get_weights()
+            if len(weights) > 0:
+                kernel = weights[0]
+                # Flatten to compute threshold across all weights
+                flat_kernel = np.abs(kernel).flatten()
+                threshold = np.percentile(flat_kernel, sparsity * 100)
+
+                pruned_kernel = np.where(np.abs(kernel) < threshold, 0, kernel)
+                weights[0] = pruned_kernel
+                layer.set_weights(weights)
+
+                # Optional: print stats
+                actual_sparsity = np.mean(pruned_kernel == 0)
+                #print(f"{layer.name}: applied sparsity = {actual_sparsity:.2f}")
+        return model
 
     def improve_model(self, data, invert_loss=False, pdr=0):
         #if invert_loss==False and os.path.getsize("test_files/faulty_data.csv") > 0:
         #    return None
         #    return None
-        pruning_level=pdr
+        pruning_level=self.init_pruning
         #pruning_level=50
         model, X=self.train_model(data, invert_loss, pruning_level)
+        if pruning_level:
+            pruned_model = self.manual_prune_weights(model, pruning_level)
+            print("Pruned model")
         model.save(os.path.join("models", self.model_name+".h5"))
-        
-        self.quantize_model(X,model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level)
+        if pruning_level:
+            self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level)
+        else:
+            self.quantize_model(X,model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level)
 
 
 #make_model=IoT_model("datasets/initial_data.csv")
