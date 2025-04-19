@@ -134,10 +134,13 @@ class TCP_COM():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.bind((listen_host, listen_port))
             server_socket.listen(5)
+            server_socket.settimeout(1.0)
             print(f"Server listening on {listen_host}:{listen_port}")
             while self.RUNNING:
-
-                conn, addr = server_socket.accept()
+                try:
+                    conn, addr = server_socket.accept()
+                except socket.timeout:
+                    continue
                 if self.device=="edge":
                     if addr[0]!=self.TAR_IP:
                         print("not target IP")
