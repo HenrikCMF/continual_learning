@@ -19,7 +19,7 @@ class IoT_model():
         self.init_pruning=0.9#0.9
         self.first_run=True
         self.model_name="autoencoder"
-        self.trigger_threshold=0.1
+        self.trigger_threshold=0.2
         print("TensorFlow version:", tf.__version__)
         print("TFMOT version:", tfmot.__version__)
         self.initial_data=initial_data
@@ -252,7 +252,7 @@ class IoT_model():
         if invert_loss==False:
             num_epochs=int(num_epochs)
         else:
-            num_epochs=int(num_epochs)
+            num_epochs=int(num_epochs/2)
         #for _ in range(num_epochs):
 
         if invert_loss==False:
