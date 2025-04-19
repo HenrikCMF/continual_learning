@@ -48,7 +48,7 @@ class edge_device(TCP_COM):
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
-        self.fault_index=6
+        self.fault_index=0
         self.filename, self.start_offset=make_dataset(fault_index=self.fault_index, num=1)
         df=pd.read_csv(self.filename)
         self.timestamps=df['timestamp']
