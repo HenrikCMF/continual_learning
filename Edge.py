@@ -58,8 +58,8 @@ class edge_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        self.model = IoT_model.IoT_model("test_files/initial_data.csv", input)
-        #self.model = mlp_classifier("test_files/initial_data.csv")
+        #self.model = IoT_model.IoT_model("test_files/initial_data.csv", input)
+        self.model = mlp_classifier("test_files/initial_data.csv", input)
         #self.model.load_model()
 
     

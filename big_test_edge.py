@@ -10,9 +10,9 @@ file_path = "plots/autoencoder_results.csv"
 #        writer = csv.writer(file)
 #        writer.writerow(["i", "TP", "FP"])
 
-start = 0.1
-stop = 3.0
-step = 0.2
+start = 0.08
+stop = 0.99
+step = 0.08
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)

@@ -15,10 +15,10 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
 class mlp_classifier(IoT_model):
-    def __init__(self, initial_data):
+    def __init__(self, initial_data, thresh):
         super().__init__(initial_data)
         self.model_name="MLP_binary"
-        self.trigger_threshold=0.49
+        self.trigger_threshold=thresh
     
     def check_sample(self, data):
         important=False
@@ -34,10 +34,10 @@ class mlp_classifier(IoT_model):
         inputs = tf.keras.Input(shape=(self.n_features,))
         
         # Custom architecture (e.g., deeper encoder/decoder)
-        x = tf.keras.layers.Dense(32, activation="relu")(inputs)
-        x = tf.keras.layers.Dense(32, activation="relu")(x)
-        x = tf.keras.layers.Dense(16, activation="relu")(x)  # Bottleneck
-        x = tf.keras.layers.Dense(8, activation="relu")(x)
+        x = tf.keras.layers.Dense(128, activation="relu")(inputs)
+        x = tf.keras.layers.Dense(64, activation="relu")(x)
+        x = tf.keras.layers.Dense(32, activation="relu")(x)  # Bottleneck
+        x = tf.keras.layers.Dense(16, activation="relu")(x)
         out=tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
         autoencoder = tf.keras.Model(inputs, out)
