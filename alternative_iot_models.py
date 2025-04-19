@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 
 class mlp_classifier(IoT_model):
     def __init__(self, initial_data, thresh):
-        super().__init__(initial_data)
+        super().__init__(initial_data, thresh)
         self.model_name="MLP_binary"
         self.trigger_threshold=thresh
     
