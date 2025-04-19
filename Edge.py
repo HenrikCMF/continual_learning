@@ -58,8 +58,8 @@ class edge_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        #self.model = IoT_model.IoT_model("test_files/initial_data.csv", input)
-        self.model = mlp_classifier("test_files/initial_data.csv", input)
+        self.model = IoT_model.IoT_model("test_files/initial_data.csv", input)
+        #self.model = mlp_classifier("test_files/initial_data.csv", input)
         #self.model.load_model()
 
     
@@ -278,7 +278,7 @@ class edge_device(TCP_COM):
         plt.show()
 
 #fd
-#bs=edge_device("received")
-#bs.run()
+bs=edge_device("received", 0.1)
+bs.run(0.1)
 #bs.send_file("test_files/PEPE.jpeg")
 #bs.receive_file()

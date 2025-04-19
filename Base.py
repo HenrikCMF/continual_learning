@@ -28,8 +28,8 @@ class Base_station(TCP_COM):
                 f.write("")  # Write an empty string to create the file
         
         self.init_data=os.path.join('test_files','initial_data.csv')
-        #self.ml_model=IoT_model.IoT_model(self.init_data, input)
-        self.ml_model=mlp_classifier(self.init_data, input)
+        self.ml_model=IoT_model.IoT_model(self.init_data, input)
+        #self.ml_model=mlp_classifier(self.init_data, input)
         if self.NEW_START:
             self.ml_model.train_initial_model()
         self.device_type="bs"
@@ -150,5 +150,5 @@ class Base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
-#bs=Base_station("received")
-#bs.run()
+bs=Base_station("received", 0.1)
+bs.run(0.1)
