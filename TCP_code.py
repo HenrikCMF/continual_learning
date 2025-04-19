@@ -27,6 +27,7 @@ class TCP_COM():
             self.TAR_PORT_UDP=TARGET_PORT[1]
             self.MY_PORT_TCP=MY_PORT
         self.file_Q=file_queue
+        self.RUNNING=True
         self.__TCP_receive(MY_HOST, self.MY_PORT_TCP)
         self.in_path=REC_FILE_PATH
         self.device=device
@@ -134,7 +135,7 @@ class TCP_COM():
             server_socket.bind((listen_host, listen_port))
             server_socket.listen(5)
             print(f"Server listening on {listen_host}:{listen_port}")
-            while True:
+            while self.RUNNING:
 
                 conn, addr = server_socket.accept()
                 if self.device=="edge":
@@ -160,6 +161,10 @@ class TCP_COM():
                         self.handle_dummy_req(conn,file_size, file_name)
                 except Exception as e:
                     print(e)
+    
+    def stop_TCP(self):
+        self.RUNNING=False
+        
 
     def measure_PDR(self, num_packets):
         #Call edge device to listen for UDP packets

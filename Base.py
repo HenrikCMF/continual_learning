@@ -17,7 +17,7 @@ from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class Base_station(TCP_COM):
-    def __init__(self, REC_FILE_PATH):
+    def __init__(self, REC_FILE_PATH, input):
         self.total_data_sent=0
         self.use_PDR=False
         self.NEW_START=True
@@ -28,7 +28,7 @@ class Base_station(TCP_COM):
                 f.write("")  # Write an empty string to create the file
         
         self.init_data=os.path.join('test_files','initial_data.csv')
-        self.ml_model=IoT_model.IoT_model(self.init_data)
+        self.ml_model=IoT_model.IoT_model(self.init_data, input)
         #self.ml_model=mlp_classifier(self.init_data)
         if self.NEW_START:
             self.ml_model.train_initial_model()
@@ -77,7 +77,8 @@ class Base_station(TCP_COM):
         df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
         df_combined.to_csv(init_data_path)
 
-    def run(self):
+    def run(self, input):
+        Running=True
         TP=0
         FP=0
         start=time.time()
@@ -90,7 +91,7 @@ class Base_station(TCP_COM):
             self.measure_PDR(100)
         self.distribute_model("models/"+self.ml_model.model_name+".tflite")
         
-        while True:
+        while Running:
             try:
                 file, transmission_time = self.file_Q.get(timeout=3)
                 if file=="DONE":
@@ -101,7 +102,8 @@ class Base_station(TCP_COM):
                     print("TP transmissions: ", TP)
                     print("FP transmissions: ", FP)
                     remove_all_avro_files('received')
-                    exit()
+                    self.stop_TCP()
+                    Running=False
                 self.file_Q.task_done()
                 if "ACK" in file:
                     self.distribute_model("models/"+self.ml_model.model_name+".tflite")
@@ -129,6 +131,7 @@ class Base_station(TCP_COM):
             except queue.Empty:
                 print("waiting for data")
                 pass
+        return TP, FP
             #
         #self.send_file("307.jpg")
 
@@ -147,6 +150,5 @@ class Base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
-bs=Base_station("received")
-#bs.send_file("307.jpg")
-bs.run()
+#bs=Base_station("received")
+#bs.run()

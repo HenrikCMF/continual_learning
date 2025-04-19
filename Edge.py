@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
 class edge_device(TCP_COM):
-    def __init__(self, REC_FILE_PATH):
+    def __init__(self, REC_FILE_PATH, input):
         self.use_PDR=False
         self.total_sent_data=0
         self.device_type="edge"
@@ -58,7 +58,7 @@ class edge_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        self.model = IoT_model.IoT_model("test_files/initial_data.csv")
+        self.model = IoT_model.IoT_model("test_files/initial_data.csv", input)
         #self.model = mlp_classifier("test_files/initial_data.csv")
         #self.model.load_model()
 
@@ -137,7 +137,8 @@ class edge_device(TCP_COM):
         return True
 
 
-    def run(self, waittime=10):
+    def run(self, input):
+        Running=True
         start=time.time()
         self.sample_buffer=[]
         self.timestamp_buffer=[]
@@ -150,7 +151,7 @@ class edge_device(TCP_COM):
             file, transmission_time = self.file_Q.get(timeout=3)
         except queue.Empty:
             time.sleep(1)
-        while True:
+        while Running:
             try:
                 file, transmission_time= self.file_Q.get(timeout=2)
                 files_received+=1
@@ -180,7 +181,9 @@ class edge_device(TCP_COM):
                 print("Total data sent(KB): ", self.total_sent_data/1024)
                 self.make_end_plot(self.mse_buff)
                 remove_all_avro_files('test_files')
-                exit()
+                self.stop_TCP()
+                Running=False
+
         
     def received_model(self, path):
         model_name=str(path).split('/')[-1].split('.')[0]
@@ -271,10 +274,10 @@ class edge_device(TCP_COM):
         plt.ylabel("MSE of Model Output")
         plt.title("Autoencoder")
         plt.legend()
-        plt.show()
+        #plt.show()
 
 #fd
-bs=edge_device("received")
-bs.run()
+#bs=edge_device("received")
+#bs.run()
 #bs.send_file("test_files/PEPE.jpeg")
 #bs.receive_file()

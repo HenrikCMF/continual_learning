@@ -15,11 +15,11 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class IoT_model():
     
-    def __init__(self, initial_data):
+    def __init__(self, initial_data, thresh):
         self.init_pruning=0.9#0.9
         self.first_run=True
         self.model_name="autoencoder"
-        self.trigger_threshold=0.5
+        self.trigger_threshold=thresh
         print("TensorFlow version:", tf.__version__)
         print("TFMOT version:", tfmot.__version__)
         self.initial_data=initial_data
@@ -94,13 +94,6 @@ class IoT_model():
     def design_model_architecture(self):
         print("feats",self.n_features)
         inputs = tf.keras.Input(shape=(self.n_features,))
-        # Encoder
-        #encoded = tf.keras.layers.Dense(64, activation="relu")(inputs)
-        #encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        #encoded = tf.keras.layers.Dense(6, activation="relu")(encoded)  # Bottleneck
-        #decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        #decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
-
         encoded = tf.keras.layers.Dense(128, activation="relu")(inputs)
         encoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
         encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
