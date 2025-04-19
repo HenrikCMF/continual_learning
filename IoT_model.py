@@ -336,7 +336,7 @@ class IoT_model():
         #if invert_loss==False and os.path.getsize("test_files/faulty_data.csv") > 0:
         #    return None
         #    return None
-        pruning_level=self.init_pruning
+        pruning_level=pdr
         #pruning_level=50
         model, X=self.train_model(data, invert_loss, pruning_level)
         if pruning_level:

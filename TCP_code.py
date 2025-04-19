@@ -161,10 +161,12 @@ class TCP_COM():
                         self.handle_dummy_req(conn,file_size, file_name)
                 except Exception as e:
                     print(e)
+            print("stopped socket")
+            server_socket.close()
     
     def stop_TCP(self):
         self.RUNNING=False
-        
+
 
     def measure_PDR(self, num_packets):
         #Call edge device to listen for UDP packets
