@@ -19,7 +19,7 @@ class IoT_model():
         self.init_pruning=0.9#0.9
         self.first_run=True
         self.model_name="autoencoder"
-        self.trigger_threshold=0.2
+        self.trigger_threshold=thresh
         print("TensorFlow version:", tf.__version__)
         print("TFMOT version:", tfmot.__version__)
         self.initial_data=initial_data

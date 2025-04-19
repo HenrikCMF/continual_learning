@@ -150,5 +150,5 @@ class Base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
-bs=Base_station("received", 0.1)
-bs.run(0.1)
+bs=Base_station("received", 0)
+bs.run(0)

@@ -278,7 +278,7 @@ class edge_device(TCP_COM):
         plt.show()
 
 #fd
-bs=edge_device("received", 0.1)
-bs.run(0.1)
+bs=edge_device("received", 0)
+bs.run(0)
 #bs.send_file("test_files/PEPE.jpeg")
 #bs.receive_file()
