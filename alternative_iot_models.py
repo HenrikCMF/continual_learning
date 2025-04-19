@@ -18,7 +18,7 @@ class mlp_classifier(IoT_model):
     def __init__(self, initial_data, thresh):
         super().__init__(initial_data, thresh)
         self.model_name="MLP_binary"
-        self.trigger_threshold=thresh
+        self.trigger_threshold=0.16
     
     def check_sample(self, data):
         important=False
@@ -79,22 +79,7 @@ class mlp_classifier(IoT_model):
         values1, counts1 = np.unique(data_labels, return_counts=True)
         print(dict(zip(values1, counts1)))
         print("about to train with input data of dim: ", np.shape(data), " with label number: ", np.shape(data_labels))
-        if pruning_level:
-            pruning_params = {
-                'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
-                    initial_sparsity=0.0,
-                    final_sparsity=pruning_level,
-                    begin_step=0,
-                    end_step=1000
-                )
-            }
-            # Wrap the pretrained model.
-            model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
-            model.compile(optimizer="adam", loss='binary_crossentropy')
-            callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
-            history = model.fit(data, data_labels, epochs=num_epochs, batch_size=128, callbacks=callbacks)
-            model = tfmot.sparsity.keras.strip_pruning(model)
-        else:
-            model.compile(optimizer="adam", loss='binary_crossentropy')
-            history =model.fit(data, data_labels, epochs=num_epochs, batch_size=128)
+        
+        model.compile(optimizer="adam", loss='binary_crossentropy')
+        history =model.fit(data, data_labels, epochs=num_epochs, batch_size=128)
         return model, X
