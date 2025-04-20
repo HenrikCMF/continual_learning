@@ -28,6 +28,7 @@ class Base_station(TCP_COM):
                 f.write("")  # Write an empty string to create the file
         
         self.init_data=os.path.join('test_files','initial_data.csv')
+        self.init_data_columns=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore').columns
         self.ml_model=IoT_model.IoT_model(self.init_data, input)
         #self.ml_model=mlp_classifier(self.init_data, input)
         if self.NEW_START:
@@ -56,13 +57,15 @@ class Base_station(TCP_COM):
         super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type, self.file_Q)
     
     def append_to_initial_data(self, data, timestamps, init_data_path):
-        init_data=pd.read_csv(init_data_path).drop(columns=["Unnamed: 0"], errors='ignore')
+        #init_data=pd.read_csv(init_data_path).drop(columns=["Unnamed: 0"], errors='ignore')
         timestamps=pd.DataFrame(timestamps)
         timestamps.columns=['timestamp']
         df2 = pd.concat([timestamps, data], axis=1).drop(columns=["Unnamed: 0"], errors='ignore')
-        df2.columns=init_data.columns
-        df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
-        df_combined.to_csv(init_data_path)
+        #df2.columns=init_data.columns
+        df2.columns=self.init_data_columns
+        #df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
+        #df_combined.to_csv(init_data_path)
+        df2.to_csv(init_data_path, mode='a', header=False, index=False)
 
     def append_to_faulty_data(self, data, timestamps, init_data_path):
         init_data_no_faults=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore')
@@ -150,5 +153,5 @@ class Base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
-bs=Base_station("received", 0)
-bs.run(0)
+bs=Base_station("received", 0.2)
+bs.run(0.2)
