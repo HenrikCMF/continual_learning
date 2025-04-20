@@ -3,7 +3,7 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/pruning_results_size_test.csv"
+file_path = "plots/pruning_results_quantized.csv"
 
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
