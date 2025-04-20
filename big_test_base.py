@@ -3,13 +3,13 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/pruning_results.csv"
+file_path = "plots/pruning_results_size_test.csv"
 
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["i", "TP", "FP"])
-exit()
+        writer.writerow(["i", "TP", "FP", "size"])
+
 start = 0.05
 stop = 1
 step = 0.1
@@ -19,6 +19,7 @@ for idx in range(num_steps):
     time.sleep(10)
     bs=Base_station("received", 0.2)
     TP, FP = bs.run(i)
+    size = os.path.getsize("models/autoencoder.tflite.zip")
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow([i, TP, FP])
+        writer.writerow([i, TP, FP, size])
