@@ -9,7 +9,7 @@ if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP"])
-
+exit()
 start = 0.05
 stop = 1
 step = 0.1
