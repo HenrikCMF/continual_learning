@@ -255,25 +255,17 @@ class IoT_model():
             num_epochs=int(num_epochs/2)
         #for _ in range(num_epochs):
 
-        if invert_loss==False:
-            data=self.combine_new_with_random_old(X,y, new_data)
-        elif os.path.getsize("test_files/faulty_data.csv") > 0:
-            data=self.combine_faulty_with_random_old(new_data)
-        else:
-            data=new_data
+        ####
+        data=new_data
+        #if invert_loss==False:
+        #    data=self.combine_new_with_random_old(X,y, new_data)
+        #elif os.path.getsize("test_files/faulty_data.csv") > 0:
+        #    data=self.combine_faulty_with_random_old(new_data)
+        #else:
+        #    data=new_data
+        #####
         batch_size=128
 
-        #if pruning_level:
-        #    print(pruning_level)
-        #    total_steps=int(len(data)/batch_size*num_epochs)
-            #pruning_params = {'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(initial_sparsity=0.0,final_sparsity=pruning_level,begin_step=0,end_step=total_steps)}
-            # Wrap the pretrained model.
-            #model= tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
-        #    model.compile(optimizer="adam", loss=mse_loss)
-        #    callbacks = [tfmot.sparsity.keras.UpdatePruningStep()]
-        #    history = model.fit(data, data, epochs=num_epochs, batch_size=batch_size, callbacks=callbacks)
-        #    model = tfmot.sparsity.keras.strip_pruning(model)
-        #else:
         model.compile(optimizer="adam", loss=mse_loss)
         history =model.fit(data, data, epochs=num_epochs, batch_size=batch_size)
         return model, X

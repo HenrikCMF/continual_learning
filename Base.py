@@ -126,7 +126,7 @@ class Base_station(TCP_COM):
                         #self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR)
                         #if invert_training==False:
                         #self.ml_model.improve_model(batch, invert_training, pdr=self.PDR)
-                        self.ml_model.improve_model(batch, invert_training, pdr=input)
+                        self.ml_model.improve_model(batch, invert_training, pdr=self.PDR)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
                         else:
@@ -154,5 +154,5 @@ class Base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
 
-#bs=Base_station("received", 0.2)
-#bs.run(0.2)
+bs=Base_station("received", 0.2)
+bs.run(0.2)
