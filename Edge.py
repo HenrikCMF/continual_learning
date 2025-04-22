@@ -86,7 +86,7 @@ class edge_device(TCP_COM):
                 return 5
             
 
-    def get_important_important_batch(self):
+    def get_important_important_batch(self, input):
         batch_not_found=True
         if self.use_PDR:
             important_batches_tar = self.determine_batch_num()
@@ -95,7 +95,8 @@ class edge_device(TCP_COM):
         important_batches=0
         #print("Analyzing samples")
         #NUM_BUF_SAMPLES=100
-        NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
+        #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
+        NUM_BUF_SAMPLES=input
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         time.sleep(0.01)
         while batch_not_found:
@@ -160,7 +161,7 @@ class edge_device(TCP_COM):
                     self.received_model(file)
                     #pass
                 self.file_Q.task_done()
-                self.get_important_important_batch()
+                self.get_important_important_batch(input)
                 #self.send_ACK()
                 #self.index+=50000
             except queue.Empty:
@@ -278,7 +279,7 @@ class edge_device(TCP_COM):
         #plt.show()
 
 #fd
-bs=edge_device("received", 0.2)
-bs.run(0.2)
+#bs=edge_device("received", 0.2)
+#bs.run(0.2)
 #bs.send_file("test_files/PEPE.jpeg")
 #bs.receive_file()
