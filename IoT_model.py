@@ -256,13 +256,12 @@ class IoT_model():
         #for _ in range(num_epochs):
 
         ####
-        data=new_data
-        #if invert_loss==False:
-        #    data=self.combine_new_with_random_old(X,y, new_data)
-        #elif os.path.getsize("test_files/faulty_data.csv") > 0:
-        #    data=self.combine_faulty_with_random_old(new_data)
-        #else:
-        #    data=new_data
+        if invert_loss==False:
+            data=self.combine_new_with_random_old(X,y, new_data)
+        elif os.path.getsize("test_files/faulty_data.csv") > 0:
+            data=self.combine_faulty_with_random_old(new_data)
+        else:
+            data=new_data
         #####
         batch_size=128
 

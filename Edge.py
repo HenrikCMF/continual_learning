@@ -24,6 +24,8 @@ class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
         self.use_PDR=False
         self.total_sent_data=0
+        self.total_received_data=0
+        self.num_inferences=0
         self.device_type="edge"
         self.model_path="models"
         with open("configs.json", "r") as file:
@@ -69,6 +71,7 @@ class edge_device(TCP_COM):
         s, t=self.get_sample()    
         for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
         rare, mse=self.model.check_sample(for_mse)
+        self.num_inferences+=1
         self.mse_buff.append(mse)
         return rare, mse, s, t
 
@@ -184,7 +187,7 @@ class edge_device(TCP_COM):
                 remove_all_avro_files('test_files')
                 self.stop_TCP()
                 Running=False
-        return None, None
+        return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences
 
         
     def received_model(self, path):
@@ -197,6 +200,7 @@ class edge_device(TCP_COM):
                 zipf.extractall(output_folder)
         destination_path=os.path.join(self.model_path, model_name+'.tflite')
         shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
+        self.total_received_data = os.path.getsize(destination_path)
         self.model.load_model()
     
     def get_previous_X_samples(self, X):

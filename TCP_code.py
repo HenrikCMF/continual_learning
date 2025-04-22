@@ -16,6 +16,7 @@ class telegram_type(Enum):
 class TCP_COM():
     def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device, file_queue=None):
         self.time_transmitting=0
+        self.time_receiving=0
         self.MY_IP=MY_HOST
         self.TAR_IP=TARGET_HOST
         if device=="edge":
@@ -54,10 +55,12 @@ class TCP_COM():
 
     @retry_transmission_handler
     def send_ACK(self, client_socket, val=0, packet_num=0):
+        start=time.time()
         client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
         file_name="ACK"
         file_size=0
         client_socket.sendall(f"{telegram_type.DUMMY.value}:{file_name}:{file_size}".encode())
+        self.time_transmitting+=time.time()-start
     
     def handle_dummy_req(self,conn, file_size, file_name):
         file_size=float(file_size)
@@ -115,7 +118,7 @@ class TCP_COM():
                 received_size += len(data)
         stop=time.time()
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),stop-start))
-        self.time_transmitting+=time.time()-start
+        self.time_receiving+=time.time()-start
         #print(f"File '{file_name}' received, took: ", stop-start)
 
     def handle_PDR_req(self, file_size, file_name):
@@ -223,7 +226,7 @@ class TCP_COM():
         pdr = 1-(count / expected_packets)
         print(f"PDR: {pdr*100:.2f}%")
         self.send_open_udp(self.TAR_IP,val=pdr)
-        self.time_transmitting+=time.time()-start
+        self.time_receiving+=time.time()-start
         return pdr
 
     #Replace with mmcli for cell connections
