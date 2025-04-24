@@ -77,7 +77,7 @@ class edge_device(TCP_COM):
         else:
             for_mse=s.drop(columns='machine_status')
         rare, mse=self.model.check_sample(for_mse)
-        self.num_inferences+=self.inference_batch
+        self.num_inferences+=1
         self.mse_buff.append(mse)
         return rare, mse, s, t
 
