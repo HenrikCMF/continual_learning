@@ -50,6 +50,7 @@ class IoT_model():
 
         
     def inference_on_model(self, data):
+        print(data)
         data=np.array(self.scale_data(data))
         self.interpreter.set_tensor(self.input_details[0]['index'], np.reshape(data.astype(np.float32),(-1,self.enc_in_shape[1])))
         self.interpreter.invoke()
@@ -130,7 +131,8 @@ class IoT_model():
         important=False
         w, h=np.shape(data)
         if w>1 and h>1:
-            mse_val = max(mean_squared_error(self.scale_data(data), self.inference_on_model(data)))
+            data=np.array(data).T
+            mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
         else:
             mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
         if mse_val>self.trigger_threshold:
