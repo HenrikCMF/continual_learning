@@ -73,13 +73,9 @@ class edge_device(TCP_COM):
     def analyze_samples(self):
         s, t=self.get_sample()    
         if self.inference_batch==0:
-            print(1)
             for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
-            print(2)
         else:
-            print("Wtf")
             for_mse=s.drop(columns='machine_status')
-        print(3)
         rare, mse=self.model.check_sample(for_mse)
         self.num_inferences+=self.inference_batch
         self.mse_buff.append(mse)
@@ -221,9 +217,9 @@ class edge_device(TCP_COM):
 
     def get_sample(self):
         #should fetch the next sample in the dataset
-        sample=self.data.iloc[self.index:self.index+self.inference_batch]
-        timestamp=self.timestamps.iloc[self.index:self.index+self.inference_batch]
-        self.index+=self.inference_batch
+        sample=self.data.iloc[self.index]
+        timestamp=self.timestamps.iloc[self.index]
+        self.index+=1+self.inference_batch
         return sample, timestamp
     
     def calculate_fault_detection_score(self, mse_buf, adjusted_broken_indices, threshold=2, window=100):
