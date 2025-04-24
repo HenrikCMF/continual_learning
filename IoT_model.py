@@ -132,8 +132,6 @@ class IoT_model():
         w, h=np.shape(data)
         print(w,h)
         if w>1 and h>1:
-            data=np.array(data).T
-            print(data)
             mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
         else:
             mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
