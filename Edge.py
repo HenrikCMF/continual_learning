@@ -22,6 +22,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
+        self.inference_batch=16
         self.use_PDR=False
         self.total_sent_data=0
         self.total_received_data=0
@@ -73,7 +74,7 @@ class edge_device(TCP_COM):
         s, t=self.get_sample()    
         for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
         rare, mse=self.model.check_sample(for_mse)
-        self.num_inferences+=1
+        self.num_inferences+=self.inference_batch
         self.mse_buff.append(mse)
         return rare, mse, s, t
 
@@ -121,7 +122,7 @@ class edge_device(TCP_COM):
                     pass
                 self.sample_buffer.append(s)
                 self.timestamp_buffer.append(t)
-                for i in range(NUM_BUF_SAMPLES):
+                for i in range(int(NUM_BUF_SAMPLES/self.inference_batch)):
                     s, t=self.get_sample()
                     self.sample_buffer.append(s)
                     self.timestamp_buffer.append(t)
@@ -203,7 +204,7 @@ class edge_device(TCP_COM):
                 zipf.extractall(output_folder)
         destination_path=os.path.join(self.model_path, model_name+'.tflite')
         shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
-        self.total_received_data = os.path.getsize(destination_path)+20
+        self.total_received_data += os.path.getsize(destination_path)+20
         self.model.load_model()
     
     def get_previous_X_samples(self, X):
@@ -213,9 +214,9 @@ class edge_device(TCP_COM):
 
     def get_sample(self):
         #should fetch the next sample in the dataset
-        sample=self.data.iloc[self.index]
-        timestamp=self.timestamps.iloc[self.index]
-        self.index+=1
+        sample=self.data.iloc[self.index:self.index+self.inference_batch]
+        timestamp=self.timestamps.iloc[self.index:self.index+self.inference_batch]
+        self.index+=self.inference_batch
         return sample, timestamp
     
     def calculate_fault_detection_score(self, mse_buf, adjusted_broken_indices, threshold=2, window=100):

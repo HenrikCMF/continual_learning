@@ -128,7 +128,7 @@ class IoT_model():
 
     def check_sample(self, data):
         important=False
-        mse_val = mean_squared_error(self.scale_data(data).T, self.inference_on_model(data))
+        mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
         if mse_val>self.trigger_threshold:
             important=True
         return important, mse_val
