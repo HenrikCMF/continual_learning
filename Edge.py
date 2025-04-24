@@ -37,8 +37,10 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            rate_kbps=input#configs['bandwidth_limit_kbps']
-            burst_kbps=input#configs['burst_limit_kbps']
+            #rate_kbps=input
+            # #configs['bandwidth_limit_kbps']
+            #burst_kbps=input
+            #configs['burst_limit_kbps']
             latency_ms=configs['buffering_latency_ms']
             packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
@@ -46,7 +48,7 @@ class edge_device(TCP_COM):
             #packet_loss_pct=None
             delay_ms=None
             jitter_ms=None
-            self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
+            #self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
@@ -97,9 +99,9 @@ class edge_device(TCP_COM):
             important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        NUM_BUF_SAMPLES=100
+        #NUM_BUF_SAMPLES=100
         #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
-        #NUM_BUF_SAMPLES=input
+        NUM_BUF_SAMPLES=input
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         time.sleep(0.01)
         while batch_not_found:
@@ -133,7 +135,8 @@ class edge_device(TCP_COM):
                         str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
                         )
                     #comment
-                    AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
+                    #AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
+                    AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches)
                     self.total_sent_data+=os.path.getsize(filename)+20
                     self.send_file(self.TAR_IP, self.TAR_PORT_TCP,filename)
                     self.sample_buffer=[]
@@ -183,7 +186,7 @@ class edge_device(TCP_COM):
                 print("Time elapsed: ", time.time()-start)
                 print("Transmitting time: ", self.time_transmitting)
                 print("Total data sent(KB): ", self.total_sent_data/1024)
-                self.make_end_plot(self.mse_buff)
+                #self.make_end_plot(self.mse_buff)
                 remove_all_avro_files('test_files')
                 self.stop_TCP()
                 Running=False
