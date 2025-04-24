@@ -73,7 +73,10 @@ class edge_device(TCP_COM):
     def analyze_samples(self):
         s, t=self.get_sample()    
         print(s)
-        for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
+        if self.inference_batch==1:
+            for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
+        else:
+            for_mse=np.array(s.drop(columns='machine_status')).reshape(1,-1)
         rare, mse=self.model.check_sample(for_mse)
         self.num_inferences+=self.inference_batch
         self.mse_buff.append(mse)
