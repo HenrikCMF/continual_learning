@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
-        self.inference_batch=1
+        self.inference_batch=0
         self.use_PDR=False
         self.total_sent_data=0
         self.total_received_data=0
@@ -72,10 +72,14 @@ class edge_device(TCP_COM):
 
     def analyze_samples(self):
         s, t=self.get_sample()    
-        if self.inference_batch==1:
+        if self.inference_batch==0:
+            print(1)
             for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
+            print(2)
         else:
+            print("Wtf")
             for_mse=s.drop(columns='machine_status')
+        print(3)
         rare, mse=self.model.check_sample(for_mse)
         self.num_inferences+=self.inference_batch
         self.mse_buff.append(mse)
