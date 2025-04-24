@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
-        self.inference_batch=16
+        self.inference_batch=1
         self.use_PDR=False
         self.total_sent_data=0
         self.total_received_data=0
@@ -103,9 +103,9 @@ class edge_device(TCP_COM):
             important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        #NUM_BUF_SAMPLES=100
+        NUM_BUF_SAMPLES=125
         #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
-        NUM_BUF_SAMPLES=input
+        #NUM_BUF_SAMPLES=input
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         time.sleep(0.01)
         while batch_not_found:
@@ -131,7 +131,7 @@ class edge_device(TCP_COM):
                     self.timestamp_buffer.append(t)
                     self.mse_buff.append(self.mse_buff[-1])
                 important_batches+=1
-                if important_batches==important_batches_tar: #network parameter
+                if important_batches==input:#important_batches_tar: #network parameter
                     batch_not_found=False
                     self.sample_buffer=np.array(self.sample_buffer)
                     filename=os.path.join(
@@ -139,8 +139,8 @@ class edge_device(TCP_COM):
                         str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
                         )
                     #comment
-                    #AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
-                    AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches)
+                    AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
+                    #AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches)
                     self.total_sent_data+=os.path.getsize(filename)+20
                     self.send_file(self.TAR_IP, self.TAR_PORT_TCP,filename)
                     self.sample_buffer=[]

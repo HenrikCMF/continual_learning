@@ -55,9 +55,9 @@ if not os.path.isfile(file_path):
         writer = csv.writer(file)
         writer.writerow(["i","time_transmitting", "time_receiving", "total_sent_data", "total_received_data", "num_inferences"])
 
-start = 20
-stop = 200
-step = 20
+start = 1
+stop = 8
+step = 1
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)
