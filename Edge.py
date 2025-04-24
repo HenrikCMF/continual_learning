@@ -37,8 +37,8 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            rate_kbps=configs['bandwidth_limit_kbps']
-            burst_kbps=configs['burst_limit_kbps']
+            rate_kbps=input#configs['bandwidth_limit_kbps']
+            burst_kbps=input#configs['burst_limit_kbps']
             latency_ms=configs['buffering_latency_ms']
             packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
@@ -60,7 +60,7 @@ class edge_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        self.model = IoT_model.IoT_model("test_files/initial_data.csv", input)
+        self.model = IoT_model.IoT_model("test_files/initial_data.csv", 0.2)
         #self.model = mlp_classifier("test_files/initial_data.csv", input)
         #self.model.load_model()
 
@@ -97,9 +97,9 @@ class edge_device(TCP_COM):
             important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        #NUM_BUF_SAMPLES=100
+        NUM_BUF_SAMPLES=100
         #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
-        NUM_BUF_SAMPLES=input
+        #NUM_BUF_SAMPLES=input
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         time.sleep(0.01)
         while batch_not_found:
@@ -134,7 +134,7 @@ class edge_device(TCP_COM):
                         )
                     #comment
                     AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
-                    self.total_sent_data+=os.path.getsize(filename)
+                    self.total_sent_data+=os.path.getsize(filename)+20
                     self.send_file(self.TAR_IP, self.TAR_PORT_TCP,filename)
                     self.sample_buffer=[]
                     self.timestamp_buffer=[]
@@ -200,7 +200,7 @@ class edge_device(TCP_COM):
                 zipf.extractall(output_folder)
         destination_path=os.path.join(self.model_path, model_name+'.tflite')
         shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
-        self.total_received_data = os.path.getsize(destination_path)
+        self.total_received_data = os.path.getsize(destination_path)+20
         self.model.load_model()
     
     def get_previous_X_samples(self, X):

@@ -29,7 +29,7 @@ class Base_station(TCP_COM):
         
         self.init_data=os.path.join('test_files','initial_data.csv')
         self.init_data_columns=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore').columns
-        self.ml_model=IoT_model.IoT_model(self.init_data, input)
+        self.ml_model=IoT_model.IoT_model(self.init_data, 0.2)
         #self.ml_model=mlp_classifier(self.init_data, input)
         if self.NEW_START:
             self.ml_model.train_initial_model()
@@ -43,8 +43,8 @@ class Base_station(TCP_COM):
         self.rec_ip=configs['edgeip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            rate_kbps=configs['bandwidth_limit_kbps']
-            burst_kbps=configs['burst_limit_kbps']
+            rate_kbps=input#configs['bandwidth_limit_kbps']
+            burst_kbps=input#configs['burst_limit_kbps']
             latency_ms=configs['buffering_latency_ms']
             packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
