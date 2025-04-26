@@ -103,7 +103,7 @@ class edge_device(TCP_COM):
             important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        NUM_BUF_SAMPLES=125
+        NUM_BUF_SAMPLES=100
         #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #NUM_BUF_SAMPLES=input
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
@@ -287,7 +287,7 @@ class edge_device(TCP_COM):
         plt.ylabel("Autoencoder MSE Output")
         plt.title("Autoencoder fault detector")
         plt.legend()
-        #plt.show()
+        plt.show()
 
 bs=edge_device("received", 0.2)
 bs.run(0.2)
