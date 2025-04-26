@@ -3,16 +3,16 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/IoT_buff_test.csv"
+file_path = "plots/package_size_server2.csv"
 
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP", "size"])
 
-start = 1
-stop = 8
-step = 1
+start = 0
+stop = 200
+step = 20
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)

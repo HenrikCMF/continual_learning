@@ -328,8 +328,8 @@ class IoT_model():
         return model
 
     def improve_model(self, data, invert_loss=False, pdr=0):
-        if invert_loss==True:
-            return None
+        #if invert_loss==True:
+        #    return None
         #    return None
         pruning_level=pdr
         #pruning_level=50
