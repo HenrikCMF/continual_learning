@@ -131,7 +131,7 @@ class edge_device(TCP_COM):
                     self.timestamp_buffer.append(t)
                     self.mse_buff.append(self.mse_buff[-1])
                 important_batches+=1
-                if important_batches==input:#important_batches_tar: #network parameter
+                if important_batches==important_batches_tar: #network parameter
                     batch_not_found=False
                     self.sample_buffer=np.array(self.sample_buffer)
                     filename=os.path.join(
@@ -289,8 +289,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-#fd
-#bs=edge_device("received", 0.2)
-#bs.run(0.2)
-#bs.send_file("test_files/PEPE.jpeg")
-#bs.receive_file()
+bs=edge_device("received", 0.2)
+bs.run(0.2)
