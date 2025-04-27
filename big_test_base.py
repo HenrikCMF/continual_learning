@@ -3,7 +3,7 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/package_size_server2.csv"
+file_path = "plots/optimum1_server.csv"
 
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
@@ -11,8 +11,8 @@ if not os.path.isfile(file_path):
         writer.writerow(["i", "TP", "FP", "size"])
 
 start = 0
-stop = 200
-step = 20
+stop = 5
+step = 1
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)
