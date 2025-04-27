@@ -75,7 +75,12 @@ class TCP_COM():
             self.file_Q.put((str("ACK"),0))
         elif file_name=="THROUGHPUT":
             conn.sendall("READY".encode())
-            #print("Received done")
+            received_size = 0
+            while received_size < file_size:
+                data = conn.recv(1024)
+                #print(received_size)
+                if not data:
+                    break
 
     @retry_transmission_handler
     def Ready_to_start(self, client_socket, val=0, packet_num=0):
@@ -276,9 +281,8 @@ class TCP_COM():
             client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{data_size_bytes}".encode())
             #client_socket.sendall(f"DATA:{data_size_bytes}".encode())
             ack = client_socket.recv(1024).decode()
-            if ack != "READY":
-                raise Exception("Not ready")
-
+            #if ack != "READY":
+            #    raise Exception("Not ready")
             # Send data
             start_time = time.time()
             bytes_sent = 0
@@ -288,19 +292,13 @@ class TCP_COM():
                 client_socket.sendall(chunk)
                 bytes_sent += len(chunk)
             end_time = time.time()
-
             # Measure results
             transmission_time = end_time - start_time  # seconds
             throughput_mbps = (bytes_sent * 8) / (transmission_time * 1_000_000)  # bits/sec to Mbps
-
             # Optionally store transmission time
             self.time_transmitting += transmission_time
-
-            return {
-                "transmission_time_sec": transmission_time,
-                "throughput_mbps": throughput_mbps,
-                "data_size_bytes": bytes_sent
-            }
+            self.file_Q.put((throughput_mbps,0))
+            return None
 
         except Exception as e:
             print(f"Error during data transfer: {e}")

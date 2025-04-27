@@ -52,12 +52,16 @@ class Z_Base_station(TCP_COM):
         while clients<1:
             file, transmission_time = self.file_Q.get(timeout=None, block=True)
             clients+=1
-        for ip in self.edge_devices:
-            #self.TAR_IP=ip
-            print("Sending model")
-            result=self.getthroughput(ip, self.TAR_PORT_TCP, 5000)
-            print(result)
-
+        for i in range(50):
+            for ip in self.edge_devices:
+                #self.TAR_IP=ip
+                self.getthroughput(ip, self.TAR_PORT_TCP, 30000)
+                try:
+                    file, transmission_time = self.file_Q.get(timeout=3)
+                    print("through",file)
+                except queue.Empty:
+                    #print("waiting for data")
+                    pass
 
 bs=Z_Base_station("received", 0.2)
 bs.run()
