@@ -272,7 +272,8 @@ class TCP_COM():
             data = os.urandom(data_size_bytes)
 
             # Optional: Send a small header to inform receiver (e.g., data length)
-            client_socket.sendall(f"{telegram_type.DUMMY.value}:{"THROUGHPUT"}:{data_size_bytes}".encode())
+            filename="THROUGHPUT"
+            client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{data_size_bytes}".encode())
             #client_socket.sendall(f"DATA:{data_size_bytes}".encode())
             ack = client_socket.recv(1024).decode()
             if ack != "READY":
