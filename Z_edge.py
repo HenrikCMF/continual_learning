@@ -20,7 +20,7 @@ import threading
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
-class edge_device(TCP_COM):
+class Z_edge(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
         self.inference_batch=0
         self.use_PDR=False
@@ -65,3 +65,6 @@ class edge_device(TCP_COM):
                 pass
         while True:
             time.sleep(1)
+
+bs=Z_edge("received", 0.2)
+bs.run()

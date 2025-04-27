@@ -57,3 +57,7 @@ class Z_Base_station(TCP_COM):
             print("Sending model")
             result=self.getthroughput(ip, self.TAR_PORT_TCP, 5000)
             print(result)
+
+
+bs=Z_Base_station("received", 0.2)
+bs.run()
