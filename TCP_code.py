@@ -34,6 +34,7 @@ class TCP_COM():
         self.device=device
         self.edge_devices=[]
         self.PDR=0
+        self.MSS=0
         if not os.path.exists(self.in_path):
             os.makedirs(self.in_path)
 
@@ -157,6 +158,7 @@ class TCP_COM():
             while self.RUNNING:
                 try:
                     conn, addr = server_socket.accept()
+                    self.MSS = conn.getsockopt(socket.IPPROTO_TCP, socket.TCP_MAXSEG)
                     start=time.time()
                 except socket.timeout:
                     continue
@@ -302,7 +304,7 @@ class TCP_COM():
                 end_time = time.perf_counter()
             # Measure results
             transmission_time = end_time - start_time  # seconds
-            throughput_mbps = (bytes_sent * 8) / ((transmission_time-RTT) * 1_000_000)  # bits/sec to Mbps
+            throughput_mbps = 2*((bytes_sent+20) * 8) / ((transmission_time-(RTT*2)) * 1000000)  # bits/sec to Mbps
             # Optionally store transmission time
             self.time_transmitting += transmission_time
             self.file_Q.put((throughput_mbps,0))
