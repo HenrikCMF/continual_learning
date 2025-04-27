@@ -171,6 +171,7 @@ class TCP_COM():
                         print("added", addr[0])
                 try:
                     # Receive file metadata
+                    print("received something")
                     metadata = conn.recv(1024).decode()
                     type, file_name, file_size = metadata.split(":")
                     print(" received:", type, file_name, file_size)
@@ -279,14 +280,18 @@ class TCP_COM():
             # Connect and prepare to send
             client_socket.connect((TAR_IP, TAR_PORT))
             RTT=self.measure_RTT(client_socket)
+            print(3, RTT)
             # Generate random data
             data = os.urandom(data_size_bytes)
 
             # Optional: Send a small header to inform receiver (e.g., data length)
             filename="THROUGHPUT"
+            print(4)
             client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{data_size_bytes}".encode())
+            print(5)
             #client_socket.sendall(f"DATA:{data_size_bytes}".encode())
             ack = client_socket.recv(1024).decode()
+            print("got", ack)
             if ack != "READY":
                 raise Exception("Not ready")
             # Send data
@@ -317,7 +322,9 @@ class TCP_COM():
         filename="PING"
         size=len(filename)
         client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{size}".encode())
-        pong = client_socket.recv(8)
+        print(1)
+        pong = client_socket.recv(1024).decode()
+        print(2)
         end_rtt = time.perf_counter()
 
         rtt = end_rtt - start_rtt  # seconds
