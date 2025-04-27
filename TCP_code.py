@@ -82,6 +82,7 @@ class TCP_COM():
                 #print(received_size)
                 if not data:
                     break
+                received_size += len(data)
             conn.sendall("READY".encode())
 
     @retry_transmission_handler
