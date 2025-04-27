@@ -155,6 +155,7 @@ class TCP_COM():
             server_socket.settimeout(1.0)
             print(f"Server listening on {listen_host}:{listen_port}")
             while self.RUNNING:
+                print("In loop")
                 try:
                     conn, addr = server_socket.accept()
                     start=time.time()
