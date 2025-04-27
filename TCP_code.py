@@ -81,6 +81,7 @@ class TCP_COM():
                 #print(received_size)
                 if not data:
                     break
+            conn.sendall("READY".encode())
 
     @retry_transmission_handler
     def Ready_to_start(self, client_socket, val=0, packet_num=0):
@@ -281,8 +282,8 @@ class TCP_COM():
             client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{data_size_bytes}".encode())
             #client_socket.sendall(f"DATA:{data_size_bytes}".encode())
             ack = client_socket.recv(1024).decode()
-            #if ack != "READY":
-            #    raise Exception("Not ready")
+            if ack != "READY":
+                raise Exception("Not ready")
             # Send data
             start_time = time.time()
             bytes_sent = 0
@@ -291,7 +292,9 @@ class TCP_COM():
                 chunk = data[i:i+chunk_size]
                 client_socket.sendall(chunk)
                 bytes_sent += len(chunk)
-            end_time = time.time()
+            ack = client_socket.recv(1024).decode()
+            if ack == "READY":
+                end_time = time.time()
             # Measure results
             transmission_time = end_time - start_time  # seconds
             throughput_mbps = (bytes_sent * 8) / (transmission_time * 1_000_000)  # bits/sec to Mbps
