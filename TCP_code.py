@@ -106,7 +106,7 @@ class TCP_COM():
         self.time_transmitting+=time.time()-start
 
     def __receive_file(self, conn, file_name, file_size):
-        start=time.time()
+        
         conn.sendall("READY".encode())
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
@@ -116,9 +116,8 @@ class TCP_COM():
                     break
                 f.write(data)
                 received_size += len(data)
-        stop=time.time()
-        self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),stop-start))
-        self.time_receiving+=time.time()-start
+        self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),0))
+        
         #print(f"File '{file_name}' received, took: ", stop-start)
 
     def handle_PDR_req(self, file_size, file_name):
@@ -142,6 +141,7 @@ class TCP_COM():
             while self.RUNNING:
                 try:
                     conn, addr = server_socket.accept()
+                    start=time.time()
                 except socket.timeout:
                     continue
                 if self.device=="edge":
@@ -165,8 +165,10 @@ class TCP_COM():
                         self.handle_PDR_req(file_size, file_name)
                     elif telegram_type(int(type))==telegram_type.DUMMY:
                         self.handle_dummy_req(conn,file_size, file_name)
+                
                 except Exception as e:
                     print(e)
+                self.time_receiving+=time.time()-start
             print("stopped socket")
             server_socket.close()
     
@@ -200,7 +202,6 @@ class TCP_COM():
         """
         Listens for UDP packets on (host, port) and counts how many arrive.
         """
-        start=time.time()
         ENABLE_ARTIFICIAL_DROPS=False
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.MY_IP, self.MY_PORT_UDP))
@@ -226,7 +227,6 @@ class TCP_COM():
         pdr = 1-(count / expected_packets)
         print(f"PDR: {pdr*100:.2f}%")
         self.send_open_udp(self.TAR_IP,val=pdr)
-        self.time_receiving+=time.time()-start
         return pdr
 
     #Replace with mmcli for cell connections
