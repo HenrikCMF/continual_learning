@@ -77,7 +77,6 @@ class TCP_COM():
             conn.sendall("READY".encode())
             received_size = 0
             while received_size < file_size:
-                print(received_size)
                 data = conn.recv(1024)
                 #print(received_size)
                 if not data:
