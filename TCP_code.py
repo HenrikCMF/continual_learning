@@ -6,6 +6,7 @@ import time
 from enum import Enum
 import subprocess
 import re
+import numpy as np
 from utils import retry_transmission_handler, threaded
 import random
 class telegram_type(Enum):
@@ -304,7 +305,7 @@ class TCP_COM():
                 end_time = time.perf_counter()
             # Measure results
             transmission_time = end_time - start_time  # seconds
-            throughput_mbps = 2*((bytes_sent+20) * 8) / ((transmission_time-(RTT*2)) * 1000000)  # bits/sec to Mbps
+            throughput_mbps = ((bytes_sent+20) * 8) / ((transmission_time-(RTT*2)) * 1000000)  # bits/sec to Mbps
             # Optionally store transmission time
             self.time_transmitting += transmission_time
             self.file_Q.put((throughput_mbps,0))
@@ -325,6 +326,12 @@ class TCP_COM():
 
         rtt = end_rtt - start_rtt  # seconds
         self.file_Q.put((rtt,0))
+
+    def mathis_eq(self, RTT, PDR):
+        if PDR<=0:
+            PDR=0.001
+        throughput=self.MSS/(RTT*np.sqrt(PDR))
+        return throughput
 #com
 
 if __name__ == "__main__":
