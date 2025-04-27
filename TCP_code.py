@@ -83,6 +83,8 @@ class TCP_COM():
                     break
                 received_size += len(data)
             conn.sendall("READY".encode())
+        elif file_name=="PING":
+            conn.sendall("PONG".encode())
 
     @retry_transmission_handler
     def Ready_to_start(self, client_socket, val=0, packet_num=0):
@@ -274,7 +276,7 @@ class TCP_COM():
         try:
             # Connect and prepare to send
             client_socket.connect((TAR_IP, TAR_PORT))
-
+            RTT=self.measure_RTT(client_socket)
             # Generate random data
             data = os.urandom(data_size_bytes)
 
@@ -286,19 +288,19 @@ class TCP_COM():
             if ack != "READY":
                 raise Exception("Not ready")
             # Send data
-            start_time = time.time()
+            start_time = time.perf_counter()
             bytes_sent = 0
-            chunk_size = 1024  # 1 KB
+            chunk_size = 8192  # 1 KB
             for i in range(0, data_size_bytes, chunk_size):
                 chunk = data[i:i+chunk_size]
                 client_socket.sendall(chunk)
                 bytes_sent += len(chunk)
             ack = client_socket.recv(1024).decode()
             if ack == "READY":
-                end_time = time.time()
+                end_time = time.perf_counter()
             # Measure results
             transmission_time = end_time - start_time  # seconds
-            throughput_mbps = (bytes_sent * 8) / (transmission_time * 1_000_000)  # bits/sec to Mbps
+            throughput_mbps = (bytes_sent * 8) / ((transmission_time-RTT) * 1_000_000)  # bits/sec to Mbps
             # Optionally store transmission time
             self.time_transmitting += transmission_time
             self.file_Q.put((throughput_mbps,0))
@@ -307,6 +309,15 @@ class TCP_COM():
         except Exception as e:
             print(f"Error during data transfer: {e}")
             return None
+        
+    def measure_RTT(self, client_socket):
+        start_rtt = time.perf_counter()
+        client_socket.sendall(b"PING")
+        pong = client_socket.recv(1024)
+        end_rtt = time.perf_counter()
+
+        rtt = end_rtt - start_rtt  # seconds
+        return rtt
 #com
 
 if __name__ == "__main__":
