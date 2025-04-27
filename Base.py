@@ -135,7 +135,7 @@ class Base_station(TCP_COM):
                             self.append_to_faulty_data(data, timestamps, self.faulty_data)
                     self.distribute_model("models/"+self.ml_model.model_name+".tflite")
             except queue.Empty:
-                print("waiting for data")
+                #print("waiting for data")
                 pass
         return TP, FP
             #

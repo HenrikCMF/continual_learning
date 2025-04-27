@@ -175,7 +175,8 @@ class edge_device(TCP_COM):
                 #self.send_ACK()
                 #self.index+=50000
             except queue.Empty:
-                print("waiting for model")
+                #print("waiting for model")
+                pass
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
