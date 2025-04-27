@@ -55,7 +55,15 @@ class Z_Base_station(TCP_COM):
         for i in range(50):
             for ip in self.edge_devices:
                 #self.TAR_IP=ip
-                self.getthroughput(ip, self.TAR_PORT_TCP, 1000000)
+                self.measure_RTT(ip, self.TAR_PORT_TCP)
+                try:
+                    file, transmission_time = self.file_Q.get(timeout=3)
+                    RTT=file
+                    print(RTT)
+                except queue.Empty:
+                    #print("waiting for data")
+                    pass
+                self.getthroughput(ip, self.TAR_PORT_TCP, 1000000, RTT)
                 try:
                     file, transmission_time = self.file_Q.get(timeout=3)
                     print("through",file)

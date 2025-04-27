@@ -155,7 +155,6 @@ class TCP_COM():
             server_socket.settimeout(1.0)
             print(f"Server listening on {listen_host}:{listen_port}")
             while self.RUNNING:
-                print("In loop")
                 try:
                     conn, addr = server_socket.accept()
                     start=time.time()
@@ -276,23 +275,18 @@ class TCP_COM():
         
 
     @retry_transmission_handler
-    def getthroughput(self, client_socket, TAR_IP, TAR_PORT, data_size_bytes):
+    def getthroughput(self, client_socket, TAR_IP, TAR_PORT, data_size_bytes, RTT):
         try:
             # Connect and prepare to send
             client_socket.connect((TAR_IP, TAR_PORT))
-            RTT=self.measure_RTT(client_socket)
-            print(3, RTT)
             # Generate random data
             data = os.urandom(data_size_bytes)
 
             # Optional: Send a small header to inform receiver (e.g., data length)
             filename="THROUGHPUT"
-            print(4)
             client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{data_size_bytes}".encode())
-            print(5)
             #client_socket.sendall(f"DATA:{data_size_bytes}".encode())
             ack = client_socket.recv(1024).decode()
-            print("got", ack)
             if ack != "READY":
                 raise Exception("Not ready")
             # Send data
@@ -317,19 +311,18 @@ class TCP_COM():
         except Exception as e:
             print(f"Error during data transfer: {e}")
             return None
-        
-    def measure_RTT(self, client_socket):
+    @retry_transmission_handler
+    def measure_RTT(self, client_socket, TAR_IP, TAR_PORT):
+        client_socket.connect((TAR_IP, TAR_PORT))
         start_rtt = time.perf_counter()
         filename="PING"
         size=len(filename)
         client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{size}".encode())
-        print(1)
         pong = client_socket.recv(1024).decode()
-        print(2)
         end_rtt = time.perf_counter()
 
         rtt = end_rtt - start_rtt  # seconds
-        return rtt
+        self.file_Q.put((rtt,0))
 #com
 
 if __name__ == "__main__":
