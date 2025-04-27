@@ -89,7 +89,7 @@ class TCP_COM():
 
     @retry_transmission_handler
     def send_file(self, client_socket, TAR_IP, TAR_PORT,file_path):
-        start=time.time()
+        
         client_socket.connect((TAR_IP, TAR_PORT))
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
@@ -100,6 +100,7 @@ class TCP_COM():
         if ack != "READY":
             raise Exception("Not ready")
         # Send file content
+        start=time.time()
         with open(file_path, "rb") as f:
             while chunk := f.read(1024):
                 client_socket.sendall(chunk)
