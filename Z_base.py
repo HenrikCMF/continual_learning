@@ -62,8 +62,8 @@ class Z_Base_station(TCP_COM):
                 except queue.Empty:
                     #print("waiting for data")
                     pass
-                self.measure_PDR(100)
-                print("throughput",self.mathis_eq(RTT, self.PDR))
+                self.measure_PDR(1000)
+                print("throughput",self.mathis_eq(RTT, self.PDR)*8/1000, "kb")
                 try:
                     file, transmission_time = self.file_Q.get(timeout=3)
                     print("through",file)

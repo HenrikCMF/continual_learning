@@ -244,7 +244,7 @@ class TCP_COM():
                 break
 
         sock.close()
-        pdr = 1-(count / expected_packets)
+        pdr = max(1-(count / expected_packets),0.001)
         print(f"PDR: {pdr*100:.2f}%")
         self.send_open_udp(self.TAR_IP,val=pdr)
         return pdr
