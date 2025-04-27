@@ -312,8 +312,9 @@ class TCP_COM():
         
     def measure_RTT(self, client_socket):
         start_rtt = time.perf_counter()
-        client_socket.sendall(b"PING")
-        pong = client_socket.recv(1024)
+        filename="PING"
+        client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{len("PING")}".encode())
+        pong = client_socket.recv(8)
         end_rtt = time.perf_counter()
 
         rtt = end_rtt - start_rtt  # seconds
