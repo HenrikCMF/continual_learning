@@ -73,6 +73,8 @@ class TCP_COM():
         elif file_name=="ACK":
             conn.sendall("ACK".encode())
             self.file_Q.put((str("ACK"),0))
+        elif file_name=="THROUGHPUT":
+            conn.sendall("READY".encode())
             #print("Received done")
 
     @retry_transmission_handler
@@ -257,6 +259,50 @@ class TCP_COM():
                 return None
         except subprocess.CalledProcessError:
             # Happens if the interface doesn't exist or there's an iw error.
+            return None
+        
+
+    @retry_transmission_handler
+    def getthroughput(self, client_socket, TAR_IP, TAR_PORT, data_size_bytes):
+        try:
+            # Connect and prepare to send
+            client_socket.connect((TAR_IP, TAR_PORT))
+
+            # Generate random data
+            data = os.urandom(data_size_bytes)
+
+            # Optional: Send a small header to inform receiver (e.g., data length)
+            client_socket.sendall(f"{telegram_type.DUMMY.value}:{"THROUGHPUT"}:{data_size_bytes}".encode())
+            #client_socket.sendall(f"DATA:{data_size_bytes}".encode())
+            ack = client_socket.recv(1024).decode()
+            if ack != "READY":
+                raise Exception("Not ready")
+
+            # Send data
+            start_time = time.time()
+            bytes_sent = 0
+            chunk_size = 1024  # 1 KB
+            for i in range(0, data_size_bytes, chunk_size):
+                chunk = data[i:i+chunk_size]
+                client_socket.sendall(chunk)
+                bytes_sent += len(chunk)
+            end_time = time.time()
+
+            # Measure results
+            transmission_time = end_time - start_time  # seconds
+            throughput_mbps = (bytes_sent * 8) / (transmission_time * 1_000_000)  # bits/sec to Mbps
+
+            # Optionally store transmission time
+            self.time_transmitting += transmission_time
+
+            return {
+                "transmission_time_sec": transmission_time,
+                "throughput_mbps": throughput_mbps,
+                "data_size_bytes": bytes_sent
+            }
+
+        except Exception as e:
+            print(f"Error during data transfer: {e}")
             return None
 #com
 
