@@ -136,7 +136,7 @@ class TCP_COM():
     def __TCP_receive(self,listen_host, listen_port):
         """Handles receiving files from the other party."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024)
+            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 2048)
             server_socket.bind((listen_host, listen_port))
             server_socket.listen(5)
             server_socket.settimeout(1.0)
