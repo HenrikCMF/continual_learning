@@ -103,9 +103,9 @@ class edge_device(TCP_COM):
             important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        #NUM_BUF_SAMPLES=100
+        NUM_BUF_SAMPLES=200
         #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
-        NUM_BUF_SAMPLES=input
+        #NUM_BUF_SAMPLES=input
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
         time.sleep(0.01)
         while batch_not_found:
@@ -289,5 +289,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-#bs=edge_device("received", 0.2)
-#bs.run(0.2)
+bs=edge_device("received", 0.2)
+bs.run(0.2)
