@@ -84,7 +84,9 @@ class TCP_COM():
                 received_size += len(data)
             conn.sendall("READY".encode())
         elif file_name=="PING":
+            print("Received PING")
             conn.sendall("PONG".encode())
+            print("sent back PONG")
 
     @retry_transmission_handler
     def Ready_to_start(self, client_socket, val=0, packet_num=0):
