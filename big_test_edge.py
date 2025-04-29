@@ -53,7 +53,7 @@ def analyze_model_energy_params(model_path):
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["i","time_transmitting", "time_receiving", "total_sent_data", "total_received_data", "num_inferences"])
+        writer.writerow(["i","time_transmitting", "time_receiving", "total_sent_data", "total_received_data", "num_inferences", "measthrough"])
 
 start = 200
 stop = 1000
@@ -63,8 +63,8 @@ for idx in range(num_steps):
     i = round(start + step * idx, 2)
     time.sleep(10)
     bs=edge_device("received", i)
-    time_transmitting, time_receiving, total_sent_data, total_received_data, num_inferences = bs.run(i)
+    time_transmitting, time_receiving, total_sent_data, total_received_data, num_inferences, throughput = bs.run(i)
     #N_s, N_c, A_s = analyze_model_energy_params("models/autoencoder.tflite")
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow([i, time_transmitting, time_receiving, total_sent_data, total_received_data, num_inferences])
+        writer.writerow([i, time_transmitting, time_receiving, total_sent_data, total_received_data, num_inferences, throughput])

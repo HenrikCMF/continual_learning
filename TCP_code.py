@@ -123,20 +123,20 @@ class TCP_COM():
         self.time_transmitting+=time.time()-start
 
     def __receive_file(self, conn, file_name, file_size):
-        start_time=time.perf_counter()
-        conn.sendall("READY".encode())
         
+        conn.sendall("READY".encode())
+        start_time=time.perf_counter()
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
-                data = conn.recv(1024)
+                data = conn.recv(1024*64)
                 #print(received_size)
                 if not data:
                     break
                 f.write(data)
                 received_size += len(data)
         stop_time=time.perf_counter()
-        self.throughput = (received_size * 8) / ((stop_time - start_time) * 1_000) #in kbps
+        self.throughput = ((received_size+40) * 8) / ((stop_time - start_time) * 1_000) #in kbps
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),0))
         
         #print(f"File '{file_name}' received, took: ", stop-start)
@@ -156,6 +156,9 @@ class TCP_COM():
         """Handles receiving files from the other party."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 2048)
+            server_socket.setsockopt(socket.IPPROTO_TCP,
+                socket.TCP_CONGESTION,
+                b"bbr")
             server_socket.bind((listen_host, listen_port))
             server_socket.listen(5)
             server_socket.settimeout(1.0)

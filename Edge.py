@@ -24,6 +24,7 @@ class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
         self.inference_batch=0
         self.use_PDR=False
+        self.throughputs=[]
         self.total_sent_data=0
         self.total_received_data=0
         self.num_inferences=0
@@ -87,6 +88,7 @@ class edge_device(TCP_COM):
     def get_important_important_batch(self, input):
         batch_not_found=True
         if self.throughput:
+            self.throughputs.append(self.throughput)
             if self.throughput<200:
                 important_batches_tar=3
             elif self.throughput<330:
@@ -176,8 +178,8 @@ class edge_device(TCP_COM):
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
-                pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
-                self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
+                #pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
+                #self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
                 try:
                     self.send_done_sending()
                 except:
@@ -191,7 +193,7 @@ class edge_device(TCP_COM):
                 remove_all_avro_files('test_files')
                 self.stop_TCP()
                 Running=False
-        return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences
+        return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences, np.mean(self.throughputs)
 
         
     def received_model(self, path):

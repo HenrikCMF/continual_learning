@@ -19,6 +19,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 class Base_station(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
         self.total_data_sent=0
+        self.throughputs=[]
         self.use_PDR=False
         self.NEW_START=True
         self.faulty_data=os.path.join('test_files','faulty_data.csv')
@@ -128,6 +129,7 @@ class Base_station(TCP_COM):
                         #self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR)
                         #if invert_training==False:
                         #self.ml_model.improve_model(batch, invert_training, pdr=self.PDR)
+                        self.throughputs.append(self.throughput)
                         self.ml_model.improve_model(batch, invert_training, pdr=self.PDR, throughput=self.throughput)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
@@ -137,7 +139,7 @@ class Base_station(TCP_COM):
             except queue.Empty:
                 #print("waiting for data")
                 pass
-        return TP, FP
+        return TP, FP, np.mean(self.throughputs)
             #
         #self.send_file("307.jpg")
 
