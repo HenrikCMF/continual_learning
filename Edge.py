@@ -290,5 +290,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-#bs=edge_device("received", 0.2)
-#bs.run(0.2)
+bs=edge_device("received", 0.2)
+bs.run(0.2)

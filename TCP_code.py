@@ -120,7 +120,7 @@ class TCP_COM():
             while chunk := f.read(1024):
                 client_socket.sendall(chunk)
         self.time_transmitting+=time.time()-start
-
+        print("transmission time", time.time()-start)
     def __receive_file(self, conn, file_name, file_size):
         
         conn.sendall("READY".encode())
@@ -134,7 +134,6 @@ class TCP_COM():
                 f.write(data)
                 received_size += len(data)
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),0))
-        
         #print(f"File '{file_name}' received, took: ", stop-start)
 
     def handle_PDR_req(self, file_size, file_name):
