@@ -120,9 +120,12 @@ class TCP_COM():
         with open(file_path, "rb") as f:
             while chunk := f.read(1024):
                 client_socket.sendall(chunk)
-        
-        self.time_transmitting+=time.time()-start
-        print("time of transmission:", time.time()-start)
+        ack = client_socket.recv(1024).decode()
+        if ack != "DONE":
+            self.time_transmitting+=time.time()-start
+            print("time of transmission:", time.time()-start)
+        else:
+            raise Exception("Didnt finish")
 
     def __receive_file(self, conn, file_name, file_size):
         
@@ -137,6 +140,7 @@ class TCP_COM():
                     break
                 f.write(data)
                 received_size += len(data)
+        conn.sendall("DONE".encode())
         stop_time=time.perf_counter()
         self.throughput = ((received_size+40) * 8) / ((stop_time - start_time) * 1_000) #in kbps
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),0))

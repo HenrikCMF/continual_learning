@@ -179,8 +179,8 @@ class edge_device(TCP_COM):
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
-                pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
-                self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
+                #pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
+                #self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
                 try:
                     self.send_done_sending()
                 except:
