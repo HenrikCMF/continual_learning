@@ -120,7 +120,9 @@ class TCP_COM():
         with open(file_path, "rb") as f:
             while chunk := f.read(1024):
                 client_socket.sendall(chunk)
+        
         self.time_transmitting+=time.time()-start
+        print("time of transmission:", time.time()-start)
 
     def __receive_file(self, conn, file_name, file_size):
         
@@ -156,9 +158,7 @@ class TCP_COM():
         """Handles receiving files from the other party."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 2048)
-            server_socket.setsockopt(socket.IPPROTO_TCP,
-                socket.TCP_CONGESTION,
-                b"bbr")
+            server_socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_CONGESTION,b"bbr")
             server_socket.bind((listen_host, listen_port))
             server_socket.listen(5)
             server_socket.settimeout(1.0)
