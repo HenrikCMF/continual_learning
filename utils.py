@@ -21,6 +21,7 @@ def retry_transmission_handler(func):
         while i<10:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+                    client_socket.settimeout(None)
                     if is_method:
                         result = func(self_or_cls,client_socket,*args[1:], **kwargs)
                     else:
