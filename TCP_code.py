@@ -143,7 +143,7 @@ class TCP_COM():
                 received_size += len(data)
         conn.sendall("DONE".encode())
         stop_time=time.perf_counter()
-        self.throughput = ((received_size+40) * 8) / ((stop_time - start_time) * 1_000) #in kbps
+        self.throughput = ((received_size+40) * 8) / ((stop_time - start_time-0.1) * 1000) #in kbps
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),0))
         
         #print(f"File '{file_name}' received, took: ", stop-start)

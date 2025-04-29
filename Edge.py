@@ -39,10 +39,11 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            #rate_kbps=input
-            rate_kbps=configs['bandwidth_limit_kbps']
-            #burst_kbps=input
-            burst_kbps=configs['burst_limit_kbps']
+            
+            #rate_kbps=configs['bandwidth_limit_kbps']
+            #burst_kbps=configs['burst_limit_kbps']
+            rate_kbps=input
+            burst_kbps=input
             latency_ms=configs['buffering_latency_ms']
             packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
