@@ -4,7 +4,7 @@ import time
 import csv
 import os
 import tensorflow as tf
-file_path = "plots/optimum1.csv"
+file_path = "plots/optimum1_IoT.csv"
 
 
 def analyze_model_energy_params(model_path):
@@ -55,14 +55,14 @@ if not os.path.isfile(file_path):
         writer = csv.writer(file)
         writer.writerow(["i","time_transmitting", "time_receiving", "total_sent_data", "total_received_data", "num_inferences"])
 
-start = 0
-stop = 5
-step = 1
+start = 200
+stop = 2000
+step = 200
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)
     time.sleep(10)
-    bs=edge_device("received", 0.2)
+    bs=edge_device("received", i)
     time_transmitting, time_receiving, total_sent_data, total_received_data, num_inferences = bs.run(i)
     #N_s, N_c, A_s = analyze_model_energy_params("models/autoencoder.tflite")
     with open(file_path, mode="a", newline="") as file:

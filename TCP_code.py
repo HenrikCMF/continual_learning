@@ -16,6 +16,7 @@ class telegram_type(Enum):
 
 class TCP_COM():
     def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device, file_queue=None):
+        self.throughput=None
         self.time_transmitting=0
         self.time_receiving=0
         self.MY_IP=MY_HOST
@@ -124,6 +125,7 @@ class TCP_COM():
     def __receive_file(self, conn, file_name, file_size):
         
         conn.sendall("READY".encode())
+        start_time=time.perf_counter()
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
@@ -133,6 +135,9 @@ class TCP_COM():
                     break
                 f.write(data)
                 received_size += len(data)
+        stop_time=time.perf_counter()
+        self.throughput = (received_size * 8) / ((stop_time - start_time) * 1_000) #in kbps
+        print("Measured THROUGHPUT:", self.throughput)
         self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),0))
         
         #print(f"File '{file_name}' received, took: ", stop-start)
@@ -160,6 +165,7 @@ class TCP_COM():
                 try:
                     conn, addr = server_socket.accept()
                     self.MSS = conn.getsockopt(socket.IPPROTO_TCP, socket.TCP_MAXSEG)
+                    print("MSS:", self.MSS)
                     start=time.time()
                 except socket.timeout:
                     continue

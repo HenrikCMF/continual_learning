@@ -38,10 +38,10 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            #rate_kbps=input
-            rate_kbps=configs['bandwidth_limit_kbps']
-            #burst_kbps=input
-            burst_kbps=configs['burst_limit_kbps']
+            rate_kbps=input
+            #rate_kbps=configs['bandwidth_limit_kbps']
+            burst_kbps=input
+            #burst_kbps=configs['burst_limit_kbps']
             latency_ms=configs['buffering_latency_ms']
             packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
@@ -53,7 +53,7 @@ class edge_device(TCP_COM):
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
-        self.fault_index=0
+        self.fault_index=6
         self.filename, self.start_offset=make_dataset(fault_index=self.fault_index, num=1)
         df=pd.read_csv(self.filename)
         self.timestamps=df['timestamp']

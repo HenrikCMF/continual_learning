@@ -9,9 +9,9 @@ if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP", "size"])
-start = 0
-stop = 5
-step = 1
+start = 200
+stop = 2000
+step = 200
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)

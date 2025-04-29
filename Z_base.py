@@ -59,6 +59,7 @@ class Z_Base_station(TCP_COM):
                 try:
                     file, transmission_time = self.file_Q.get(timeout=3)
                     RTT=file
+                    print("RTT",RTT)
                 except queue.Empty:
                     #print("waiting for data")
                     pass
