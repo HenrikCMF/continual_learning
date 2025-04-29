@@ -122,10 +122,10 @@ class TCP_COM():
                 client_socket.sendall(chunk)
         ack = client_socket.recv(1024).decode()
         if ack != "DONE":
-            self.time_transmitting+=time.time()-start
-            print("time of transmission:", time.time()-start)
-        else:
             raise Exception("Didnt finish")
+        self.time_transmitting+=time.time()-start
+        print("time of transmission:", time.time()-start)
+            
 
     def __receive_file(self, conn, file_name, file_size):
         
