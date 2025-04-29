@@ -106,12 +106,10 @@ class TCP_COM():
     @retry_transmission_handler
     def send_file(self, client_socket, TAR_IP, TAR_PORT,file_path):
         
+        start=time.time()
         client_socket.connect((TAR_IP, TAR_PORT))
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
-
-        # Send file metadata
-        start=time.time()
         client_socket.sendall(f"{telegram_type.FILE.value}:{file_name}:{file_size}".encode())
         ack = client_socket.recv(1024).decode()
         if ack != "READY":
@@ -162,7 +160,7 @@ class TCP_COM():
     def __TCP_receive(self,listen_host, listen_port):
         """Handles receiving files from the other party."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 2048)
+            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 512)
             server_socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_CONGESTION,b"bbr")
             server_socket.bind((listen_host, listen_port))
             server_socket.listen(5)
