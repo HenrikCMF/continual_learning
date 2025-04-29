@@ -162,6 +162,11 @@ class TCP_COM():
             server_socket.bind((listen_host, listen_port))
             server_socket.listen(5)
             server_socket.settimeout(1.0)
+            algo =server_socket.getsockopt(socket.IPPROTO_TCP,
+                    socket.TCP_CONGESTION,
+                    16)
+            print(algo.decode())
+            exit()
             print(f"Server listening on {listen_host}:{listen_port}")
             while self.RUNNING:
                 try:
