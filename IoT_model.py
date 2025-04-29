@@ -332,8 +332,9 @@ class IoT_model():
         #    return None
         #    return None
         #pruning_level=pdr
+        quantize=False
         if throughput:
-            pruning_level=-0.84*(throughput/8 - 131.3)/100
+            pruning_level=min(max(-0.84*(throughput/8 - 131.3)/100,0),0.95)
             if pruning_level>0.5:
                 quantize=True
                 pruning_level=min(max(-3.56*(throughput/8 - 42.17)/100,0),0.95)
@@ -345,9 +346,9 @@ class IoT_model():
             print("Pruned model")
         model.save(os.path.join("models", self.model_name+".h5"))
         if pruning_level:
-            self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level, quantize=quantize)
+            self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), quantize=quantize)
         else:
-            self.quantize_model(X,model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level, quantize=quantize)
+            self.quantize_model(X,model, os.path.join("models", self.model_name), quantize=quantize)
 
 
 #make_model=IoT_model("datasets/initial_data.csv")

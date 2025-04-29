@@ -123,9 +123,9 @@ class TCP_COM():
         self.time_transmitting+=time.time()-start
 
     def __receive_file(self, conn, file_name, file_size):
-        
-        conn.sendall("READY".encode())
         start_time=time.perf_counter()
+        conn.sendall("READY".encode())
+        
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
             while received_size < file_size:
