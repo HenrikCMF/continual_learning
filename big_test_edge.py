@@ -4,7 +4,7 @@ import time
 import csv
 import os
 import tensorflow as tf
-file_path = "plots/ftest1_IOT.csv"
+file_path = "plots/ftest0_iot.csv"
 
 
 def analyze_model_energy_params(model_path):
@@ -55,9 +55,9 @@ if not os.path.isfile(file_path):
         writer = csv.writer(file)
         writer.writerow(["i","time_transmitting", "time_receiving", "total_sent_data", "total_received_data", "num_inferences", "measthrough"])
 
-start = 1000
-stop = 1000
-step = 200
+start = 1
+stop = 5
+step = 1
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)

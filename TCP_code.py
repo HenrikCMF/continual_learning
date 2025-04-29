@@ -185,7 +185,6 @@ class TCP_COM():
                         print("added", addr[0])
                 try:
                     # Receive file metadata
-                    print("received something")
                     metadata = conn.recv(1024).decode()
                     type, file_name, file_size = metadata.split(":")
                     print(" received:", type, file_name, file_size)
