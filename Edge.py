@@ -39,10 +39,10 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            rate_kbps=input
-            #rate_kbps=configs['bandwidth_limit_kbps']
-            burst_kbps=input
-            #burst_kbps=configs['burst_limit_kbps']
+            #rate_kbps=input
+            rate_kbps=configs['bandwidth_limit_kbps']
+            #burst_kbps=input
+            burst_kbps=configs['burst_limit_kbps']
             latency_ms=configs['buffering_latency_ms']
             packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
@@ -97,6 +97,7 @@ class edge_device(TCP_COM):
                 important_batches_tar=1
         else:
             important_batches_tar=1
+        important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
         NUM_BUF_SAMPLES=200
@@ -288,5 +289,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-#bs=edge_device("received", 0.2)
-#bs.run(0.2)
+bs=edge_device("received", 0.2)
+bs.run(0.2)

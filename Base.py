@@ -44,10 +44,10 @@ class Base_station(TCP_COM):
         self.rec_ip=configs['edgeip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            rate_kbps=input
-            #rate_kbps=configs['bandwidth_limit_kbps']
-            burst_kbps=input
-            #burst_kbps=configs['burst_limit_kbps']
+            #rate_kbps=input
+            rate_kbps=configs['bandwidth_limit_kbps']
+            #burst_kbps=input
+            burst_kbps=configs['burst_limit_kbps']
             latency_ms=configs['buffering_latency_ms']
             packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
@@ -157,6 +157,5 @@ class Base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,model)
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
-
-#bs=Base_station("received", 0.2)
-#bs.run(0.2)
+bs=Base_station("received", 0.2)
+bs.run(0.2)
