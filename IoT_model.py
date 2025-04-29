@@ -120,10 +120,10 @@ class IoT_model():
         x_random = X.iloc[index]
         return x_random
 
-    def quantize_model(self, data,model, path, amount_of_pruning=0):
+    def quantize_model(self, data,model, path, quantize=None):
         
         x_random=self.make_representative_data(pd.DataFrame(data))
-        qm.quantize_8_bit(model,x_random, path)
+        qm.quantize_8_bit(model,x_random, path, quantize)
         
 
     def check_sample(self, data):
@@ -327,11 +327,17 @@ class IoT_model():
                 #print(f"{layer.name}: applied sparsity = {actual_sparsity:.2f}")
         return model
 
-    def improve_model(self, data, invert_loss=False, pdr=0):
+    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None):
         #if invert_loss==True:
         #    return None
         #    return None
-        pruning_level=pdr
+        #pruning_level=pdr
+        if throughput:
+            pruning_level=-0.84*(throughput/8 - 131.3)/100
+            if pruning_level>0.5:
+                quantize=True
+                pruning_level=min(max(-3.56*(throughput/8 - 42.17)/100,0),0.95)
+            print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
         #pruning_level=50
         model, X=self.train_model(data, invert_loss, pruning_level)
         if pruning_level:
@@ -339,9 +345,9 @@ class IoT_model():
             print("Pruned model")
         model.save(os.path.join("models", self.model_name+".h5"))
         if pruning_level:
-            self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level)
+            self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level, quantize=quantize)
         else:
-            self.quantize_model(X,model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level)
+            self.quantize_model(X,model, os.path.join("models", self.model_name), amount_of_pruning=pruning_level, quantize=quantize)
 
 
 #make_model=IoT_model("datasets/initial_data.csv")

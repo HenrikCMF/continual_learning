@@ -53,7 +53,7 @@ class edge_device(TCP_COM):
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
-        self.fault_index=6
+        self.fault_index=0
         self.filename, self.start_offset=make_dataset(fault_index=self.fault_index, num=1)
         df=pd.read_csv(self.filename)
         self.timestamps=df['timestamp']
@@ -81,29 +81,25 @@ class edge_device(TCP_COM):
         self.mse_buff.append(mse)
         return rare, mse, s, t
 
-    def determine_batch_num(self):
-        match self.PDR:
-            case _ if self.PDR<1-0.95:
-                return 1
-            case _ if self.PDR<1-0.9:
-                return 2
-            case _ if self.PDR<1-0.85:
-                return 3
-            case _ if self.PDR>1-0.8:
-                return 4
-            case _:
-                return 5
+
             
 
     def get_important_important_batch(self, input):
         batch_not_found=True
-        if self.use_PDR:
-            important_batches_tar = self.determine_batch_num()
+        if self.throughput:
+            if self.throughput<200:
+                important_batches_tar=3
+            elif self.throughput<330:
+                important_batches_tar=2
+            else:
+                important_batches_tar=1
         else:
             important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        NUM_BUF_SAMPLES=200
+        #NUM_BUF_SAMPLES=200
+        NUM_BUF_SAMPLES=min(max(1.74*(self.throughput/8 - 7.2)/100,0),60)
+        print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #NUM_BUF_SAMPLES=input
         #print("PDR is", self.PDR, "So Number of samples is: ", NUM_BUF_SAMPLES)
