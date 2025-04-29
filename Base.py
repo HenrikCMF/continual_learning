@@ -45,7 +45,7 @@ class Base_station(TCP_COM):
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
             rate_kbps=input
-            burst_kbps=4#input
+            burst_kbps=8#input
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
             latency_ms=configs['buffering_latency_ms']

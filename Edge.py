@@ -43,7 +43,7 @@ class edge_device(TCP_COM):
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
             rate_kbps=input
-            burst_kbps=4#input
+            burst_kbps=8#input
             latency_ms=configs['buffering_latency_ms']
             packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
