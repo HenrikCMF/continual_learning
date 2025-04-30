@@ -98,11 +98,11 @@ class edge_device(TCP_COM):
                 important_batches_tar=1
         else:
             important_batches_tar=1
-        important_batches_tar=1
+        #important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        NUM_BUF_SAMPLES=200
-        #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 7.2),0),60))
+        #NUM_BUF_SAMPLES=200
+        NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 7.2),0),60))
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #NUM_BUF_SAMPLES=input
