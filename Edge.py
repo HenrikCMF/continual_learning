@@ -90,7 +90,7 @@ class edge_device(TCP_COM):
         batch_not_found=True
         if self.throughput:
             self.throughputs.append(self.throughput)
-            if self.throughput<200:
+            if self.throughput<250:
                 important_batches_tar=3
             elif self.throughput<330:
                 important_batches_tar=2
@@ -102,7 +102,8 @@ class edge_device(TCP_COM):
         important_batches=0
         #print("Analyzing samples")
         #NUM_BUF_SAMPLES=200
-        NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 7.2),0),60))
+        #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 7.2),0),60))
+        NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         #NUM_BUF_SAMPLES=int(100*(1-self.PDR)) if self.use_PDR else int(100)
         #NUM_BUF_SAMPLES=input
