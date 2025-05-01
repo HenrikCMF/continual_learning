@@ -92,7 +92,7 @@ class edge_device(TCP_COM):
             self.throughputs.append(self.throughput)
             if self.throughput<250:
                 important_batches_tar=3
-            elif self.throughput<330:
+            elif self.throughput<400:
                 important_batches_tar=2
             else:
                 important_batches_tar=1
