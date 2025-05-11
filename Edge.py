@@ -215,10 +215,10 @@ class edge_device(TCP_COM):
             with zipfile.ZipFile(path, 'r') as zipf:
                 output_folder=str(path).split('/')[0]
                 print("outputfolder: ", output_folder)
-                if "Q" in output_folder:
-                    model_name=model_name[1:]
-                    print("changed model_name   ", model_name)
                 zipf.extractall(output_folder)
+        if "Q" in model_name:
+            model_name=model_name[1:]
+            print("changed model_name   ", model_name)
         destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
         print("current path: ", os.path.join(output_folder, model_name+'.tflite'))
         print("destination: ", destination_path)
