@@ -213,6 +213,7 @@ class edge_device(TCP_COM):
             with zipfile.ZipFile(path, 'r') as zipf:
                 output_folder=str(path).split('/')[0]
                 if "Q" in output_folder:
+                    model_name=model_name[1:]
                     zipf.extractall(output_folder[1:])
                 else:
                     zipf.extractall(output_folder)
@@ -267,5 +268,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-bs=edge_device("received", 1000)
-bs.run(1000)
+bs=edge_device("received", 400)
+bs.run(400)
