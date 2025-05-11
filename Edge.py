@@ -212,7 +212,10 @@ class edge_device(TCP_COM):
         if '.zip' in path:
             with zipfile.ZipFile(path, 'r') as zipf:
                 output_folder=str(path).split('/')[0]
-                zipf.extractall(output_folder)
+                if "Q" in output_folder:
+                    zipf.extractall(output_folder[1:])
+                else:
+                    zipf.extractall(output_folder)
         destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
         shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
         self.total_received_data += os.path.getsize(destination_path)+20

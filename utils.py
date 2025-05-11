@@ -149,7 +149,7 @@ def remove_all_avro_files(path):
         file.unlink()
 
 
-def make_end_plot(mse, offset):
+def make_end_plot(mse,trendline, offset):
     file_path = "datasets/sensor.csv"
     df = pd.read_csv(file_path)
 
@@ -161,28 +161,22 @@ def make_end_plot(mse, offset):
     broken_indices = df.index[df["machine_status"] == "BROKEN"].tolist()
     last_index = df.index[-1]
     adjusted_broken_indices = [idx - offset for idx in broken_indices if idx >= offset]
-
-    mse_buf = []
-    for i in range(len(mse)):
-        mse_buf.append(pd.read_csv(mse[i]).iloc[:,1])
-
+    mse_buf = mse  
     # Plot the mse_buf values
     plt.figure(figsize=(10, 5))
-    #for i in mse_buf:
-    
-    plt.plot(mse_buf[0], label="MSE, Continual Learning", alpha=0.8)
-    plt.plot(mse_buf[1], label="MSE, Continual Learning, 7 batches combined", alpha=0.8)
-    plt.ylim(None, 10)
+    plt.plot(mse_buf, label="Autoencoder MSE Output")
+    plt.plot(trendline, color='green', linestyle='--', label="Trend Line (Linear Regression)")
+    #plt.ylim(-0.1, min(10, max(mse_buf)))
     # Plot vertical lines where 'machine_status' is 'BROKEN'
     for idx in adjusted_broken_indices:
-        plt.axvline(x=idx, color='r', linestyle='--', alpha=0.3, label="Fault Instances" if idx == adjusted_broken_indices[0] else "")
-    #plt.axvline(x=(last_index-offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
+        plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="Fault" if idx == adjusted_broken_indices[0] else "")
+    #plt.axvline(x=(last_index-self.start_offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
 
 
     # Labels and legend
     plt.xlabel("Index")
-    plt.ylabel("MSE Values")
-    plt.title("Model Reconstruction Error over dataset")
+    plt.ylabel("Autoencoder MSE Output")
+    plt.title("Autoencoder fault detector")
     plt.legend()
     plt.show()
 
