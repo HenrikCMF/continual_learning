@@ -351,6 +351,10 @@ class IoT_model():
             self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), quantize=quantize)
         else:
             self.quantize_model(X,model, os.path.join("models", self.model_name), quantize=quantize)
+        if quantize:
+            return 8
+        else:
+            return 32
 
 
 #make_model=IoT_model("datasets/initial_data.csv")

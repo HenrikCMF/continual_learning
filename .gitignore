@@ -2,6 +2,7 @@ __pycache__/
 plots/
 *.pyc
 *.jpg
+*.tex
 datasets/
 testfolder/
 my_dir/

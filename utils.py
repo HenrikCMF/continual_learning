@@ -26,11 +26,12 @@ def retry_transmission_handler(func):
                         result = func(self_or_cls,client_socket,*args[1:], **kwargs)
                     else:
                         result = func(client_socket,*args, **kwargs)
-                    break
+                    return result
             except Exception as e:
                 print(e)
                 time.sleep(0.1)
             i+=1
+        return None
     return wrapper
 
 def threaded(func):

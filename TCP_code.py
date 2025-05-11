@@ -37,6 +37,7 @@ class TCP_COM():
         self.edge_devices=[]
         self.PDR=0
         self.MSS=0
+        self.model_quantization=32
         if not os.path.exists(self.in_path):
             os.makedirs(self.in_path)
 
@@ -108,7 +109,10 @@ class TCP_COM():
         
         start=time.time()
         client_socket.connect((TAR_IP, TAR_PORT))
-        file_name = os.path.basename(file_path)
+        if self.model_quantization==8:
+            file_name = "Q"+os.path.basename(file_path)
+        else:
+            file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
         client_socket.sendall(f"{telegram_type.FILE.value}:{file_name}:{file_size}".encode())
         ack = client_socket.recv(1024).decode()
@@ -122,12 +126,18 @@ class TCP_COM():
         ack = client_socket.recv(1024).decode()
         if ack != "DONE":
             raise Exception("Didnt finish")
-        self.time_transmitting+=time.time()-start
-        print("time of transmission:", time.time()-start)
+        stop=time.time()
+        self.time_transmitting+=stop-start
+        print("time of transmission:", stop-start)
+        return stop-start
             
 
     def __receive_file(self, conn, file_name, file_size):
         conn.sendall("READY".encode())
+        if "Q" in file_name:
+            self.model_quantization=8
+        else:
+            self.model_quantization=32
         start_time=time.perf_counter()
         with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
             received_size = 0
@@ -141,7 +151,7 @@ class TCP_COM():
         conn.sendall("DONE".encode())
         stop_time=time.perf_counter()
         self.throughput = ((received_size+40) * 8) / ((stop_time - start_time) * 1000) #in kbps
-        self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),0))
+        self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),stop_time - start_time))
         
         #print(f"File '{file_name}' received, took: ", stop-start)
 
