@@ -206,22 +206,16 @@ class edge_device(TCP_COM):
 
         
     def received_model(self, path):
-        print("Path: ", path)
         model_name=str(path).split('/')[-1].split('.')[0]
-        print("model_name: ", model_name)
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
         if '.zip' in path:
             with zipfile.ZipFile(path, 'r') as zipf:
                 output_folder=str(path).split('/')[0]
-                print("outputfolder: ", output_folder)
                 zipf.extractall(output_folder)
         if "Q" in model_name:
             model_name=model_name[1:]
-            print("changed model_name   ", model_name)
         destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
-        print("current path: ", os.path.join(output_folder, model_name+'.tflite'))
-        print("destination: ", destination_path)
         shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
         self.total_received_data += os.path.getsize(destination_path)+20
         self.model.load_model()
