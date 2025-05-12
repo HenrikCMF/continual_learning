@@ -73,8 +73,6 @@ class Z_edge(TCP_COM):
                     self.results.append((self.throughput, rssi))
                 except queue.Empty:
                     pass
-                except:
-                    pass
         except KeyboardInterrupt:
             print("Interrupted by user. Saving results to CSV...")
             with open("RSSI/throughputresults.csv", "w", newline="") as f:
