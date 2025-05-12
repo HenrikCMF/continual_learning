@@ -52,25 +52,9 @@ class Z_Base_station(TCP_COM):
         while clients<1:
             file, transmission_time = self.file_Q.get(timeout=None, block=True)
             clients+=1
-        for i in range(50):
+        while True:
             for ip in self.edge_devices:
-                #self.TAR_IP=ip
-                self.measure_RTT(ip, self.TAR_PORT_TCP)
-                try:
-                    file, transmission_time = self.file_Q.get(timeout=3)
-                    RTT=file
-                    print("RTT",RTT)
-                except queue.Empty:
-                    #print("waiting for data")
-                    pass
-                self.measure_PDR(1000)
-                print("throughput",self.mathis_eq(RTT, self.PDR)*8/1000, "kb")
-                try:
-                    file, transmission_time = self.file_Q.get(timeout=3)
-                    print("through",file)
-                except queue.Empty:
-                    #print("waiting for data")
-                    pass
+                self.send_file(ip, self.TAR_PORT_TCP, "test_files/PEPE.jpeg")
 
 bs=Z_Base_station("received", 0.2)
 bs.run()

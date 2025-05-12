@@ -17,6 +17,7 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 import psutil
 import threading
+import csv
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
@@ -27,6 +28,7 @@ class Z_edge(TCP_COM):
         self.total_sent_data=0
         self.total_received_data=0
         self.num_inferences=0
+        self.results=[]
         self.device_type="edge"
         self.model_path="models"
         with open("configs.json", "r") as file:
@@ -63,8 +65,23 @@ class Z_edge(TCP_COM):
                 not_started=False
             except:
                 pass
-        while True:
-            time.sleep(1)
+        try:
+            while True:
+                try:
+                    file, rec_time= self.file_Q.get(timeout=2)
+                    rssi=self.get_rssi_via_iw()
+                    self.results.append((self.throughput, rssi))
+                except queue.Empty:
+                    pass
+                except:
+                    pass
+        except KeyboardInterrupt:
+            print("Interrupted by user. Saving results to CSV...")
+            with open("RSSI/throughputresults.csv", "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["throughput", "rssi"])  # Column headers
+                writer.writerows(self.results)
+            print("Results saved. Exiting.")
 
 bs=Z_edge("received", 0.2)
 bs.run()
