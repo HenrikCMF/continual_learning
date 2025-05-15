@@ -198,9 +198,13 @@ class edge_device(TCP_COM):
             if self.index>=self.len_of_dataset:
                 #pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
                 #pd.DataFrame(self.energy_buff).to_csv('test_files/energy_data.csv')
+                print("mse",np.shape(self.mse_buff))
+                print("energy",np.shape(self.energy_buff[1:]))
+                print("th",np.shape(self.throughput_buf))
+                print("Mth",np.shape(self.measured_throughput_buf))
                 data = {
                     'mse': self.mse_buff,
-                    'energy': self.energy_buff,
+                    'energy': self.energy_buff[1:],
                     'throughput': self.throughput_buf,
                     'measured_throughput': self.measured_throughput_buf
                 }
@@ -288,5 +292,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-bs=edge_device("received", 200)
-bs.run(200)
+bs=edge_device("received", 1000)
+bs.run(1000)
