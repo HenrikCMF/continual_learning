@@ -132,14 +132,14 @@ class Base_station(TCP_COM):
                         #if invert_training==False:
                         #self.ml_model.improve_model(batch, invert_training, pdr=self.PDR)
                         self.throughputs.append(self.throughput)
-                        self.model_quantization=self.ml_model.improve_model(batch, invert_training, pdr=self.PDR, throughput=self.throughput)
+                        #self.model_quantization=self.ml_model.improve_model(batch, invert_training, pdr=self.PDR, throughput=self.throughput)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
                         else:
                             self.append_to_faulty_data(data, timestamps, self.faulty_data)
                     self.distribute_model("models/"+self.ml_model.model_name+".tflite")
-                    self.rate_kbps-=10
-                    self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
+                    #self.rate_kbps-=10
+                    #self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
             except queue.Empty:
                 #print("waiting for data")
                 pass

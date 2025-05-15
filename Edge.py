@@ -105,9 +105,9 @@ class edge_device(TCP_COM):
         #important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        #NUM_BUF_SAMPLES=200
+        NUM_BUF_SAMPLES=200
 
-        NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
+        #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         time.sleep(0.01)
         while batch_not_found:
@@ -178,15 +178,15 @@ class edge_device(TCP_COM):
         while Running:
             try:
                 file, rec_time= self.file_Q.get(timeout=2)
-                self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
+                #self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                 files_received+=1
                 print(file)
                 if ".tflite" in file or '.zip' in file:
                     self.received_model(file)
                     #pass
                 self.file_Q.task_done()
-                self.rate_kbps-=10
-                self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
+                #self.rate_kbps-=10
+                #self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
                 self.get_important_important_batch(input)
                 #self.send_ACK()
                 #self.index+=50000
