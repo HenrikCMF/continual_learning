@@ -18,6 +18,7 @@ from sklearn.exceptions import ConvergenceWarning
 import psutil
 import threading
 import IoT_energy
+import subprocess
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
@@ -43,16 +44,16 @@ class edge_device(TCP_COM):
             
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
-            rate_kbps=input
-            burst_kbps=16#input
-            latency_ms=configs['buffering_latency_ms']
-            packet_loss_pct=configs['packet_loss_pct']
+            self.rate_kbps=input
+            self.burst_kbps=16#input
+            self.latency_ms=configs['buffering_latency_ms']
+            self.packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
             #jitter_ms=configs['jitter_ms']
             #packet_loss_pct=None
-            delay_ms=None
-            jitter_ms=None
-            self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
+            self.delay_ms=None
+            self.jitter_ms=None
+            self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
@@ -68,6 +69,7 @@ class edge_device(TCP_COM):
         generate_avro_schema(sensors, self.schema_path)
         self.model = IoT_model.IoT_model("test_files/initial_data.csv", 0.2)
         self.energy_model=IoT_energy.energy()
+        self.configs=configs
         #self.model = mlp_classifier("test_files/initial_data.csv", input)
         #self.model.load_model()
 
@@ -111,7 +113,9 @@ class edge_device(TCP_COM):
         while batch_not_found:
             
             rare, mse, s, t = self.analyze_samples()
-            self.energy_buff.append(self.energy_model.inference_energy(32))
+            self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
+            self.measured_throughput_buf.append(self.throughput)
+            self.throughput_buf.append(self.rate_kbps)
             self.samples_since_last_batch+=1
             if rare:
                 self.samples_since_last_batch-=1
@@ -131,6 +135,8 @@ class edge_device(TCP_COM):
                     self.sample_buffer.append(s)
                     self.timestamp_buffer.append(t)
                     self.mse_buff.append(self.mse_buff[-1])
+                    self.measured_throughput_buf.append(self.throughput)
+                    self.throughput_buf.append(self.rate_kbps)
                     self.energy_buff.append(0)
                 important_batches+=1
                 if important_batches==important_batches_tar: #network parameter
@@ -158,6 +164,8 @@ class edge_device(TCP_COM):
         self.timestamp_buffer=[]
         self.mse_buff=[]
         self.energy_buff=[]
+        self.throughput_buf=[]
+        self.measured_throughput_buf=[]
         self.energy_buff.append(0)
         done_sending=False
         self.samples_since_last_batch=0
@@ -177,6 +185,8 @@ class edge_device(TCP_COM):
                     self.received_model(file)
                     #pass
                 self.file_Q.task_done()
+                self.rate_kbps-=10
+                self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
                 self.get_important_important_batch(input)
                 #self.send_ACK()
                 #self.index+=50000
@@ -186,8 +196,19 @@ class edge_device(TCP_COM):
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
-                pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
-                pd.DataFrame(self.energy_buff).to_csv('test_files/energy_data.csv')
+                #pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
+                #pd.DataFrame(self.energy_buff).to_csv('test_files/energy_data.csv')
+                data = {
+                    'mse': self.mse_buff,
+                    'energy': self.energy_buff,
+                    'throughput': self.throughput_buf,
+                    'measured_throughput': self.measured_throughput_buf
+                }
+
+                df = pd.DataFrame(data)
+
+                # Save to CSV
+                df.to_csv("test_files/full_IoTresult.csv", index=False)
                 #self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
                 try:
                     self.send_done_sending()
@@ -202,6 +223,7 @@ class edge_device(TCP_COM):
                 remove_all_avro_files('test_files')
                 self.stop_TCP()
                 Running=False
+                subprocess.run(f"sudo tc qdisc del dev {self.configs['edgeNET_INTERFACE']} root", shell=True)
         return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences, np.mean(self.throughputs)
 
         

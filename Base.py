@@ -13,7 +13,7 @@ import zipfile
 import pandas as pd
 import warnings
 from sklearn.exceptions import ConvergenceWarning
-
+import subprocess
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 class Base_station(TCP_COM):
@@ -44,19 +44,20 @@ class Base_station(TCP_COM):
         self.rec_ip=configs['edgeip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            rate_kbps=input
-            burst_kbps=16#input
+            self.rate_kbps=input
+            self.burst_kbps=16#input
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
-            latency_ms=configs['buffering_latency_ms']
-            packet_loss_pct=configs['packet_loss_pct']
+            self.latency_ms=configs['buffering_latency_ms']
+            self.packet_loss_pct=configs['packet_loss_pct']
             #delay_ms=configs['base_delay_ms']
             #jitter_ms=configs['jitter_ms']
-            delay_ms=None
-            jitter_ms=None
-            self.nc.set_network_conditions(rate_kbps, burst_kbps, latency_ms, packet_loss_pct, delay_ms, jitter_ms)
+            self.delay_ms=None
+            self.jitter_ms=None
+            self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
+        self.configs=configs
         super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type, self.file_Q)
     
     def append_to_initial_data(self, data, timestamps, init_data_path):
@@ -110,6 +111,7 @@ class Base_station(TCP_COM):
                     remove_all_avro_files('received')
                     self.stop_TCP()
                     Running=False
+                    subprocess.run(f"sudo tc qdisc del dev {self.configs['baseNET_INTERFACE']} root", shell=True)
                 self.file_Q.task_done()
                 if "ACK" in file:
                     self.distribute_model("models/"+self.ml_model.model_name+".tflite")
@@ -136,6 +138,8 @@ class Base_station(TCP_COM):
                         else:
                             self.append_to_faulty_data(data, timestamps, self.faulty_data)
                     self.distribute_model("models/"+self.ml_model.model_name+".tflite")
+                    self.rate_kbps-=10
+                    self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
             except queue.Empty:
                 #print("waiting for data")
                 pass
