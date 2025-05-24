@@ -44,7 +44,7 @@ class Base_station(TCP_COM):
         self.rec_ip=configs['edgeip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            self.rate_kbps=input
+            self.rate_kbps=1200
             self.burst_kbps=16#input
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
@@ -130,9 +130,8 @@ class Base_station(TCP_COM):
                             FP+=1
                         #self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR)
                         #if invert_training==False:
-                        #self.ml_model.improve_model(batch, invert_training, pdr=self.PDR)
                         self.throughputs.append(self.throughput)
-                        #self.model_quantization=self.ml_model.improve_model(batch, invert_training, pdr=self.PDR, throughput=self.throughput)
+                        self.model_quantization=self.ml_model.improve_model(input,batch, invert_training, pdr=self.PDR, throughput=self.throughput)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
                         else:

@@ -239,7 +239,7 @@ class IoT_model():
 
         return data
 
-    def train_model(self, data, invert_loss=False, pruning_level=0):
+    def train_model(self, input, data, invert_loss=False, pruning_level=0):
         data = data.drop(data.columns[-1], axis=1)
         X, y = self.prepare_training_data()
         X=pd.DataFrame(X)
@@ -247,7 +247,7 @@ class IoT_model():
         new_data=self.scale_data(np.array(data))
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            return -0.3*mse if invert_loss else mse  # Negate the loss to maximize
+            return -1*input*mse if invert_loss else mse  # Negate the loss to maximize
         
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
@@ -304,30 +304,20 @@ class IoT_model():
         return model
     
     def manual_prune_weights(self, model, sparsity=0.9):
-        """
-        Manually zero out the lowest X% magnitude weights in each trainable kernel.
-        :param model: a Keras model
-        :param sparsity: float between 0 and 1, e.g., 0.9 means prune 90% of lowest weights
-        :return: pruned model
-        """
         for layer in model.layers:
             weights = layer.get_weights()
             if len(weights) > 0:
                 kernel = weights[0]
-                # Flatten to compute threshold across all weights
                 flat_kernel = np.abs(kernel).flatten()
                 threshold = np.percentile(flat_kernel, sparsity * 100)
-
                 pruned_kernel = np.where(np.abs(kernel) < threshold, 0, kernel)
                 weights[0] = pruned_kernel
                 layer.set_weights(weights)
-
-                # Optional: print stats
                 actual_sparsity = np.mean(pruned_kernel == 0)
-                #print(f"{layer.name}: applied sparsity = {actual_sparsity:.2f}")
         return model
 
-    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None):
+
+    def improve_model(self, input, data, invert_loss=False, pdr=0, throughput=None):
         #if invert_loss==True:
         #    return None
         #    return None
@@ -342,7 +332,7 @@ class IoT_model():
         else:
             pruning_level=None
         #pruning_level=50
-        model, X=self.train_model(data, invert_loss, pruning_level)
+        model, X=self.train_model(input, data, invert_loss, pruning_level)
         if pruning_level:
             pruned_model = self.manual_prune_weights(model, pruning_level)
             print("Pruned model")
