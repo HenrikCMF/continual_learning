@@ -239,7 +239,7 @@ class IoT_model():
 
         return data
 
-    def train_model(self, input, data, invert_loss=False, pruning_level=0):
+    def train_model(self, data, invert_loss=False, pruning_level=0):
         data = data.drop(data.columns[-1], axis=1)
         X, y = self.prepare_training_data()
         X=pd.DataFrame(X)
@@ -247,8 +247,8 @@ class IoT_model():
         new_data=self.scale_data(np.array(data))
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            return -1*input*mse if invert_loss else mse  # Negate the loss to maximize
-        
+            return -0.3*mse if invert_loss else mse  # Negate the loss to maximize
+
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
         num_epochs = max(5, min(100, int(2000 / len(data))))
@@ -317,12 +317,13 @@ class IoT_model():
         return model
 
 
-    def improve_model(self, input, data, invert_loss=False, pdr=0, throughput=None):
+    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None):
         #if invert_loss==True:
         #    return None
         #    return None
         #pruning_level=pdr
         quantize=False
+        throughput=None
         if throughput:
             pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
             if pruning_level>0.4:
@@ -332,7 +333,7 @@ class IoT_model():
         else:
             pruning_level=None
         #pruning_level=50
-        model, X=self.train_model(input, data, invert_loss, pruning_level)
+        model, X=self.train_model(data, invert_loss, pruning_level)
         if pruning_level:
             pruned_model = self.manual_prune_weights(model, pruning_level)
             print("Pruned model")

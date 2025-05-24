@@ -3,15 +3,15 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/ftest08_server.csv"
+file_path = "plots/adapt_onlyIoT_server.csv"
 
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP", "size", "measthroughput"])
-start = 0.1
-stop = 1
-step = 0.1
+start = 200
+stop = 1000
+step = 200
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)
