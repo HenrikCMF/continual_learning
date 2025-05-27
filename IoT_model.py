@@ -339,6 +339,10 @@ class IoT_model():
             pruned_model = self.manual_prune_weights(model, pruning_level)
             print("Pruned model")
         model.save(os.path.join("models", self.model_name+".h5"))
+
+        ###
+        quantize=True
+        ###
         if pruning_level:
             self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), quantize=quantize)
         else:

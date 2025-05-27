@@ -44,7 +44,8 @@ class edge_device(TCP_COM):
             
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
-            self.rate_kbps=input
+            #self.rate_kbps=input
+            self.rate_kbps=1000
             self.burst_kbps=16#input
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
@@ -102,12 +103,11 @@ class edge_device(TCP_COM):
                 important_batches_tar=1
         else:
             important_batches_tar=1
-        #important_batches_tar=1
+        important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        #NUM_BUF_SAMPLES=200
-
-        NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
+        NUM_BUF_SAMPLES=input
+        #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         time.sleep(0.01)
         while batch_not_found:
