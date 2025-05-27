@@ -4,7 +4,7 @@ import time
 import csv
 import os
 import tensorflow as tf
-file_path = "plots/adapt_onlyIoT_iot.csv"
+file_path = "plots/adapt_onlyIoTQ_iot.csv"
 
 
 def analyze_model_energy_params(model_path):

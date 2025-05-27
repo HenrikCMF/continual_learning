@@ -324,6 +324,7 @@ class IoT_model():
         #pruning_level=pdr
         quantize=False
         throughput=None
+        
         if throughput:
             pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
             if pruning_level>0.4:
