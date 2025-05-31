@@ -6,7 +6,7 @@ import os
 import tensorflow as tf
 file_path = "plots/adapt_onlyIoTQ_iot.csv"
 
-
+#Function for runnning the full test run multiple times but with a changing input for each run
 def analyze_model_energy_params(model_path):
     """
     Load a Keras model from file and calculate:

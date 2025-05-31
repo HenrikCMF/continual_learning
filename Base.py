@@ -16,25 +16,42 @@ from sklearn.exceptions import ConvergenceWarning
 import subprocess
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
+
+#Main File for the server Node
+
+
 class Base_station(TCP_COM):
+    #Initialize Server
     def __init__(self, REC_FILE_PATH, input):
+        """
+        Initializes a server listening and model training object..
+
+        Parameters:
+        ----------
+        REC_FILE_PATH : string acting as path to folder where received files are to be stored.           
+        input : test parameter.
+        --------
+        """
         self.total_data_sent=0
         self.throughputs=[]
         self.use_PDR=False
         self.NEW_START=True
         self.faulty_data=os.path.join('test_files','faulty_data.csv')
+        #Fetch only the "Allowed" part of the training data, according to the rules
         if self.NEW_START:
             make_initial_data("datasets/sensor.csv", 'test_files')
             with open(self.faulty_data, 'w') as f:
-                f.write("")  # Write an empty string to create the file
+                f.write("")
         
         self.init_data=os.path.join('test_files','initial_data.csv')
         self.init_data_columns=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore').columns
-        self.ml_model=IoT_model.IoT_model(self.init_data, 0.2)
-        #self.ml_model=mlp_classifier(self.init_data, input)
+        #Load the chosen model
+        self.ml_model=IoT_model.IoT_model(self.init_data, 0.2) #Autoencoder
         if self.NEW_START:
+            #Train the initial model
             self.ml_model.train_initial_model()
         self.device_type="bs"
+        #Load all configs to set up as TCP server.
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.local_IP=configs['baseip']
@@ -42,6 +59,7 @@ class Base_station(TCP_COM):
         self.edgePORT_UDP=configs['edgePORT_UDP']
         self.basePORT=configs['basePORT']
         self.rec_ip=configs['edgeip']
+        #Enable network control
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
             #self.rate_kbps=input
@@ -62,17 +80,35 @@ class Base_station(TCP_COM):
         super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type, self.file_Q)
     
     def append_to_initial_data(self, data, timestamps, init_data_path):
-        #init_data=pd.read_csv(init_data_path).drop(columns=["Unnamed: 0"], errors='ignore')
+        """
+        Appends new data with corresponding timestamps to the initial data CSV file.
+
+        Parameters:
+        ----------
+        data : must be a pd.Dataframe, containing recent sensor data. Must align column-wise with `self.init_data_columns`,
+            excluding the timestamp.           
+        timestamps : must be array-like corresponding to each row in `data`.
+        init_data_path : str path to the CSV file where the combined data and timestamps will be appended.
+        --------
+        """
         timestamps=pd.DataFrame(timestamps)
         timestamps.columns=['timestamp']
         df2 = pd.concat([timestamps, data], axis=1).drop(columns=["Unnamed: 0"], errors='ignore')
-        #df2.columns=init_data.columns
         df2.columns=self.init_data_columns
-        #df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
-        #df_combined.to_csv(init_data_path)
         df2.to_csv(init_data_path, mode='a', header=False, index=False)
 
     def append_to_faulty_data(self, data, timestamps, init_data_path):
+        """
+        Appends new faulty data with corresponding timestamps to a growing database of faults.
+
+        Parameters:
+        ----------
+        data : must be a pd.Dataframe, containing recent sensor data. Must align column-wise with previous faults,
+            excluding the timestamp.           
+        timestamps : must be array-like corresponding to each row in `data`.
+        init_data_path : str path to the CSV file where the combined data and timestamps will be appended.
+        --------
+        """
         init_data_no_faults=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore')
         if os.path.getsize(init_data_path) <= 0:
             init_data=pd.DataFrame()
@@ -86,6 +122,18 @@ class Base_station(TCP_COM):
         df_combined.to_csv(init_data_path)
 
     def run(self, input):
+        """
+        Runs the basic server routine of waiting for samples, using them to improve the model, then transmitting the improved model back.
+
+        Parameters:
+        ----------
+        input: test parameter
+        --------
+        Returns:
+        TP: Total number of received packages containing a fault
+        FP: Total number of received packages not containing a fault
+        Average throughput: Average of all measured throughputs.
+        """
         Running=True
         TP=0
         FP=0
@@ -148,6 +196,17 @@ class Base_station(TCP_COM):
         #self.send_file("307.jpg")
 
     def distribute_model(self, model):
+        """
+        Compresses a received model to a zip file and transmits it to all known IoT receivers.
+
+        Parameters:
+        ----------
+        data : must be a pd.Dataframe, containing recent sensor data. Must align column-wise with previous faults,
+            excluding the timestamp.           
+        timestamps : must be array-like corresponding to each row in `data`.
+        init_data_path : str path to the CSV file where the combined data and timestamps will be appended.
+        --------
+        """
         output_zip=model+'.zip'
         input_file=model
         with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:

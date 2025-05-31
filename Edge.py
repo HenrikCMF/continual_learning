@@ -24,6 +24,15 @@ warnings.filterwarnings("ignore", module="sklearn")
 
 class edge_device(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
+        """
+        Initializes an IoT device object.
+
+        Parameters:
+        ----------
+        REC_FILE_PATH : string acting as path to folder where received files are to be stored.           
+        input : test parameter.
+        --------
+        """
         self.inference_batch=0
         self.use_PDR=False
         self.throughputs=[]
@@ -78,6 +87,15 @@ class edge_device(TCP_COM):
 
 
     def analyze_samples(self):
+        """
+        Fetch a sample and check for probability of being a fault.
+
+        Returns
+        rare: binary value for whether rare or not.
+        mse: mse score/ model output of sample
+        s: sample
+        t: timestamp
+        """
         s, t=self.get_sample()    
         if self.inference_batch==0:
             for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
@@ -92,6 +110,18 @@ class edge_device(TCP_COM):
             
 
     def get_important_important_batch(self, input):
+        """
+        Iterates through samples until it finds a rare one,keeps a buffer of length N 
+        of previous samples and collects future context of length N.
+        Decides on N as well as amount of buffering.
+        When it is evaluated that all data necessary for a package has been collected,
+        it serializes the data with avro and transmits it to the server.
+
+        Parameters:
+        ----------         
+        input : test parameter.
+        --------
+        """
         batch_not_found=True
         if self.throughput:
             self.throughputs.append(self.throughput)
@@ -158,6 +188,22 @@ class edge_device(TCP_COM):
 
 
     def run(self, input):
+        """
+        Runs the basic IoT routine of checking samples, collecting context, then transmitting 
+        the samples and receiving an updated model afterwards.
+
+        Parameters:
+        ----------
+        input: test parameter
+        --------
+        Returns:
+        self.time_transmitting: total measured time spent transmitting.
+        self.time_receiving: total measured time spent receiving.
+        self.total_sent_data: total bytes transmitted
+        self.total_received_data: total bytes received.
+        self.num_inferences: total number of inferences
+        self.throughputs: average throughput
+        """
         Running=True
         start=time.time()
         self.sample_buffer=[]
@@ -232,6 +278,14 @@ class edge_device(TCP_COM):
 
         
     def received_model(self, path):
+        """
+        Decompresses a received model and loads it into memory.
+
+        Parameters:
+        ----------
+        path: string model path
+        --------
+        """
         model_name=str(path).split('/')[-1].split('.')[0]
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
@@ -247,6 +301,14 @@ class edge_device(TCP_COM):
         self.model.load_model()
     
     def get_previous_X_samples(self, X):
+        """
+        Fetches N samples from buffer
+
+        Parameters:
+        ----------
+        X: int number of samples to be fetched
+        --------
+        """
         sample=self.data.iloc[self.index-X:self.index].values.tolist()
         timestamp=self.timestamps.iloc[self.index-X:self.index].tolist()
         return sample, timestamp

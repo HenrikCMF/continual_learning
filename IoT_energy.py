@@ -1,6 +1,7 @@
 import numpy as np
 class energy():
     def __init__(self):
+        #Initializes model and energy paramers
         self.xi_R = 0.33   # Receive power in Watts
         self.xi_T = 0.79   # Transmit power in Watts
         # Model architecture params (from analyzer or manual estimate)
@@ -13,6 +14,7 @@ class energy():
         self.E_base = 26.5e-12  # Joules
 
     def inference_energy(self, quantization_bits):
+        #Calculates inference energy based on model quantization level.
         b_q=quantization_bits
         E_MUAC = self.E_base * (b_q / self.b_max)**1.25
         E_L = self.E_base * (b_q / self.b_max)
@@ -33,11 +35,13 @@ class energy():
         return E_HW
     
     def transmission_energy(self, transmission_time):
+        #Calculate transmission energy based on measured transmission time
         tx=np.array(transmission_time)
         E_transmit = self.xi_T * tx
         return E_transmit
     
     def receiving_energy(self, receiving_time):
+        #Calculate receiving energy based on measured receiving time
         rx=np.array(receiving_time)
         E_recv = self.xi_R * rx
         return E_recv

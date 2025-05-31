@@ -47,10 +47,10 @@ def get_pruning_wrapper(model, sparsity, epochs, batch_size, num_training_sample
     start_step=int(total_steps/2)
     pruning_params = {
     'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
-        initial_sparsity=0.0,    # start training with 0% sparsity
-        final_sparsity=sparsity,     # end training with 50% sparsity
-        begin_step=start_step,            # when to start pruning
-        end_step=total_steps        # when to end pruning
+        initial_sparsity=0.0,   
+        final_sparsity=sparsity,     
+        begin_step=start_step,          
+        end_step=total_steps    
     )
     }
     model = tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)

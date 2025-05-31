@@ -4,7 +4,7 @@ import time
 import csv
 import os
 file_path = "plots/adapt_onlyIoTQ_server.csv"
-
+#Function for runnning the full test run multiple times but with a changing input for each run
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)

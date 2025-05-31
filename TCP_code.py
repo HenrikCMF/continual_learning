@@ -16,6 +16,21 @@ class telegram_type(Enum):
 
 class TCP_COM():
     def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device, file_queue=None):
+        """
+        Initializes TCP communication object, this object can be used for transmitting files or messages.
+        Initializing it will also automatically spawn a TCP receiver thread based on the parameters given.
+
+        Parameters:
+        ----------
+        MY_HOST : string giving device IP    
+        MY_HOST : string giving device PORT
+        TARGET_HOST : string giving target IP (IP of server if IoT, unused if server)   
+        MY_HOST : string giving target PORT (port of server if IoT, port of IoT if server)  
+        REC_FILE_PATH: string where received files will end up
+        device: string either "edge" or "base" specifying whether IoT or server
+        file_queue: python queue object to put messages for interthread communication.
+        --------
+        """
         self.throughput=None
         self.time_transmitting=0
         self.time_receiving=0
@@ -283,7 +298,6 @@ class TCP_COM():
                 return None
         try:
             interface=get_wireless_interface()
-            print("interface", interface)
             if interface:
                 output=get_signal_level(interface)
                 match = re.search(r"Signal level=(-?\d+)", output)
@@ -344,12 +358,6 @@ class TCP_COM():
 
         rtt = end_rtt - start_rtt  # seconds
         self.file_Q.put((rtt,0))
-
-    def mathis_eq(self, RTT, PDR):
-        if PDR<=0:
-            PDR=0.001
-        throughput=self.MSS/(RTT*np.sqrt(PDR))
-        return throughput
 #com
 
 if __name__ == "__main__":

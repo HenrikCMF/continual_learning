@@ -8,12 +8,6 @@ class network_control():
             self.interface=configs['baseNET_INTERFACE']
         else:
             self.interface=configs['edgeNET_INTERFACE']
-        #self.rate_kbps=configs['bandwidth_limit_kbps']
-        #self.burst_kbps=configs['burst_limit_kbps']
-        #self.latency_ms=configs['buffering_latency_ms']
-        #self.packet_loss_pct=configs['packet_loss_pct']
-        #self.delay_ms=configs['base_delay_ms']
-        #self.jitter_ms=configs['jitter_ms']
 
 
     def set_network_conditions(self, rate, burst, latency, p_loss=None, delay=None, jitter=None):
@@ -28,14 +22,6 @@ class network_control():
         - packet_loss_pct (float): Packet loss percentage (e.g., 5 for 5% loss).
         - delay_ms (int): Mean delay added by netem.
         - jitter_ms (int): Jitter variation for the delay.
-        # Example usage
-        interface = "eth0"  # Change to your network interface (e.g., "wlan0" for WiFi)
-        rate_kbps = 8  # 1 KB/s (8 Kbps)
-        burst_kbps = 16  # 2 KB burst
-        latency_ms = 400  # Buffering latency in TBF
-        packet_loss_pct = 5  # 5% packet loss
-        delay_ms = 250  # Base delay
-        jitter_ms = 50  # Jitter
         """
 
         # Convert Kbps to bits per second (tc requires bits)

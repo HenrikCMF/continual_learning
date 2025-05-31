@@ -23,8 +23,6 @@ class mlp_classifier(IoT_model):
     def check_sample(self, data):
         important=False
         score = self.inference_on_model(data)[0]
-        #if score>0.1:
-        #    print(score)
         if score>self.trigger_threshold:
             important=True
         return important, score
@@ -32,11 +30,9 @@ class mlp_classifier(IoT_model):
     def design_model_architecture(self):
         print("Custom architecture with", self.n_features, "features")
         inputs = tf.keras.Input(shape=(self.n_features,))
-        
-        # Custom architecture (e.g., deeper encoder/decoder)
         x = tf.keras.layers.Dense(128, activation="relu")(inputs)
         x = tf.keras.layers.Dense(64, activation="relu")(x)
-        x = tf.keras.layers.Dense(32, activation="relu")(x)  # Bottleneck
+        x = tf.keras.layers.Dense(32, activation="relu")(x)
         x = tf.keras.layers.Dense(16, activation="relu")(x)
         out=tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
@@ -45,12 +41,11 @@ class mlp_classifier(IoT_model):
         return autoencoder
 
     def train_initial_model(self):
-        # Optionally override training behavior here too
         X, y = self.prepare_training_data(should_inject_faults=True, fit_scaler=True)
         model = self.design_model_architecture()
         history = model.fit(
             X, y,
-            epochs=5,  # shorter training for testing
+            epochs=5,
             batch_size=128,
             verbose=1
         )
