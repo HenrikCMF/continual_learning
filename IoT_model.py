@@ -29,7 +29,7 @@ class IoT_model():
         self.model_name="autoencoder"
         self.trigger_threshold=thresh
         print("TensorFlow version:", tf.__version__)
-        print("TFMOT version:", tfmot.__version__)
+        #print("TFMOT version:", tfmot.__version__)
         self.initial_data=initial_data
         self.scaler=MinMaxScaler()
 
@@ -335,6 +335,25 @@ class IoT_model():
                 actual_sparsity = np.mean(pruned_kernel == 0)
         return model
 
+    def EECL_comp(self, throughput, model, X):
+        quantize=False
+        
+        if throughput:
+            pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
+            if pruning_level>0.4:
+                quantize=True
+                pruning_level=min(max(-4*(throughput/8 - 48)/100,0),0.8)
+            pruned_model = self.manual_prune_weights(model, pruning_level)
+            self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), quantize=quantize)
+            print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
+        else:
+            pruning_level=None
+            self.quantize_model(X,model, os.path.join("models", self.model_name), quantize=quantize)
+        if quantize:
+            return 8
+        else:
+            return 32
+        
 
     def improve_model(self, data, invert_loss=False, pdr=0, throughput=None):
         """
@@ -348,32 +367,9 @@ class IoT_model():
         throughput: measured throughput when receiving data
         --------
         """
-        quantize=False
-        
-        if throughput:
-            pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
-            if pruning_level>0.4:
-                quantize=True
-                pruning_level=min(max(-4*(throughput/8 - 48)/100,0),0.8)
-            print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
-        else:
-            pruning_level=None
-        #pruning_level=50
-        model, X=self.train_model(data, invert_loss, pruning_level)
-        if pruning_level:
-            pruned_model = self.manual_prune_weights(model, pruning_level)
-            print("Pruned model")
+        model, X=self.train_model(data, invert_loss)
         model.save(os.path.join("models", self.model_name+".h5"))
 
-        ###
-        quantize=True
-        ###
-        if pruning_level:
-            self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), quantize=quantize)
-        else:
-            self.quantize_model(X,model, os.path.join("models", self.model_name), quantize=quantize)
-        if quantize:
-            return 8
-        else:
-            return 32
+        quantization=self.EECL_comp(throughput, model, X)
+        return quantization
 

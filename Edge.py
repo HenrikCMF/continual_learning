@@ -15,7 +15,6 @@ from alternative_iot_models import mlp_classifier
 import matplotlib.pyplot as plt
 import warnings
 from sklearn.exceptions import ConvergenceWarning
-import psutil
 import threading
 import IoT_energy
 import subprocess
