@@ -53,7 +53,7 @@ class edge_device(TCP_COM):
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
             #self.rate_kbps=input
-            self.rate_kbps=1000
+            self.rate_kbps=input
             self.burst_kbps=16#input
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
@@ -353,5 +353,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-bs=edge_device("received", 1000)
-bs.run(1000)
+#bs=edge_device("received", 1000)
+#bs.run(1000)

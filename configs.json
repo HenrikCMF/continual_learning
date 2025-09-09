@@ -5,7 +5,7 @@
     "edgePORT_UDP":7000,
     "basePORT":6000,
     "edgeNET_INTERFACE":"wlp61s0",
-    "baseNET_INTERFACE":"enp8s0",
+    "baseNET_INTERFACE":"enx000ec68edcf6",
     "use_config_network_control":true,
     "bandwidth_limit_kbps": 1000,
     "burst_limit_kbps": 16,
