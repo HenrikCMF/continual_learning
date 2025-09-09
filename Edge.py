@@ -135,8 +135,8 @@ class edge_device(TCP_COM):
         important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
-        NUM_BUF_SAMPLES=input
-        #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
+        #NUM_BUF_SAMPLES=input
+        NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         time.sleep(0.01)
         while batch_not_found:
@@ -353,5 +353,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-#bs=edge_device("received", 1000)
-#bs.run(1000)
+bs=edge_device("received", 1000)
+bs.run(1000)
