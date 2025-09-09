@@ -49,17 +49,10 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            
-            #rate_kbps=configs['bandwidth_limit_kbps']
-            #burst_kbps=configs['burst_limit_kbps']
-            #self.rate_kbps=input
             self.rate_kbps=input
-            self.burst_kbps=16#input
+            self.burst_kbps=16
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
-            #delay_ms=configs['base_delay_ms']
-            #jitter_ms=configs['jitter_ms']
-            #packet_loss_pct=None
             self.delay_ms=None
             self.jitter_ms=None
             self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
@@ -124,9 +117,9 @@ class edge_device(TCP_COM):
         batch_not_found=True
         if self.throughput:
             self.throughputs.append(self.throughput)
-            if self.throughput<250:
+            if self.throughput<330:
                 important_batches_tar=3
-            elif self.throughput<400:
+            elif self.throughput<350:
                 important_batches_tar=2
             else:
                 important_batches_tar=1
@@ -134,8 +127,6 @@ class edge_device(TCP_COM):
             important_batches_tar=1
         important_batches_tar=1
         important_batches=0
-        #print("Analyzing samples")
-        #NUM_BUF_SAMPLES=input
         NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         time.sleep(0.01)
@@ -223,26 +214,18 @@ class edge_device(TCP_COM):
         while Running:
             try:
                 file, rec_time= self.file_Q.get(timeout=2)
-                #self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                 files_received+=1
                 print(file)
                 if ".tflite" in file or '.zip' in file:
                     self.received_model(file)
                     #pass
                 self.file_Q.task_done()
-                #self.rate_kbps-=10
-                #self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
                 self.get_important_important_batch(input)
-                #self.send_ACK()
-                #self.index+=50000
             except queue.Empty:
-                #print("waiting for model")
                 pass
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
-                #pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
-                #pd.DataFrame(self.energy_buff).to_csv('test_files/energy_data.csv')
                 print("mse",np.shape(self.mse_buff))
                 print("energy",np.shape(self.energy_buff[1:]))
                 print("th",np.shape(self.throughput_buf))
@@ -353,5 +336,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-#bs=edge_device("received", 1000)
-#bs.run(1000)
+bs=edge_device("received", 200)
+bs.run(200)
