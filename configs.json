@@ -1,5 +1,5 @@
 {
-    "edgeip":"192.168.0.117",
+    "edgeip":"192.168.0.108",
     "baseip":"192.168.0.112",
     "edgePORT_TCP":5000,
     "edgePORT_UDP":7000,
