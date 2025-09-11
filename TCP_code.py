@@ -9,13 +9,14 @@ import re
 import numpy as np
 from utils import retry_transmission_handler, threaded
 import random
+import queue
 class telegram_type(Enum):
     PDR=1
     DUMMY=2
     FILE=3
 
 class TCP_COM():
-    def __init__(self, MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT, REC_FILE_PATH, device, file_queue=None):
+    def __init__(self, rec_queue, send_queue, REC_FILE_PATH, device, file_queue=None, throughput=1000):
         """
         Initializes TCP communication object, this object can be used for transmitting files or messages.
         Initializing it will also automatically spawn a TCP receiver thread based on the parameters given.
@@ -31,22 +32,14 @@ class TCP_COM():
         file_queue: python queue object to put messages for interthread communication.
         --------
         """
-        self.throughput=None
+        self.throughput=throughput
         self.time_transmitting=0
         self.time_receiving=0
-        self.MY_IP=MY_HOST
-        self.TAR_IP=TARGET_HOST
-        if device=="edge":
-            self.MY_PORT_TCP=MY_PORT[0]
-            self.MY_PORT_UDP=MY_PORT[1]
-            self.TAR_PORT_TCP=TARGET_PORT
-        else:
-            self.TAR_PORT_TCP=TARGET_PORT[0]
-            self.TAR_PORT_UDP=TARGET_PORT[1]
-            self.MY_PORT_TCP=MY_PORT
+        self.recQ=rec_queue
+        self.sendQ=send_queue
         self.file_Q=file_queue
         self.RUNNING=True
-        self.__TCP_receive(MY_HOST, self.MY_PORT_TCP)
+        self.__TCP_receive()
         self.in_path=REC_FILE_PATH
         self.device=device
         self.edge_devices=[]
@@ -56,308 +49,85 @@ class TCP_COM():
         if not os.path.exists(self.in_path):
             os.makedirs(self.in_path)
 
-    @retry_transmission_handler
-    def send_open_udp(self, client_socket, TAR_IP, val=0, packet_num=0):
-        start=time.time()
-        client_socket.connect((TAR_IP, self.TAR_PORT_TCP))
-        file_name=packet_num
-        file_size=val
-        client_socket.sendall(f"{telegram_type.PDR.value}:{file_name}:{file_size}".encode())
-        self.time_transmitting+=time.time()-start
 
-    @retry_transmission_handler
-    def send_done_sending(self, client_socket, val=0, packet_num=0):
-        client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
+    def send_done_sending(self,val=0, packet_num=0):
         file_name="DONE"
         file_size=0
-        client_socket.sendall(f"{telegram_type.DUMMY.value}:{file_name}:{file_size}".encode())
+        self.sendQ.put((telegram_type.DUMMY, file_name, file_size, self.throughput, ""))
 
-    @retry_transmission_handler
     def send_ACK(self, client_socket, val=0, packet_num=0):
-        start=time.time()
-        client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
         file_name="ACK"
         file_size=0
-        client_socket.sendall(f"{telegram_type.DUMMY.value}:{file_name}:{file_size}".encode())
-        self.time_transmitting+=time.time()-start
+        self.sendQ.put((telegram_type.DUMMY, file_name, file_size, self.throughput, ""))
     
-    def handle_dummy_req(self,conn, file_size, file_name):
-        file_size=float(file_size)
+    def handle_dummy_req(self,file_size, file_name):
         if file_name=="DONE":
             self.file_Q.put((str("DONE"),0))
-            print("Received done")
         elif file_name=="READY":
-            conn.sendall("ACK".encode())
             self.file_Q.put((str("READY"),0))
         elif file_name=="ACK":
-            conn.sendall("ACK".encode())
             self.file_Q.put((str("ACK"),0))
-        elif file_name=="THROUGHPUT":
-            conn.sendall("READY".encode())
-            received_size = 0
-            while received_size < file_size:
-                data = conn.recv(1024)
-                #print(received_size)
-                if not data:
-                    break
-                received_size += len(data)
-            conn.sendall("READY".encode())
-        elif file_name=="PING":
-            print("Received PING")
-            conn.sendall("PONG".encode())
-            print("sent back PONG")
 
-    @retry_transmission_handler
-    def Ready_to_start(self, client_socket, val=0, packet_num=0):
-        client_socket.connect((self.TAR_IP, self.TAR_PORT_TCP))
+    def Ready_to_start(self, val=0, packet_num=0):
         file_name="READY"
         file_size=0
-        client_socket.sendall(f"{telegram_type.DUMMY.value}:{file_name}:{file_size}".encode())
-        ack = client_socket.recv(1024).decode()
-        if ack != "ACK":
-            raise Exception("Not ready")
-        else:
-            self.file_Q.put((str("READY"),0))
+        self.sendQ.put((telegram_type.DUMMY, file_name, file_size, self.throughput, ""))
+        self.file_Q.put((str("READY"),0))
 
-    @retry_transmission_handler
-    def send_file(self, client_socket, TAR_IP, TAR_PORT,file_path):
-        
-        start=time.time()
-        client_socket.connect((TAR_IP, TAR_PORT))
+    def send_file(self, payload, file_path):
         if self.model_quantization==8:
             file_name = "Q"+os.path.basename(file_path)
         else:
             file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
-        client_socket.sendall(f"{telegram_type.FILE.value}:{file_name}:{file_size}".encode())
-        ack = client_socket.recv(1024).decode()
-        if ack != "READY":
-            raise Exception("Not ready")
-        # Send file content
-        
-        with open(file_path, "rb") as f:
-            while chunk := f.read(1024):
-                client_socket.sendall(chunk)
-        ack = client_socket.recv(1024).decode()
-        if ack != "DONE":
-            raise Exception("Didnt finish")
-        stop=time.time()
-        self.time_transmitting+=stop-start
-        print("time of transmission:", stop-start)
-        return stop-start
+        self.sendQ.put((telegram_type.FILE, file_name, file_size, self.throughput, payload))
+        self.time_transmitting+=file_size/(self.throughput*1000/8)
+        return file_size/(self.throughput*1000/8)
             
 
-    def __receive_file(self, conn, file_name, file_size):
-        conn.sendall("READY".encode())
+    def __receive_file(self, file_name, file_size, payload, t_time):
         if "Q" in file_name:
             self.model_quantization=8
         else:
             self.model_quantization=32
-        start_time=time.perf_counter()
-        with open(os.path.join(self.in_path,f"{file_name}"), "wb") as f:
-            received_size = 0
-            while received_size < file_size:
-                data = conn.recv(1024)
-                #print(received_size)
-                if not data:
-                    break
-                f.write(data)
-                received_size += len(data)
-        conn.sendall("DONE".encode())
-        stop_time=time.perf_counter()
-        self.throughput = ((received_size+40) * 8) / ((stop_time - start_time) * 1000) #in kbps
-        self.file_Q.put((str(os.path.join(self.in_path,f"{file_name}")),stop_time - start_time))
-        
-        #print(f"File '{file_name}' received, took: ", stop-start)
-
-    def handle_PDR_req(self, file_size, file_name):
-        start=time.time()
-        file_size=float(file_size)
-        if file_size!=0:
-            self.PDR=file_size
-            print("RECEIVED PDR:", self.PDR)
+        if "tflite" in file_name:
+            self.file_Q.put((str(file_name), t_time))
         else:
-            self.PDR=self.receive_packets(int(file_name))
-        self.time_transmitting+=time.time()-start
+            self.file_Q.put((payload,t_time))
+        
+    def handle_telegram(self, telegram):
+        #Transmission format: ((type, file_name, file_size, throughput, payload))
+        type, file_name, file_size, throughput, payload = telegram
+        self.time_receiving+=file_size/(throughput*1000/8)
+        self.throughput=throughput
+        #print(self.device," received: ", type, file_name, file_size)
+        if type==telegram_type.FILE:
+            file_size = int(file_size)
+            self.__receive_file(file_name, file_size, payload, file_size/(throughput*1000/8))
+        elif type==telegram_type.DUMMY:
+            self.handle_dummy_req(file_size, file_name)
 
     @threaded
-    def __TCP_receive(self,listen_host, listen_port):
+    def __TCP_receive(self):
         """Handles receiving files from the other party."""
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-            #server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 512)
-            #server_socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_CONGESTION,b"bbr")
-            server_socket.bind((listen_host, listen_port))
-            server_socket.listen(5)
-            server_socket.settimeout(1)
-            print(f"Server listening on {listen_host}:{listen_port}")
-            while self.RUNNING:
-                try:
-                    conn, addr = server_socket.accept()
-                    self.MSS = conn.getsockopt(socket.IPPROTO_TCP, socket.TCP_MAXSEG)
-                    start=time.time()
-                except socket.timeout:
-                    continue
-                if self.device=="edge":
-                    if addr[0]!=self.TAR_IP:
-                        print("not target IP")
-                        conn.close()
-                        continue
-                elif self.device=="bs":
-                    if addr[0] not in self.edge_devices:
-                        self.edge_devices.append(addr[0])
-                        print("added", addr[0])
-                try:
-                    # Receive file metadata
-                    metadata = conn.recv(1024).decode()
-                    type, file_name, file_size = metadata.split(":")
-                    print(" received:", type, file_name, file_size)
-                    if telegram_type(int(type))==telegram_type.FILE:
-                        file_size = int(file_size)
-                        self.__receive_file(conn, file_name, file_size)
-                    elif telegram_type(int(type))==telegram_type.PDR:
-                        self.handle_PDR_req(file_size, file_name)
-                    elif telegram_type(int(type))==telegram_type.DUMMY:
-                        self.handle_dummy_req(conn,file_size, file_name)
-                
-                except Exception as e:
-                    print(e)
-                self.time_receiving+=time.time()-start
-            print("stopped socket")
-            server_socket.close()
-    
+        while self.RUNNING:
+            try:
+                telegram = self.recQ.get_nowait()
+                self.handle_telegram(telegram)
+                self.recQ.task_done()
+            except queue.Empty:
+                time.sleep(0.1)
+
     def stop_TCP(self):
         self.RUNNING=False
 
 
-    def measure_PDR(self, num_packets):
-        #Call edge device to listen for UDP packets
-        for ip in self.edge_devices:
-            print("PDR measure")
-            self.send_open_udp(ip, packet_num=num_packets)
-            time.sleep(0.01)
-            self.send_UDP_packets(ip, num_packets=num_packets)
-
-    def send_UDP_packets(self, ip, num_packets=100, interval=0.001):
-        """
-        Sends `num_packets` UDP packets to (host, port) with a small interval between them.
-        """
-        start=time.time()
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        for i in range(num_packets):
-            message = f"{i}".encode()
-            sock.sendto(message, (ip, self.TAR_PORT_UDP))
-            time.sleep(interval)
-
-        sock.close()
-        self.time_transmitting+=time.time()-start
     
-    def receive_packets(self, expected_packets=100):
-        """
-        Listens for UDP packets on (host, port) and counts how many arrive.
-        """
-        ENABLE_ARTIFICIAL_DROPS=False
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((self.MY_IP, self.MY_PORT_UDP))
-        sock.settimeout(2)
-        count = 0
-        while count < expected_packets:
-            try:
-                data, addr = sock.recvfrom(1024)  # Block until a packet arrives
-                if ENABLE_ARTIFICIAL_DROPS:
-                    random_number = random.random()
-                    if random_number<0.2:
-                        data.decode()
-                        continue
-                if data:
-                    count += 1
-                    if count%20==0:
-                        print(f"Received: {data.decode()} from {addr}")
-            except:
-                print("timed out")
-                break
 
-        sock.close()
-        pdr = max(1-(count / expected_packets),0.001)
-        print(f"PDR: {pdr*100:.2f}%")
-        self.send_open_udp(self.TAR_IP,val=pdr)
-        return pdr
-
-    #Replace with mmcli for cell connections
-    def get_rssi_via_iw(self):
-        """Returns the current RSSI (dBm) for a given wireless interface, or None if unavailable."""
-        def get_wireless_interface():
-            result = subprocess.run(["iwconfig"], capture_output=True, text=True)
-            interfaces = re.findall(r"(\w+)\s+IEEE 802.11", result.stdout)
-            return interfaces[0] if interfaces else None
-        def get_signal_level(interface):
-            cmd = f"iwconfig {interface} | grep 'Signal level'"
-            try:
-                output = subprocess.check_output(cmd, shell=True, text=True).strip()
-                return output
-            except subprocess.CalledProcessError:
-                return None
-        try:
-            interface=get_wireless_interface()
-            if interface:
-                output=get_signal_level(interface)
-                match = re.search(r"Signal level=(-?\d+)", output)
-                return float(match.group(1))
-            else:
-                return None
-        except subprocess.CalledProcessError:
-            # Happens if the interface doesn't exist or there's an iw error.
-            return None
+    
         
 
-    @retry_transmission_handler
-    def getthroughput(self, client_socket, TAR_IP, TAR_PORT, data_size_bytes, RTT):
-        try:
-            # Connect and prepare to send
-            client_socket.connect((TAR_IP, TAR_PORT))
-            # Generate random data
-            data = os.urandom(data_size_bytes)
 
-            # Optional: Send a small header to inform receiver (e.g., data length)
-            filename="THROUGHPUT"
-            client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{data_size_bytes}".encode())
-            #client_socket.sendall(f"DATA:{data_size_bytes}".encode())
-            ack = client_socket.recv(1024).decode()
-            if ack != "READY":
-                raise Exception("Not ready")
-            # Send data
-            start_time = time.perf_counter()
-            bytes_sent = 0
-            chunk_size = 8192  # 1 KB
-            for i in range(0, data_size_bytes, chunk_size):
-                chunk = data[i:i+chunk_size]
-                client_socket.sendall(chunk)
-                bytes_sent += len(chunk)
-            ack = client_socket.recv(1024).decode()
-            if ack == "READY":
-                end_time = time.perf_counter()
-            # Measure results
-            transmission_time = end_time - start_time  # seconds
-            throughput_mbps = ((bytes_sent+20) * 8) / ((transmission_time-(RTT*2)) * 1000000)  # bits/sec to Mbps
-            # Optionally store transmission time
-            self.time_transmitting += transmission_time
-            self.file_Q.put((throughput_mbps,0))
-            return None
-
-        except Exception as e:
-            print(f"Error during data transfer: {e}")
-            return None
-    @retry_transmission_handler
-    def measure_RTT(self, client_socket, TAR_IP, TAR_PORT):
-        client_socket.connect((TAR_IP, TAR_PORT))
-        start_rtt = time.perf_counter()
-        filename="PING"
-        size=len(filename)
-        client_socket.sendall(f"{telegram_type.DUMMY.value}:{filename}:{size}".encode())
-        pong = client_socket.recv(1024).decode()
-        end_rtt = time.perf_counter()
-
-        rtt = end_rtt - start_rtt  # seconds
-        self.file_Q.put((rtt,0))
 #com
 
 if __name__ == "__main__":

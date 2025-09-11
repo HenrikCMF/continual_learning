@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning, module="numpy.core.fromnumeric")
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -9,10 +11,12 @@ import os
 import joblib
 from sklearn.metrics import mean_squared_error
 from utils import inject_faults
-import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
+
+
+
 class IoT_model():
     def __init__(self, initial_data, thresh):
         """
@@ -33,12 +37,15 @@ class IoT_model():
         self.initial_data=initial_data
         self.scaler=MinMaxScaler()
 
-    def load_model(self):
+    def load_model(self, path=None):
         """
         Loads whichever autoencoder is currently at the hardcoded modelpath
         """
         self.scaler = joblib.load(os.path.join("models", "scaler.pkl"))
-        tflite_model_path = "models/"+self.model_name+".tflite"
+        if path is None:
+            tflite_model_path = "models/"+self.model_name+".tflite"
+        else:
+            tflite_model_path = path
         self.interpreter = tf.lite.Interpreter(model_path=tflite_model_path, experimental_delegates=[])
         self.interpreter.allocate_tensors()
         # Get input and output details
@@ -81,7 +88,6 @@ class IoT_model():
     def inference_on_batch(self, data):
         data=np.array(data)
         results=[]
-        print("data shape", np.shape(data))
         for i in range(np.shape(data)[1]):
             results.append(self.inference_on_model(i))
         return results
@@ -145,14 +151,10 @@ class IoT_model():
 
         # Create Functional Autoencoder Model
         autoencoder = tf.keras.Model(inputs, decoded)
+        #opt = tf.keras.optimizers.Adam(learning_rate=0.00001, clipnorm=1.0)
         autoencoder.compile(optimizer='adam', loss='mse')
         return autoencoder
     
-    def make_model_quantization_aware(self, model):
-        #quantized_model = tfmot.quantization.keras.quantize_model(model)
-        #quantized_model.compile(optimizer='adam',loss='mse')
-        #return quantized_model
-        return model
     
     def make_representative_data(self, X):
         index = np.random.choice(X.shape[0], 1000, replace=False)
@@ -195,14 +197,14 @@ class IoT_model():
         epochs=20
         X, y = self.prepare_training_data(fit_scaler=True)
         total_steps=int(len(y)/batch_size*epochs)
-        autoencoder = self.design_model_architecture()
-        model = self.make_model_quantization_aware(autoencoder)
-        history = model.fit(
-                X,X,
-                epochs=epochs,
-                batch_size=batch_size,
-                verbose=1
-                )
+        model = self.design_model_architecture()
+        with tf.device('/CPU:0'):
+            history = model.fit(
+                    X,X,
+                    epochs=epochs,
+                    batch_size=batch_size,
+                    verbose=1
+                    )
         model.save(os.path.join("models", self.model_name+".h5"))
         self.quantize_model(X,model, os.path.join("models", self.model_name))
 
@@ -289,7 +291,7 @@ class IoT_model():
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
             return -0.3*mse if invert_loss else mse  # Negate the loss to maximize
 
-        with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
+        with tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
         num_epochs = max(5, min(100, int(2000 / len(data))))
 
@@ -307,7 +309,8 @@ class IoT_model():
         batch_size=128
 
         model.compile(optimizer="adam", loss=mse_loss)
-        history =model.fit(data, data, epochs=num_epochs, batch_size=batch_size)
+        with tf.device('/CPU:0'):
+            history =model.fit(data, data, epochs=num_epochs, batch_size=batch_size)
         return model, X
 
     
@@ -333,6 +336,11 @@ class IoT_model():
                 weights[0] = pruned_kernel
                 layer.set_weights(weights)
                 actual_sparsity = np.mean(pruned_kernel == 0)
+        for layer in model.layers:
+            w = layer.get_weights()
+            if w:
+                print(layer.name, "sparsity=", np.mean(w[0] == 0))
+        exit()
         return model
 
     def EECL_comp(self, throughput, model, X):
@@ -369,7 +377,6 @@ class IoT_model():
         """
         model, X=self.train_model(data, invert_loss)
         model.save(os.path.join("models", self.model_name+".h5"))
-
         quantization=self.EECL_comp(throughput, model, X)
         return quantization
 

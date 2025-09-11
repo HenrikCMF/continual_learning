@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning, module="numpy.core.fromnumeric")
 from TCP_code import TCP_COM
 import time
 import json
@@ -13,7 +15,6 @@ import shutil
 import IoT_model
 from alternative_iot_models import mlp_classifier
 import matplotlib.pyplot as plt
-import warnings
 from sklearn.exceptions import ConvergenceWarning
 import threading
 import IoT_energy
@@ -22,7 +23,7 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
 class edge_device(TCP_COM):
-    def __init__(self, REC_FILE_PATH, input):
+    def __init__(self, REC_FILE_PATH, input, eQ, bQ):
         """
         Initializes an IoT device object.
 
@@ -39,33 +40,11 @@ class edge_device(TCP_COM):
         self.total_received_data=0
         self.num_inferences=0
         self.device_type="edge"
-        self.model_path="models"
+        self.model_path="edge_models"
         with open("configs.json", "r") as file:
             configs = json.load(file)
-        self.local_IP=configs['edgeip']
-        self.edgePORT_TCP=configs['edgePORT_TCP']
-        self.edgePORT_UDP=configs['edgePORT_UDP']
-        self.basePORT=configs['basePORT']
-        self.rec_ip=configs['baseip']
-        self.nc=network_control(self.device_type)
-        if configs['use_config_network_control']==True:
-            
-            #rate_kbps=configs['bandwidth_limit_kbps']
-            #burst_kbps=configs['burst_limit_kbps']
-            #self.rate_kbps=input
-            self.rate_kbps=1000
-            self.burst_kbps=16#input
-            self.latency_ms=configs['buffering_latency_ms']
-            self.packet_loss_pct=configs['packet_loss_pct']
-            #delay_ms=configs['base_delay_ms']
-            #jitter_ms=configs['jitter_ms']
-            #packet_loss_pct=None
-            self.delay_ms=None
-            self.jitter_ms=None
-            self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
-        edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
-        super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
+        super().__init__(eQ, bQ, REC_FILE_PATH, self.device_type, self.file_Q, throughput=input)
         self.fault_index=0
         self.filename, self.start_offset=make_dataset(fault_index=self.fault_index, num=1)
         df=pd.read_csv(self.filename)
@@ -132,7 +111,6 @@ class edge_device(TCP_COM):
                 important_batches_tar=1
         else:
             important_batches_tar=1
-        important_batches_tar=1
         important_batches=0
         #print("Analyzing samples")
         #NUM_BUF_SAMPLES=input
@@ -144,7 +122,7 @@ class edge_device(TCP_COM):
             rare, mse, s, t = self.analyze_samples()
             self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
             self.measured_throughput_buf.append(self.throughput)
-            self.throughput_buf.append(self.rate_kbps)
+            self.throughput_buf.append(self.throughput)
             self.samples_since_last_batch+=1
             if rare:
                 self.samples_since_last_batch-=1
@@ -165,7 +143,7 @@ class edge_device(TCP_COM):
                     self.timestamp_buffer.append(t)
                     self.mse_buff.append(self.mse_buff[-1])
                     self.measured_throughput_buf.append(self.throughput)
-                    self.throughput_buf.append(self.rate_kbps)
+                    self.throughput_buf.append(self.throughput)
                     self.energy_buff.append(0)
                 important_batches+=1
                 if important_batches==important_batches_tar: #network parameter
@@ -175,18 +153,20 @@ class edge_device(TCP_COM):
                         'test_files',
                         str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
                         )
+                    print(self.timestamp_buffer[0])
+                    filename="test_files/avro_51.avsc"
                     #comment
-                    AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
+                    #AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
                     #AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches)
-                    self.total_sent_data+=os.path.getsize(filename)+20
-                    tx_time=self.send_file(self.TAR_IP, self.TAR_PORT_TCP,filename)
+                    #self.total_sent_data+=os.path.getsize(filename)+20
+                    tx_time=self.send_file((self.sample_buffer,self.timestamp_buffer, important_batches),filename)
                     self.energy_buff[-1]+=self.energy_model.transmission_energy(tx_time)
                     self.sample_buffer=[]
                     self.timestamp_buffer=[]
         return True
 
 
-    def run(self, input):
+    def run(self, input, resultQ):
         """
         Runs the basic IoT routine of checking samples, collecting context, then transmitting 
         the samples and receiving an updated model afterwards.
@@ -223,9 +203,7 @@ class edge_device(TCP_COM):
         while Running:
             try:
                 file, rec_time= self.file_Q.get(timeout=2)
-                #self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                 files_received+=1
-                print(file)
                 if ".tflite" in file or '.zip' in file:
                     self.received_model(file)
                     #pass
@@ -243,37 +221,23 @@ class edge_device(TCP_COM):
             if self.index>=self.len_of_dataset:
                 #pd.DataFrame(self.mse_buff).to_csv('test_files/mse_data.csv')
                 #pd.DataFrame(self.energy_buff).to_csv('test_files/energy_data.csv')
-                print("mse",np.shape(self.mse_buff))
-                print("energy",np.shape(self.energy_buff[1:]))
-                print("th",np.shape(self.throughput_buf))
-                print("Mth",np.shape(self.measured_throughput_buf))
-                data = {
-                    'mse': self.mse_buff,
-                    'energy': self.energy_buff[1:],
-                    'throughput': self.throughput_buf,
-                    'measured_throughput': self.measured_throughput_buf
-                }
-
-                df = pd.DataFrame(data)
-
-                # Save to CSV
-                df.to_csv("test_files/full_IoTresult.csv", index=False)
+                
                 #self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
                 try:
                     self.send_done_sending()
                 except:
                     print("Failed to send done")
-                print("done")
-                print("Received, ", files_received, "files")
-                print("Time elapsed: ", time.time()-start)
-                print("Transmitting time: ", self.time_transmitting)
-                print("Total data sent(KB): ", self.total_sent_data/1024)
-                #self.make_end_plot(self.mse_buff)
-                remove_all_avro_files('test_files')
                 self.stop_TCP()
                 Running=False
-                subprocess.run(f"sudo tc qdisc del dev {self.configs['edgeNET_INTERFACE']} root", shell=True)
-        return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences, np.mean(self.throughputs)
+                #subprocess.run(f"sudo tc qdisc del dev {self.configs['edgeNET_INTERFACE']} root", shell=True)
+        resultQ.put({
+            "t_T":self.time_transmitting, 
+            "t_R":self.time_receiving,
+            "datasent":self.total_sent_data,
+            "data_recevied":self.total_received_data,
+            "inferences":self.num_inferences,
+            "avg_throughput":np.mean(self.throughputs)})
+        return None
 
         
     def received_model(self, path):
@@ -285,6 +249,9 @@ class edge_device(TCP_COM):
         path: string model path
         --------
         """
+        if "Q" in path:
+            path=path[1:]
+        path="models/"+path
         model_name=str(path).split('/')[-1].split('.')[0]
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
@@ -292,12 +259,10 @@ class edge_device(TCP_COM):
             with zipfile.ZipFile(path, 'r') as zipf:
                 output_folder=str(path).split('/')[0]
                 zipf.extractall(output_folder)
-        if "Q" in model_name:
-            model_name=model_name[1:]
         destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
         shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
         self.total_received_data += os.path.getsize(destination_path)+20
-        self.model.load_model()
+        self.model.load_model(destination_path)
     
     def get_previous_X_samples(self, X):
         """
@@ -320,38 +285,6 @@ class edge_device(TCP_COM):
         return sample, timestamp
     
 
-    def make_end_plot(self, mse):
-        file_path = "datasets/sensor.csv"
-        df = pd.read_csv(file_path)
 
-        # Ensure 'machine_status' column exists
-        if "machine_status" not in df.columns:
-            raise ValueError("Column 'machine_status' not found in dataset")
-
-        # Find indices where machine_status is 'BROKEN'
-        broken_indices = df.index[df["machine_status"] == "BROKEN"].tolist()
-        last_index = df.index[-1]
-        adjusted_broken_indices = [idx - self.start_offset for idx in broken_indices if idx >= self.start_offset]
-
-        mse_buf = mse  
-
-        
-        # Plot the mse_buf values
-        plt.figure(figsize=(10, 5))
-        plt.plot(mse_buf, label="Autoencoder MSE Output")
-        plt.ylim(-0.1, min(10, max(mse_buf)))
-        # Plot vertical lines where 'machine_status' is 'BROKEN'
-        for idx in adjusted_broken_indices:
-            plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="Fault" if idx == adjusted_broken_indices[0] else "")
-        #plt.axvline(x=(last_index-self.start_offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
-
-
-        # Labels and legend
-        plt.xlabel("Index")
-        plt.ylabel("Autoencoder MSE Output")
-        plt.title("Autoencoder fault detector")
-        plt.legend()
-        #plt.show()
-
-bs=edge_device("received", 1000)
-bs.run(1000)
+#bs=edge_device("received", 1000)
+#bs.run(1000)
