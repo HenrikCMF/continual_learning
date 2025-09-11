@@ -336,13 +336,35 @@ class IoT_model():
                 weights[0] = pruned_kernel
                 layer.set_weights(weights)
                 actual_sparsity = np.mean(pruned_kernel == 0)
-        for layer in model.layers:
-            w = layer.get_weights()
-            if w:
-                print(layer.name, "sparsity=", np.mean(w[0] == 0))
-        exit()
         return model
+    
 
+
+    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None):
+        quantize=False
+        if throughput:
+            pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
+            if pruning_level>0.4:
+                quantize=True
+                pruning_level=min(max(-4*(throughput/8 - 48)/100,0),0.8)
+            print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
+        else:
+            pruning_level=None
+        #pruning_level=50
+        model, X=self.train_model(data, invert_loss)
+        if pruning_level:
+            pruned_model = self.manual_prune_weights(model, pruning_level)
+            print("Pruned model")
+        model.save(os.path.join("models", self.model_name+".h5"))
+        if pruning_level:
+            self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), quantize=quantize)
+        else:
+            self.quantize_model(X,model, os.path.join("models", self.model_name), quantize=quantize)
+        if quantize:
+            return 8
+        else:
+            return 32
+"""""
     def EECL_comp(self, throughput, model, X):
         quantize=False
         
@@ -364,19 +386,9 @@ class IoT_model():
         
 
     def improve_model(self, data, invert_loss=False, pdr=0, throughput=None):
-        """
-        used to do continual learning on the model
 
-        Parameters:
-        ----------
-        data : package of most recently received samples   
-        invert_loss: testparameter
-        pdr: testparameter
-        throughput: measured throughput when receiving data
-        --------
-        """
         model, X=self.train_model(data, invert_loss)
         model.save(os.path.join("models", self.model_name+".h5"))
         quantization=self.EECL_comp(throughput, model, X)
         return quantization
-
+"""
