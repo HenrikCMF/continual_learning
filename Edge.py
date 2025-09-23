@@ -129,7 +129,7 @@ class edge_device(TCP_COM):
         important_batches_tar=1
         important_batches=0
         #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
-        NUM_BUF_SAMPLES=100
+        NUM_BUF_SAMPLES=200
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         time.sleep(0.01)
         while batch_not_found:
@@ -221,6 +221,8 @@ class edge_device(TCP_COM):
                 if ".tflite" in file or '.zip' in file:
                     if np.sum(self.energy_buff)<self.energy_thresh:
                         self.received_model(file)
+                        print("Receiving time", rec_time)
+                        self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                     #pass
                 self.file_Q.task_done()
                 self.get_important_important_batch(input)
