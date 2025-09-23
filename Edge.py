@@ -32,6 +32,7 @@ class edge_device(TCP_COM):
         input : test parameter.
         --------
         """
+        self.energy_thresh=59
         self.inference_batch=0
         self.use_PDR=False
         self.throughputs=[]
@@ -127,7 +128,8 @@ class edge_device(TCP_COM):
             important_batches_tar=1
         important_batches_tar=1
         important_batches=0
-        NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
+        #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
+        NUM_BUF_SAMPLES=100
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar)
         time.sleep(0.01)
         while batch_not_found:
@@ -217,7 +219,8 @@ class edge_device(TCP_COM):
                 files_received+=1
                 print(file)
                 if ".tflite" in file or '.zip' in file:
-                    self.received_model(file)
+                    if np.sum(self.energy_buff)<self.energy_thresh:
+                        self.received_model(file)
                     #pass
                 self.file_Q.task_done()
                 self.get_important_important_batch(input)
@@ -336,5 +339,5 @@ class edge_device(TCP_COM):
         plt.legend()
         #plt.show()
 
-bs=edge_device("received", 800)
-bs.run(800)
+#bs=edge_device("received", 800)
+#bs.run(800)

@@ -341,6 +341,7 @@ class IoT_model():
             #    return None
             #pruning_level=pdr
             quantize=False
+            throughput=None
             if throughput:
                 pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
                 if pruning_level>0.4:
@@ -349,8 +350,8 @@ class IoT_model():
                 print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
             else:
                 pruning_level=None
-            #pruning_level=50
-            model, X=self.train_model(data, invert_loss, pruning_level)
+            #pruning_level=None
+            model, X=self.train_model(data, invert_loss)
             if pruning_level:
                 pruned_model = self.manual_prune_weights(model, pruning_level)
                 print("Pruned model")
