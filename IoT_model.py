@@ -280,7 +280,7 @@ class IoT_model():
         model: improved tensorflow model
         X : data used to improve the model with
         """
-        data = data.drop(data.columns[-1], axis=1)
+        #data = data.drop(data.columns[-1], axis=1)
         X, y = self.prepare_training_data()
         X=pd.DataFrame(X)
         data=np.array(data)
@@ -341,7 +341,6 @@ class IoT_model():
             #    return None
             #pruning_level=pdr
             quantize=False
-            throughput=None
             if throughput:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
                 pruning_level=min(max(-0.84*(t_UL*throughput/8 - 140)/100,0),0.95)
