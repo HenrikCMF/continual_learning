@@ -96,10 +96,12 @@ class edge_device(TCP_COM):
         t: timestamp
         """
         s, t=self.get_sample()    
+        print(14)
         if self.inference_batch==0:
             for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
         else:
             for_mse=s.drop(columns='machine_status')
+        print(15)
         rare, mse=self.model.check_sample(for_mse)
         #rare=True
         #mse=0
@@ -123,6 +125,7 @@ class edge_device(TCP_COM):
         input : test parameter.
         --------
         """
+        print(10.5)
         batch_not_found=True
         #if self.throughput:
         #    self.throughputs.append(self.throughput)
@@ -139,8 +142,9 @@ class edge_device(TCP_COM):
 
         self.throughput=200
         #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
+        print(11)
         NUM_BUF_SAMPLES=int(max(max(4.35(self.t_UL*self.throughput/8 - 3),0),60))
-        
+        print(12)
         #NUM_BUF_SAMPLES=200
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
         skip_samples=0
@@ -148,6 +152,7 @@ class edge_device(TCP_COM):
         time.sleep(0.01)
         while batch_not_found:
             #for i in range(int(skip_samples)):
+            print(13)
             rare, mse, s, t = self.analyze_samples()
             
             #self.energy_buff.append(0)
@@ -250,8 +255,8 @@ class edge_device(TCP_COM):
                 self.get_important_important_batch(input)
             except queue.Empty:
                 pass
-            except Exception as e:
-                print(e)
+            #except Exception as e:
+            #    print(e)
             if self.index>=self.len_of_dataset:
                 print("mse",np.shape(self.mse_buff))
                 print("energy",np.shape(self.energy_buff[1:]))
