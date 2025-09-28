@@ -149,6 +149,7 @@ class edge_device(TCP_COM):
         while batch_not_found:
             #for i in range(int(skip_samples)):
             rare, mse, s, t = self.analyze_samples()
+            
             #self.energy_buff.append(0)
             self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
             self.measured_throughput_buf.append(self.throughput)
@@ -184,6 +185,7 @@ class edge_device(TCP_COM):
                         str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
                         )
                     #comment
+                    print(np.shape(self.sample_buffer))
                     AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
                     #AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches)
                     self.total_sent_data+=os.path.getsize(filename)+20
