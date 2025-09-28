@@ -96,12 +96,10 @@ class edge_device(TCP_COM):
         t: timestamp
         """
         s, t=self.get_sample()    
-        print(14)
         if self.inference_batch==0:
             for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
         else:
             for_mse=s.drop(columns='machine_status')
-        print(15)
         rare, mse=self.model.check_sample(for_mse)
         #rare=True
         #mse=0
@@ -125,7 +123,6 @@ class edge_device(TCP_COM):
         input : test parameter.
         --------
         """
-        print(10.5)
         batch_not_found=True
         #if self.throughput:
         #    self.throughputs.append(self.throughput)
@@ -142,10 +139,7 @@ class edge_device(TCP_COM):
 
         self.throughput=200
         #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
-        print(11)
-        NUM_BUF_SAMPLES=int(max(max(4.35(self.t_UL*self.throughput/8 - 3),0),60))
-        NUM_BUF_SAMPLES=int(max(max(4.35(1*self.throughput/8 - 3),0),60))
-        print(12)
+        NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 3),0),60))
         #NUM_BUF_SAMPLES=200
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
         skip_samples=0
@@ -153,7 +147,6 @@ class edge_device(TCP_COM):
         time.sleep(0.01)
         while batch_not_found:
             #for i in range(int(skip_samples)):
-            print(13)
             rare, mse, s, t = self.analyze_samples()
             
             #self.energy_buff.append(0)
@@ -191,7 +184,6 @@ class edge_device(TCP_COM):
                         str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
                         )
                     #comment
-                    print(np.shape(self.sample_buffer))
                     AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
                     #AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches)
                     self.total_sent_data+=os.path.getsize(filename)+20
@@ -243,16 +235,12 @@ class edge_device(TCP_COM):
                 print(file)
                 if ".tflite" in file or '.zip' in file:
                     #if np.sum(self.energy_buff)<self.energy_thresh:
-                    print(1)
                     self.received_model(file)
                         #print("Receiving time", rec_time)
-                    print(8)
                     self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
-                    print(9)
                         #pass
                     #pass
                 self.file_Q.task_done()
-                print(10)
                 self.get_important_important_batch(input)
             except queue.Empty:
                 pass
@@ -313,7 +301,6 @@ class edge_device(TCP_COM):
         destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
         shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
         self.total_received_data += os.path.getsize(destination_path)+20
-        print(2)
         self.model.load_model()
     
     def get_previous_X_samples(self, X):
