@@ -237,12 +237,16 @@ class edge_device(TCP_COM):
                 print(file)
                 if ".tflite" in file or '.zip' in file:
                     #if np.sum(self.energy_buff)<self.energy_thresh:
+                    print(1)
                     self.received_model(file)
                         #print("Receiving time", rec_time)
+                    print(8)
                     self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
+                    print(9)
                         #pass
                     #pass
                 self.file_Q.task_done()
+                print(10)
                 self.get_important_important_batch(input)
             except queue.Empty:
                 pass
@@ -303,6 +307,7 @@ class edge_device(TCP_COM):
         destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
         shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
         self.total_received_data += os.path.getsize(destination_path)+20
+        print(2)
         self.model.load_model()
     
     def get_previous_X_samples(self, X):

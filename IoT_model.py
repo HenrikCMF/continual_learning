@@ -37,16 +37,20 @@ class IoT_model():
         """
         Loads whichever autoencoder is currently at the hardcoded modelpath
         """
+        print(3)
         self.scaler = joblib.load(os.path.join("models", "scaler.pkl"))
         tflite_model_path = "models/"+self.model_name+".tflite"
+        print(4)
         self.interpreter = tf.lite.Interpreter(model_path=tflite_model_path, experimental_delegates=[])
+        print(5)
         self.interpreter.allocate_tensors()
+        print(6)
         # Get input and output details
         self.input_details = self.interpreter.get_input_details()
         self.enc_in_shape=self.input_details[0]["shape_signature"]
         self.output_details = self.interpreter.get_output_details()
         self.dec_out_shape=self.output_details[0]["shape_signature"]
-
+        print(7)
         if self.first_run:
             tensor_details = self.interpreter.get_tensor_details()
             total_memory = 0
@@ -179,10 +183,12 @@ class IoT_model():
         """
         important=False
         w, h=np.shape(data)
+        print(16)
         if w>1 and h>1:
             mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
         else:
             mse_val = mean_squared_error(self.scale_data(data).T, self.inference_on_model(data))
+            print(17)
         if mse_val>self.trigger_threshold:
             important=True
         return important, mse_val
