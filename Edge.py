@@ -244,8 +244,8 @@ class edge_device(TCP_COM):
                 self.get_important_important_batch(input)
             except queue.Empty:
                 pass
-            #except Exception as e:
-            #    print(e)
+            except Exception as e:
+                print(e)
             if self.index>=self.len_of_dataset:
                 print("mse",np.shape(self.mse_buff))
                 print("energy",np.shape(self.energy_buff[1:]))
