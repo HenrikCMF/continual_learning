@@ -137,7 +137,7 @@ class edge_device(TCP_COM):
         important_batches_tar=1
         important_batches=0
 
-        self.throughput=400
+        self.throughput=800
         #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
         #NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 3),0),60))
         NUM_BUF_SAMPLES=200
