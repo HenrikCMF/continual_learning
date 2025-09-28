@@ -80,7 +80,7 @@ class Base_station(TCP_COM):
             #jitter_ms=configs['jitter_ms']
             self.delay_ms=None
             self.jitter_ms=None
-            #self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
+            self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         self.configs=configs
