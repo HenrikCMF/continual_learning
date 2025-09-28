@@ -56,7 +56,7 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            self.rate_kbps=1000#input
+            self.rate_kbps=input
             self.burst_kbps=16
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
@@ -76,7 +76,7 @@ class edge_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        self.model = IoT_model.IoT_model("test_files/initial_data.csv", input)
+        self.model = IoT_model.IoT_model("test_files/initial_data.csv", 0.2)
         self.energy_model=IoT_energy.energy()
         self.configs=configs
         #self.model = mlp_classifier("test_files/initial_data.csv", input)
@@ -137,7 +137,7 @@ class edge_device(TCP_COM):
         important_batches_tar=1
         important_batches=0
 
-        self.throughput=800
+        #self.throughput=800
         #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
         #NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 3),0),60))
         NUM_BUF_SAMPLES=200

@@ -69,8 +69,8 @@ class Base_station(TCP_COM):
         #Enable network control
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            #self.rate_kbps=input
-            self.rate_kbps=1000
+            self.rate_kbps=input
+            #self.rate_kbps=1000
             self.burst_kbps=16#input
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
@@ -184,7 +184,7 @@ class Base_station(TCP_COM):
                             TP+=1
                         else:
                             FP+=1
-                        self.throughput=800
+                        #self.throughput=800
                         self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR, throughput=self.throughput, t_UL=self.t_UL)
                         self.throughputs.append(self.throughput)
                         if invert_training==False:
