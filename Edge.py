@@ -32,6 +32,8 @@ class edge_device(TCP_COM):
         input : test parameter.
         --------
         """
+        with open("configs.json", "r") as file:
+            configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['edge_tul']
         #self.energy_thresh=input
@@ -46,8 +48,7 @@ class edge_device(TCP_COM):
         self.num_inferences=0
         self.device_type="edge"
         self.model_path="models"
-        with open("configs.json", "r") as file:
-            configs = json.load(file)
+        
         self.local_IP=configs['edgeip']
         self.edgePORT_TCP=configs['edgePORT_TCP']
         self.edgePORT_UDP=configs['edgePORT_UDP']

@@ -32,6 +32,8 @@ class Base_station(TCP_COM):
         input : test parameter.
         --------
         """
+        with open("configs.json", "r") as file:
+            configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['base_tdl']
         #self.energy_thresh=input
@@ -58,8 +60,7 @@ class Base_station(TCP_COM):
             self.ml_model.train_initial_model()
         self.device_type="bs"
         #Load all configs to set up as TCP server.
-        with open("configs.json", "r") as file:
-            configs = json.load(file)
+        
         self.local_IP=configs['baseip']
         self.edgePORT_TCP=configs['edgePORT_TCP']
         self.edgePORT_UDP=configs['edgePORT_UDP']
