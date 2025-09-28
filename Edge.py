@@ -32,7 +32,12 @@ class edge_device(TCP_COM):
         input : test parameter.
         --------
         """
-        self.energy_thresh=59
+        self.baseline_energy=configs['baseline_energy']
+        self.baseline_tx=configs['edge_tul']
+        #self.energy_thresh=input
+        self.energy_thresh=self.baseline_energy
+        self.energy_ratio=self.energy_thresh/self.baseline_energy
+        self.t_UL=self.energy_ratio*self.baseline_tx
         self.inference_batch=0
         self.use_PDR=False
         self.throughputs=[]
@@ -50,13 +55,13 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            self.rate_kbps=input
+            self.rate_kbps=1000#input
             self.burst_kbps=16
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
             self.delay_ms=None
             self.jitter_ms=None
-            self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
+            #self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
@@ -70,7 +75,7 @@ class edge_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        self.model = IoT_model.IoT_model("test_files/initial_data.csv", 0.2)
+        self.model = IoT_model.IoT_model("test_files/initial_data.csv", input)
         self.energy_model=IoT_energy.energy()
         self.configs=configs
         #self.model = mlp_classifier("test_files/initial_data.csv", input)
@@ -94,9 +99,9 @@ class edge_device(TCP_COM):
             for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
         else:
             for_mse=s.drop(columns='machine_status')
-        #rare, mse=self.model.check_sample(for_mse)
-        rare=True
-        mse=0
+        rare, mse=self.model.check_sample(for_mse)
+        #rare=True
+        #mse=0
         self.num_inferences+=1
         self.mse_buff.append(mse)
         return rare, mse, s, t
@@ -118,31 +123,36 @@ class edge_device(TCP_COM):
         --------
         """
         batch_not_found=True
-        if self.throughput:
-            self.throughputs.append(self.throughput)
-            if self.throughput<330:
-                important_batches_tar=3
-            elif self.throughput<350:
-                important_batches_tar=2
-            else:
-                important_batches_tar=1
-        else:
-            important_batches_tar=1
+        #if self.throughput:
+        #    self.throughputs.append(self.throughput)
+        #    if self.throughput<330:
+        #        important_batches_tar=3
+        #    elif self.throughput<350:
+        #        important_batches_tar=2
+        #    else:
+        #        important_batches_tar=1
+        #else:
+        #    important_batches_tar=1
         important_batches_tar=1
         important_batches=0
+
+        self.throughput=1000
         #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
+        #NUM_BUF_SAMPLES=int(max(max(4.35(self.t_UL*self.throughput/8 - 3),0),60))
+        
         NUM_BUF_SAMPLES=200
-        skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
+        #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
+        skip_samples=0
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar, "Skipping ", skip_samples)
         time.sleep(0.01)
         while batch_not_found:
-            for i in range(int(skip_samples)):
-                rare, mse, s, t = self.analyze_samples()
-                self.energy_buff.append(0)
-                #self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
-                self.measured_throughput_buf.append(self.throughput)
-                self.throughput_buf.append(self.rate_kbps)
-                self.samples_since_last_batch+=1
+            #for i in range(int(skip_samples)):
+            rare, mse, s, t = self.analyze_samples()
+            #self.energy_buff.append(0)
+            self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
+            self.measured_throughput_buf.append(self.throughput)
+            self.throughput_buf.append(self.rate_kbps)
+            self.samples_since_last_batch+=1
             if rare:
                 self.samples_since_last_batch-=1
                 print("Getting last :", min(NUM_BUF_SAMPLES, self.samples_since_last_batch), "samples")
@@ -223,11 +233,11 @@ class edge_device(TCP_COM):
                 files_received+=1
                 print(file)
                 if ".tflite" in file or '.zip' in file:
-                    if np.sum(self.energy_buff)<self.energy_thresh:
-                        #self.received_model(file)
+                    #if np.sum(self.energy_buff)<self.energy_thresh:
+                    self.received_model(file)
                         #print("Receiving time", rec_time)
                         #self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
-                        pass
+                        #pass
                     #pass
                 self.file_Q.task_done()
                 self.get_important_important_batch(input)
@@ -313,38 +323,6 @@ class edge_device(TCP_COM):
         return sample, timestamp
     
 
-    def make_end_plot(self, mse):
-        file_path = "datasets/sensor.csv"
-        df = pd.read_csv(file_path)
-
-        # Ensure 'machine_status' column exists
-        if "machine_status" not in df.columns:
-            raise ValueError("Column 'machine_status' not found in dataset")
-
-        # Find indices where machine_status is 'BROKEN'
-        broken_indices = df.index[df["machine_status"] == "BROKEN"].tolist()
-        last_index = df.index[-1]
-        adjusted_broken_indices = [idx - self.start_offset for idx in broken_indices if idx >= self.start_offset]
-
-        mse_buf = mse  
-
-        
-        # Plot the mse_buf values
-        plt.figure(figsize=(10, 5))
-        plt.plot(mse_buf, label="Autoencoder MSE Output")
-        plt.ylim(-0.1, min(10, max(mse_buf)))
-        # Plot vertical lines where 'machine_status' is 'BROKEN'
-        for idx in adjusted_broken_indices:
-            plt.axvline(x=idx, color='r', linestyle='--', alpha=0.7, label="Fault" if idx == adjusted_broken_indices[0] else "")
-        #plt.axvline(x=(last_index-self.start_offset), color='g', linestyle='--', alpha=0.7, label="Last Entry")
-
-
-        # Labels and legend
-        plt.xlabel("Index")
-        plt.ylabel("Autoencoder MSE Output")
-        plt.title("Autoencoder fault detector")
-        plt.legend()
-        #plt.show()
-
+    
 #bs=edge_device("received", 800)
 #bs.run(800)

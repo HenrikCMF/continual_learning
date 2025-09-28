@@ -32,6 +32,12 @@ class Base_station(TCP_COM):
         input : test parameter.
         --------
         """
+        self.baseline_energy=configs['baseline_energy']
+        self.baseline_tx=configs['base_tdl']
+        #self.energy_thresh=input
+        self.energy_thresh=self.baseline_energy
+        self.energy_ratio=self.energy_thresh/self.baseline_energy
+        self.t_UL=self.energy_ratio*self.baseline_tx
         self.total_data_sent=0
         self.throughputs=[]
         self.use_PDR=False
@@ -63,7 +69,7 @@ class Base_station(TCP_COM):
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
             #self.rate_kbps=input
-            self.rate_kbps=input
+            self.rate_kbps=1000
             self.burst_kbps=16#input
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']
@@ -73,7 +79,7 @@ class Base_station(TCP_COM):
             #jitter_ms=configs['jitter_ms']
             self.delay_ms=None
             self.jitter_ms=None
-            self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
+            #self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
         edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
         self.file_Q=queue.Queue()
         self.configs=configs
@@ -177,10 +183,9 @@ class Base_station(TCP_COM):
                             TP+=1
                         else:
                             FP+=1
-                        #self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR)
-                        #if invert_training==False:
+                        self.throughput=1000
+                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR, throughput=self.throughput, t_UL=self.t_UL)
                         self.throughputs.append(self.throughput)
-                        #self.model_quantization=self.ml_model.improve_model(batch, invert_training, pdr=self.PDR, throughput=self.throughput)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
                         else:

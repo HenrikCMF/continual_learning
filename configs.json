@@ -12,6 +12,9 @@
     "buffering_latency_ms": 4000,
     "packet_loss_pct":0,
     "base_delay_ms":250,
-    "jitter_ms":50
-
+    "jitter_ms":50,
+    "base_tdl":1,
+    "edge_tul":0.4,
+    "baseline_rate":1000,
+    "baseline_energy":59
 }

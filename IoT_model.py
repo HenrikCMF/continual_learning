@@ -335,7 +335,7 @@ class IoT_model():
                 actual_sparsity = np.mean(pruned_kernel == 0)
         return model
 
-    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None):
+    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None, t_UL=1):
             #if invert_loss==True:
             #    return None
             #    return None
@@ -343,10 +343,11 @@ class IoT_model():
             quantize=False
             throughput=None
             if throughput:
-                pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
+                #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
+                pruning_level=min(max(-0.84*(t_UL*throughput/8 - 140)/100,0),0.95)
                 if pruning_level>0.4:
                     quantize=True
-                    pruning_level=min(max(-4*(throughput/8 - 48)/100,0),0.8)
+                    pruning_level=min(max(-4*(t_UL*throughput/8 - 48)/100,0),0.8)
                 print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
             else:
                 pruning_level=None
