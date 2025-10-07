@@ -188,7 +188,8 @@ class edge_device(TCP_COM):
                     #AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches)
                     self.total_sent_data+=os.path.getsize(filename)+20
                     tx_time=self.send_file(self.TAR_IP, self.TAR_PORT_TCP,filename)
-                    self.energy_buff[-1]+=self.energy_model.transmission_energy(tx_time)
+                    if np.sum(self.energy_buff)<self.energy_thresh:
+                        self.energy_buff[-1]+=self.energy_model.transmission_energy(tx_time)
                     self.sample_buffer=[]
                     self.timestamp_buffer=[]
         return True
@@ -234,11 +235,11 @@ class edge_device(TCP_COM):
                 
                 print(file)
                 if ".tflite" in file or '.zip' in file:
-                    #if np.sum(self.energy_buff)<self.energy_thresh:
-                    self.received_model(file)
+                    if np.sum(self.energy_buff)<self.energy_thresh:
+                        self.received_model(file)
                         #print("Receiving time", rec_time)
-                    if files_received>0:
-                        self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
+                        if files_received>0:
+                            self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                 self.file_Q.task_done()
                 self.get_important_important_batch(input)
                 files_received+=1
