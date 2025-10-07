@@ -10,7 +10,7 @@ if not os.path.isfile(file_path):
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP", "size", "measthroughput"])
 start = 200
-stop = 2000
+stop = 200
 step = 200
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
