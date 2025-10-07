@@ -3,14 +3,14 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/adapttest4.csv"
+file_path = "plots/adapttest5.csv"
 #Function for runnning the full test run multiple times but with a changing input for each run
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP", "size", "measthroughput"])
 start = 200
-stop = 200
+stop = 1000
 step = 200
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
