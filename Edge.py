@@ -124,17 +124,17 @@ class edge_device(TCP_COM):
         --------
         """
         batch_not_found=True
-        #if self.throughput:
-        #    self.throughputs.append(self.throughput)
-        #    if self.throughput<330:
-        #        important_batches_tar=3
-        #    elif self.throughput<350:
-        #        important_batches_tar=2
-        #    else:
-        #        important_batches_tar=1
-        #else:
-        #    important_batches_tar=1
-        important_batches_tar=1
+        if self.throughput:
+            self.throughputs.append(self.throughput)
+            if self.throughput<330:
+                important_batches_tar=3
+            elif self.throughput<350:
+                important_batches_tar=2
+            else:
+                important_batches_tar=1
+        else:
+            important_batches_tar=1
+        #important_batches_tar=1
         important_batches=0
 
         #self.throughput=800
