@@ -347,10 +347,10 @@ class IoT_model():
             quantize=False
             if throughput:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
-                pruning_level=min(max(-0.84*(t_UL*throughput/8 - 140)/100,0),0.95)
+                pruning_level=min(max(-0.84*(t_UL*throughput/8 - 131)/100,0),0.95)
                 if pruning_level>0.4:
                     quantize=True
-                    pruning_level=min(max(-4*(t_UL*throughput/8 - 48)/100,0),0.8)
+                    pruning_level=min(max(-3.56*(t_UL*throughput/8 - 42)/100,0),0.8)
                 print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
             else:
                 pruning_level=None
