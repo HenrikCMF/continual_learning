@@ -139,7 +139,7 @@ class edge_device(TCP_COM):
 
         #self.throughput=800
         #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
-        NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 5),0),100))
+        NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
         #NUM_BUF_SAMPLES=200
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
         skip_samples=0
