@@ -236,11 +236,17 @@ class edge_device(TCP_COM):
                 print(file)
                 if ".tflite" in file or '.zip' in file:
                     
-                    if np.sum(self.energy_buff)<self.energy_thresh:
+                    if np.sum(self.energy_buff)<=self.energy_thresh:
                         self.received_model(file)
                         #print("Receiving time", rec_time)
                         if files_received>0:
                             self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
+                    else:
+                        while True:
+                            try:
+                                self.get_sample()
+                            except:
+                                break
                 self.file_Q.task_done()
                 self.get_important_important_batch(input)
                 files_received+=1
