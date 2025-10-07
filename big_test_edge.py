@@ -55,8 +55,8 @@ if not os.path.isfile(file_path):
         writer = csv.writer(file)
         writer.writerow(["i","time_transmitting", "time_receiving", "total_sent_data", "total_received_data", "num_inferences", "measthrough", "energy"])
 
-start = 400
-stop = 1000
+start = 200
+stop = 2000
 step = 200
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
