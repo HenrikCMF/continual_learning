@@ -3,7 +3,7 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/adapttest5.csv"
+file_path = "plots/adapttest6.csv"
 #Function for runnning the full test run multiple times but with a changing input for each run
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
