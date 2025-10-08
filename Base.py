@@ -185,7 +185,7 @@ class Base_station(TCP_COM):
                         else:
                             FP+=1
                         #self.throughput=800
-                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR, throughput=self.throughput, t_UL=self.t_UL)
+                        #self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR, throughput=self.throughput, t_UL=self.t_UL)
                         self.throughputs.append(self.throughput)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
