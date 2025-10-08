@@ -138,11 +138,15 @@ class IoT_model():
         print("feats",self.n_features)
         inputs = tf.keras.Input(shape=(self.n_features,))
         encoded = tf.keras.layers.Dense(128, activation="relu")(inputs)
-        encoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(8, activation="relu")(encoded) 
-        decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
+        #encoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
+        #encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
+        #encoded = tf.keras.layers.Dense(8, activation="relu")(encoded) 
+        #decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
+        #decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
+        encoded = tf.keras.layers.Dense(256, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(256, activation="relu")(encoded)
+        encoded = tf.keras.layers.Dense(256, activation="relu")(encoded)
+        decoded = tf.keras.layers.Dense(256, activation="relu")(decoded)
         decoded = tf.keras.layers.Dense(128, activation="relu")(decoded)
 
         decoded = tf.keras.layers.Dense(self.n_features, activation="linear")(decoded)
@@ -344,7 +348,7 @@ class IoT_model():
             #    return None
             #    return None
             #pruning_level=pdr
-            throughput=None
+            #throughput=None
             quantize=False
             if throughput:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
