@@ -3,15 +3,15 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/energytest.csv"
+file_path = "plots/energytest_hawk.csv"
 #Function for runnning the full test run multiple times but with a changing input for each run
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP", "size", "measthroughput"])
-start = 30
-stop = 60
-step = 5
+start = 10
+stop = 70
+step = 10
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)

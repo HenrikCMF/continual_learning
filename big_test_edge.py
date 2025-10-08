@@ -4,7 +4,7 @@ import time
 import csv
 import os
 import tensorflow as tf
-file_path = "plots/energytest.csv"
+file_path = "plots/energytest_hawk.csv"
 
 #Function for runnning the full test run multiple times but with a changing input for each run
 def analyze_model_energy_params(model_path):
