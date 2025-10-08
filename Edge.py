@@ -101,9 +101,9 @@ class edge_device(TCP_COM):
             for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
         else:
             for_mse=s.drop(columns='machine_status')
-        rare, mse=self.model.check_sample(for_mse)
-        #rare=True
-        #mse=0
+        #rare, mse=self.model.check_sample(for_mse)
+        rare=True
+        mse=0
         self.num_inferences+=1
         self.mse_buff.append(mse)
         return rare, mse, s, t
@@ -140,18 +140,19 @@ class edge_device(TCP_COM):
 
         #self.throughput=800
         #NUM_BUF_SAMPLES=int(max(max(1.74*(self.throughput/8 - 8),0),60))
-        NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
-        #NUM_BUF_SAMPLES=200
+        #NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
+        NUM_BUF_SAMPLES=200
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
-        skip_samples=0
+        skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/((self.energy_thresh/220000)*60)
+        #skip_samples=0
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar, "Skipping ", skip_samples)
         time.sleep(0.01)
         while batch_not_found:
-            #for i in range(int(skip_samples)):
-            rare, mse, s, t = self.analyze_samples()
+            for i in range(int(skip_samples)):
+                rare, mse, s, t = self.analyze_samples()
             
-            #self.energy_buff.append(0)
-            self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
+                self.energy_buff.append(0)
+            #self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
             self.measured_throughput_buf.append(self.throughput)
             self.throughput_buf.append(self.rate_kbps)
             self.samples_since_last_batch+=1
@@ -241,7 +242,8 @@ class edge_device(TCP_COM):
                         self.received_model(file)
                         #print("Receiving time", rec_time)
                         if files_received>0:
-                            self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
+                            #self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
+                            pass
                     else:
                         while True:
                             try:
