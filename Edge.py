@@ -150,12 +150,12 @@ class edge_device(TCP_COM):
         while batch_not_found:
             for i in range(int(skip_samples)):
                 rare, mse, s, t = self.analyze_samples()
-            
-                self.energy_buff.append(0)
+                self.samples_since_last_batch+=1
+            self.energy_buff.append(0)
             #self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
             self.measured_throughput_buf.append(self.throughput)
             self.throughput_buf.append(self.rate_kbps)
-            self.samples_since_last_batch+=1
+            
             if rare:
                 self.samples_since_last_batch-=1
                 print("Getting last :", min(NUM_BUF_SAMPLES, self.samples_since_last_batch), "samples")
