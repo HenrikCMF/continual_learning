@@ -151,7 +151,7 @@ class edge_device(TCP_COM):
             #for i in range(int(skip_samples)):
             rare, mse, s, t = self.analyze_samples()
             self.samples_since_last_batch+=1
-            self.energy_buff.append(0)
+            #self.energy_buff.append(0)
             self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
             self.measured_throughput_buf.append(self.throughput)
             self.throughput_buf.append(self.rate_kbps)
