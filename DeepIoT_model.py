@@ -433,12 +433,14 @@ class IoT_model():
 
     def improve_model(self, data, invert_loss=False, pdr=0, throughput=None, t_UL=1):
         quantize = False
+        print("USING DEEP IoT")
         model, X = self.train_model(data, invert_loss)
 
-        # DeepIoT-like constant structured compression
+        ratio = 0.1  # tune this
+        widths = tuple(max(4, int(round(w * ratio))) for w in (128,64,32,16,32,64,128))
         compressed_model = self.deepiot_like_compress_to_fixed_widths(
             model,
-            widths=(96, 48, 24, 12, 24, 48, 96),  # pick once, keep constant across all runs
+            widths=widths,  # pick once, keep constant across all runs
         )
 
         # Optional: quick fine-tune helps after pruning
