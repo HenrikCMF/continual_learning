@@ -436,7 +436,7 @@ class IoT_model():
         print("USING DEEP IoT")
         model, X = self.train_model(data, invert_loss)
 
-        ratio = 0.1  # tune this
+        ratio = 0.2  # tune this
         widths = tuple(max(1, int(round(w * ratio))) for w in (128,64,32,16,32,64,128))
         compressed_model = self.deepiot_like_compress_to_fixed_widths(
             model,
