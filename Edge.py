@@ -247,10 +247,7 @@ class edge_device(TCP_COM):
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
-                print("mse",np.shape(self.mse_buff))
-                print("energy",np.shape(self.energy_buff[1:]))
-                print("th",np.shape(self.throughput_buf))
-                print("Mth",np.shape(self.measured_throughput_buf))
+                print("Total energy used: ", np.sum(self.energy_buff))
                 data = {
                     'mse': self.mse_buff,
                     'energy': self.energy_buff[1:],
