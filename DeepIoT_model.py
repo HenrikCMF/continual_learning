@@ -437,7 +437,7 @@ class IoT_model():
         model, X = self.train_model(data, invert_loss)
 
         ratio = 0.1  # tune this
-        widths = tuple(max(4, int(round(w * ratio))) for w in (128,64,32,16,32,64,128))
+        widths = tuple(max(1, int(round(w * ratio))) for w in (128,64,32,16,32,64,128))
         compressed_model = self.deepiot_like_compress_to_fixed_widths(
             model,
             widths=widths,  # pick once, keep constant across all runs
@@ -445,8 +445,8 @@ class IoT_model():
 
         # Optional: quick fine-tune helps after pruning
         compressed_model.compile(optimizer="adam", loss="mse")
-        #new_data = self.scale_data(np.array(data))
-        #compressed_model.fit(new_data, new_data, epochs=2, batch_size=128, verbose=0)
+        new_data = self.scale_data(np.array(data))
+        compressed_model.fit(new_data, new_data, epochs=2, batch_size=128, verbose=0)
 
         # Save and export
         compressed_model.save(os.path.join("models", self.model_name + ".h5"))
