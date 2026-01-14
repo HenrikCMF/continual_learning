@@ -3,7 +3,7 @@ import json
 import time
 import queue
 from network_control import network_control
-import IoT_model
+import DeepIoT_model as IoT_model
 from alternative_iot_models import mlp_classifier
 import AVRO
 import os
@@ -226,5 +226,5 @@ class Base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,model)
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
-#bs=Base_station("received", 800)
-#bs.run(800)
+bs=Base_station("received", 800)
+bs.run(800)

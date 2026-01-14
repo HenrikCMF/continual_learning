@@ -10,7 +10,7 @@ import AVRO
 import os
 import queue
 import shutil
-import IoT_model
+import DeepIoT_model as IoT_model#IoT_model
 from alternative_iot_models import mlp_classifier
 import matplotlib.pyplot as plt
 import warnings
@@ -125,16 +125,6 @@ class edge_device(TCP_COM):
         --------
         """
         batch_not_found=True
-        #if self.throughput:
-        #    self.throughputs.append(self.throughput)
-        #    if self.throughput<330:
-        #        important_batches_tar=3
-        #    elif self.throughput<350:
-        #        important_batches_tar=2
-        #    else:
-        #        important_batches_tar=1
-        #else:
-        #    important_batches_tar=1
         important_batches_tar=1
         important_batches=0
 
@@ -144,7 +134,7 @@ class edge_device(TCP_COM):
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/((self.energy_thresh/220000))
         skip_samples=0
-        print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Buffering: ", important_batches_tar, "Skipping ", skip_samples)
+        print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Skipping ", skip_samples)
         time.sleep(0.01)
         while batch_not_found:
             #for i in range(int(skip_samples)):
@@ -272,7 +262,6 @@ class edge_device(TCP_COM):
 
                 # Save to CSV
                 df.to_csv("test_files/full_IoTresult.csv", index=False)
-                #self.send_file(self.TAR_IP, self.TAR_PORT_TCP,"test_files/mse_data.csv")
                 try:
                     self.send_done_sending()
                 except:
@@ -335,5 +324,5 @@ class edge_device(TCP_COM):
     
 
     
-#bs=edge_device("received", 800)
-#bs.run(800)
+bs=edge_device("received", 800)
+bs.run(800)

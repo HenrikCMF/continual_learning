@@ -13,6 +13,19 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
+
+
+def _dense_layers_in_order(model):
+    return [l for l in model.layers if isinstance(l, tf.keras.layers.Dense)]
+
+def _slice_dense_weights(W, b, in_idx=None, out_idx=None):
+    if in_idx is not None:
+        W = W[in_idx, :]
+    if out_idx is not None:
+        W = W[:, out_idx]
+        b = b[out_idx]
+    return W, b
+
 class IoT_model():
     def __init__(self, initial_data, thresh):
         """
@@ -339,32 +352,105 @@ class IoT_model():
                 actual_sparsity = np.mean(pruned_kernel == 0)
         return model
 
+    def deepiot_like_compress_to_fixed_widths(
+        self,
+        model: tf.keras.Model,
+        widths=(96, 48, 24, 12, 24, 48, 96),
+        min_units=4,
+    ) -> tf.keras.Model:
+        """
+        DeepIoT-like structured compression for YOUR specific Dense-chain autoencoder:
+        - Prunes neurons (units) in each hidden Dense layer by L1 importance
+        - Rebuilds a smaller dense model with fixed widths (constant baseline)
+        - Copies sliced weights
+        """
+
+        widths = [max(min_units, int(w)) for w in widths]
+
+        # Expect your model to be 8 Dense layers: 7 hidden + output
+        dense_layers = _dense_layers_in_order(model)
+        if len(dense_layers) != 8:
+            raise ValueError(f"Expected 8 Dense layers (7 hidden + output), got {len(dense_layers)}")
+
+        hidden = dense_layers[:-1]  # 7
+        out_layer = dense_layers[-1]
+
+        # Compute keep indices per hidden layer by neuron importance
+        keep = []
+        prev_keep = None
+
+        for i, layer in enumerate(hidden):
+            W, b = layer.get_weights()  # W: [in, out]
+            # If previous layer pruned, restrict to surviving inputs before computing importance
+            if prev_keep is not None:
+                W_eff = W[prev_keep, :]
+            else:
+                W_eff = W
+
+            # Importance of each output neuron = L1 norm of incoming weights (simple, works well)
+            imp = np.sum(np.abs(W_eff), axis=0)  # [out]
+            k = min(widths[i], imp.shape[0])
+            idx = np.argsort(imp)[-k:]
+            idx = np.sort(idx)
+            keep.append(idx)
+            prev_keep = idx
+
+        # Build the smaller architecture (same topology, smaller widths)
+        inputs = tf.keras.Input(shape=(self.n_features,), name="compressed_input")
+        x = inputs
+
+        x = tf.keras.layers.Dense(widths[0], activation="relu", name="enc_128")(x)
+        x = tf.keras.layers.Dense(widths[1], activation="relu", name="enc_64")(x)
+        x = tf.keras.layers.Dense(widths[2], activation="relu", name="enc_32")(x)
+        x = tf.keras.layers.Dense(widths[3], activation="relu", name="enc_16")(x)
+
+        x = tf.keras.layers.Dense(widths[4], activation="relu", name="dec_32")(x)
+        x = tf.keras.layers.Dense(widths[5], activation="relu", name="dec_64")(x)
+        x = tf.keras.layers.Dense(widths[6], activation="relu", name="dec_128")(x)
+
+        outputs = tf.keras.layers.Dense(self.n_features, activation="linear", name="out")(x)
+        compressed = tf.keras.Model(inputs, outputs, name=model.name + "_deepiotlike_fixed")
+        compressed.compile(optimizer="adam", loss="mse")
+
+        # Copy sliced weights layer-by-layer
+        comp_dense = _dense_layers_in_order(compressed)
+
+        prev_in = None
+        for i in range(7):
+            W, b = hidden[i].get_weights()
+            out_idx = keep[i]
+            in_idx = prev_in
+            W2, b2 = _slice_dense_weights(W, b, in_idx=in_idx, out_idx=out_idx)
+            comp_dense[i].set_weights([W2, b2])
+            prev_in = out_idx
+
+        # Final output layer: slice inputs based on last hidden keep, keep all outputs
+        W, b = out_layer.get_weights()
+        W2, b2 = _slice_dense_weights(W, b, in_idx=prev_in, out_idx=None)
+        comp_dense[7].set_weights([W2, b2])
+
+        return compressed
+
     def improve_model(self, data, invert_loss=False, pdr=0, throughput=None, t_UL=1):
-            throughput=None
-            quantize=False
-            if throughput:
-                #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
-                pruning_level=min(max(-0.84*(t_UL*throughput/8 - 140)/100,0),0.95)
-                if pruning_level>0.4:
-                    quantize=True
-                    pruning_level=min(max(-3.56*(t_UL*throughput/8 - 48)/100,0),0.8)
-                print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
-            else:
-                pruning_level=None
-            #pruning_level=None
-            model, X=self.train_model(data, invert_loss)
-            if pruning_level:
-                pruned_model = self.manual_prune_weights(model, pruning_level)
-                print("Pruned model")
-            model.save(os.path.join("models", self.model_name+".h5"))
-            if pruning_level:
-                self.quantize_model(X,pruned_model, os.path.join("models", self.model_name), quantize=quantize)
-            else:
-                self.quantize_model(X,model, os.path.join("models", self.model_name), quantize=quantize)
-            if quantize:
-                return 8
-            else:
-                return 32
+        quantize = False
+        model, X = self.train_model(data, invert_loss)
+
+        # DeepIoT-like constant structured compression
+        compressed_model = self.deepiot_like_compress_to_fixed_widths(
+            model,
+            widths=(96, 48, 24, 12, 24, 48, 96),  # pick once, keep constant across all runs
+        )
+
+        # Optional: quick fine-tune helps after pruning
+        compressed_model.compile(optimizer="adam", loss="mse")
+        new_data = self.scale_data(np.array(data))
+        compressed_model.fit(new_data, new_data, epochs=2, batch_size=128, verbose=0)
+
+        # Save and export
+        compressed_model.save(os.path.join("models", self.model_name + ".h5"))
+        self.quantize_model(X, compressed_model, os.path.join("models", self.model_name), quantize=quantize)
+
+        return 8 if quantize else 32
 
 """""
     def EECL_comp(self, throughput, model, X):

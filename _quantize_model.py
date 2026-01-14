@@ -28,13 +28,11 @@ def determine_quantization_level(quantconverter, level, example_data):
         case _:
             return quantconverter
 
-def quantize_8_bit(model, example_data, location, quantize=None):
+def convert_to_tflite(model, example_data, location, quantize=None, DeepIoT=False):
     quantconverter = tf.lite.TFLiteConverter.from_keras_model(model)
-    if quantize:
-        quantizelevel=2
-    else:
-        quantizelevel=0
-    quantconverter = determine_quantization_level(quantconverter, quantizelevel, example_data)
+    quantizelevel = 2 if quantize else 0
+    
+    quantconverter = determine_quantization_level(quantconverter, quantizelevel , example_data)
     quantlite=quantconverter.convert()
     with open(location+".tflite", "wb") as f:
         f.write(quantlite)
