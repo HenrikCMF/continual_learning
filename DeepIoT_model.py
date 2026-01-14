@@ -445,8 +445,8 @@ class IoT_model():
 
         # Optional: quick fine-tune helps after pruning
         compressed_model.compile(optimizer="adam", loss="mse")
-        new_data = self.scale_data(np.array(data))
-        compressed_model.fit(new_data, new_data, epochs=2, batch_size=128, verbose=0)
+        #new_data = self.scale_data(np.array(data))
+        #compressed_model.fit(new_data, new_data, epochs=2, batch_size=128, verbose=0)
 
         # Save and export
         compressed_model.save(os.path.join("models", self.model_name + ".h5"))

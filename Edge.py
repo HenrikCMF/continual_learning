@@ -321,5 +321,5 @@ class edge_device(TCP_COM):
     
 
     
-bs=edge_device("received", 1000)
-bs.run(1000)
+#bs=edge_device("received", 300)
+#bs.run(1000)
