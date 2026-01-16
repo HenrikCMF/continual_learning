@@ -271,7 +271,7 @@ class IoT_model():
 
         return data
 
-    def train_model(self, data, invert_loss=False):
+    def train_model(self, data, invert_loss=False, input=-0.1):
         """
         Function to improve the most recent iteration of the model
 
@@ -291,7 +291,7 @@ class IoT_model():
         new_data=self.scale_data(np.array(data))
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            return -0.1*mse if invert_loss else mse  # Negate the loss to maximize
+            return input*mse if invert_loss else mse  # Negate the loss to maximize
 
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
@@ -339,8 +339,7 @@ class IoT_model():
                 actual_sparsity = np.mean(pruned_kernel == 0)
         return model
 
-    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None, t_UL=1):
-            throughput=None
+    def improve_model(self, data, invert_loss=False,input=-0.1, pdr=0, throughput=None, t_UL=1):
             quantize=False
             if throughput:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
@@ -352,7 +351,7 @@ class IoT_model():
             else:
                 pruning_level=None
             #pruning_level=None
-            model, X=self.train_model(data, invert_loss)
+            model, X=self.train_model(data, invert_loss, input=input)
             if pruning_level:
                 pruned_model = self.manual_prune_weights(model, pruning_level)
                 print("Pruned model")

@@ -3,7 +3,7 @@ import json
 import time
 import queue
 from network_control import network_control
-import DeepIoT_model as IoT_model
+import IoT_model
 from alternative_iot_models import mlp_classifier
 import AVRO
 import os
@@ -36,8 +36,8 @@ class Base_station(TCP_COM):
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['base_tdl']
-        self.energy_thresh=input
-        #self.energy_thresh=self.baseline_energy
+        #self.energy_thresh=input
+        self.energy_thresh=self.baseline_energy
         self.energy_ratio=self.energy_thresh/self.baseline_energy
         self.t_UL=self.energy_ratio*self.baseline_tx
         self.total_data_sent=0
@@ -185,7 +185,7 @@ class Base_station(TCP_COM):
                         else:
                             FP+=1
                         #self.throughput=800
-                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, pdr=self.PDR, throughput=self.throughput, t_UL=self.t_UL)
+                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training,input, pdr=self.PDR, throughput=self.throughput, t_UL=self.t_UL)
                         self.throughputs.append(self.throughput)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
