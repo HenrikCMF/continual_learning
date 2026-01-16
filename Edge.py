@@ -57,7 +57,7 @@ class edge_device(TCP_COM):
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
             #self.rate_kbps=input
-            self.rate_kbps=300
+            self.rate_kbps=500
             self.burst_kbps=16
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
@@ -129,8 +129,8 @@ class edge_device(TCP_COM):
         important_batches=0
 
         #self.throughput=800
-        #NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
-        NUM_BUF_SAMPLES=200
+        NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
+        #NUM_BUF_SAMPLES=200
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/((self.energy_thresh/220000))
         skip_samples=0

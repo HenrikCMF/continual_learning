@@ -9,7 +9,7 @@ if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP", "size", "measthroughput"])
-start = -0.7
+start = -0.3
 stop = 1.1
 step = 0.2
 num_steps = int((stop - start) / step) + 1
