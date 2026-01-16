@@ -4,7 +4,7 @@ import time
 import csv
 import os
 import tensorflow as tf
-file_path = "plots/lambdatest2.csv"
+file_path = "plots/lambdatest3.csv"
 
 #Function for runnning the full test run multiple times but with a changing input for each run
 def analyze_model_energy_params(model_path):
@@ -55,8 +55,8 @@ if not os.path.isfile(file_path):
         writer = csv.writer(file)
         writer.writerow(["i","time_transmitting", "time_receiving", "total_sent_data", "total_received_data", "num_inferences", "measthrough", "energy"])
 
-start = -0.3
-stop = 1.1
+start = -0.1
+stop = 0.7
 step = 0.2
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
