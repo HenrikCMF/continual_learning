@@ -143,6 +143,22 @@ def make_dataset(fault_index, num):
     df.iloc[broken_idx-100:].to_csv(filename,index=False)
     return filename, broken_idx-100
 
+def make_evalset():
+    df=pd.read_csv("datasets/sensor.csv")
+    #sensors_to_drop = ['Unnamed: 0', 'timestamp','sensor_15', 'sensor_50']
+    sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
+    df = df.drop(columns=sensors_to_drop)
+    sensor_cols = df.columns[df.isnull().any()].tolist()
+    df[sensor_cols] = df[sensor_cols].interpolate(method='linear')
+    # If any remaining NaNs, use forward/backward fill
+    df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
+    df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
+    #y=df["machine_status"]
+    #broken_idx = y[y == "BROKEN"].index[fault_index]
+    filename="test_files/eval_data"+".csv"
+    df.to_csv(filename,index=False)
+    return filename
+
 def remove_all_avro_files(path):
     directory = Path(path)
     for file in directory.glob("*.avro"):

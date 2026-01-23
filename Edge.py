@@ -2,7 +2,7 @@ from TCP_code import TCP_COM
 import time
 import json
 from network_control import network_control
-from utils import make_dataset, generate_avro_schema, remove_all_avro_files
+from utils import make_dataset, generate_avro_schema, remove_all_avro_files, make_evalset
 import pandas as pd
 import zipfile
 import numpy as np
@@ -72,6 +72,9 @@ class edge_device(TCP_COM):
         df=pd.read_csv(self.filename)
         self.timestamps=df['timestamp']
         self.data=df.drop(columns=['timestamp'])
+        eval_filename = make_evalset()
+        eval_set=pd.read_csv(eval_filename)
+        self.eval_data = eval_set.drop(columns=['timestamp'])
         self.index=0
         sensors=np.shape(self.data)[1]
         self.len_of_dataset=np.shape(self.data)[0]
@@ -240,6 +243,8 @@ class edge_device(TCP_COM):
                             except:
                                 break
                 self.file_Q.task_done()
+                self.model.evaluate_dataset(self.eval_data)
+                exit()
                 self.get_important_important_batch(input)
                 files_received+=1
             except queue.Empty:

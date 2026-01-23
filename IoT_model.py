@@ -62,7 +62,104 @@ class IoT_model():
             self.first_run=False
             print(f"Estimated total tensor memory: {total_memory / 1024:.2f} KB")
 
+    def evaluate_dataset(
+        self,
+        df: pd.DataFrame,
+        feature_cols=None,
+        label_col: str = "machine_status",
+        positive_label: str = "BROKEN",
+        batch_size: int = 1024,
+        return_per_sample: bool = False,
+    ):
+        """
+        Evaluate anomaly-trigger performance over a labeled dataset.
 
+        Decision rule:
+            pred_positive = (mse_val > self.trigger_threshold)
+
+        Ground-truth positive:
+            true_positive = (df[label_col] == positive_label)
+
+        Metrics:
+            TP: pred_positive and true_positive
+            FP: pred_positive and not true_positive
+            FN: not pred_positive and true_positive
+            TN: not pred_positive and not true_positive
+        """
+        if feature_cols is None:
+            feature_cols = [c for c in df.columns if c != label_col]
+
+        # Extract X and y
+        X = df[feature_cols].to_numpy(dtype=np.float32, copy=False)
+        y = df[label_col].astype(str).to_numpy()
+
+        n = X.shape[0]
+        y_true_pos = (y == positive_label)
+
+        # Storage
+        mse_vals = np.empty(n, dtype=np.float32)
+        y_pred_pos = np.zeros(n, dtype=bool)
+
+        # Batch loop (avoids calling model 220k times one-by-one)
+        for start in range(0, n, batch_size):
+            end = min(start + batch_size, n)
+            batch = X[start:end]  # shape: (B, 50)
+
+            # Run model inference on a batch
+            # Assumption: inference_on_model can take (B, 50) and returns (B, 50)
+            recon = self.inference_on_model(batch)
+
+            # Scale inputs the same way as training/inference expects
+            # Assumption: scale_data can take (B, 50) and returns (B, 50)
+            batch_scaled = self.scale_data(batch)
+
+            # Compute per-sample MSE: mean over features axis=1
+            # (This replaces the w/h branching, and is what you want for vectors.)
+            diff = (batch_scaled - recon).astype(np.float32)
+            batch_mse = np.mean(diff * diff, axis=1)
+
+            mse_vals[start:end] = batch_mse
+            y_pred_pos[start:end] = batch_mse > self.trigger_threshold
+
+        # Confusion matrix components
+        tp = int(np.sum(y_pred_pos & y_true_pos))
+        fp = int(np.sum(y_pred_pos & ~y_true_pos))
+        fn = int(np.sum(~y_pred_pos & y_true_pos))
+        tn = int(np.sum(~y_pred_pos & ~y_true_pos))
+
+        # Derived metrics (safe division)
+        precision = tp / (tp + fp) if (tp + fp) else 0.0
+        recall    = tp / (tp + fn) if (tp + fn) else 0.0
+        f1        = (2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
+        accuracy  = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) else 0.0
+
+        summary = {
+            "threshold": float(self.trigger_threshold),
+            "positive_label": positive_label,
+            "n_samples": int(n),
+            "TP": tp, "FP": fp, "FN": fn, "TN": tn,
+            "precision": float(precision),
+            "recall": float(recall),
+            "f1": float(f1),
+            "accuracy": float(accuracy),
+        }
+
+        if not return_per_sample:
+            return summary
+
+        per_sample = df[[label_col]].copy()
+        per_sample["mse"] = mse_vals
+        per_sample["pred_is_broken"] = y_pred_pos
+        per_sample["true_is_broken"] = y_true_pos
+
+        # Optional: add per-sample outcome label
+        outcome = np.full(n, "TN", dtype=object)
+        outcome[y_pred_pos & y_true_pos] = "TP"
+        outcome[y_pred_pos & ~y_true_pos] = "FP"
+        outcome[~y_pred_pos & y_true_pos] = "FN"
+        per_sample["outcome"] = outcome
+
+        return summary, per_sample
         
     def inference_on_model(self, data):
         """
