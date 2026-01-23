@@ -243,9 +243,8 @@ class edge_device(TCP_COM):
                             except:
                                 break
                 self.file_Q.task_done()
-                summary, per_sample = self.model.evaluate_dataset(self.eval_data)
+                summary = self.model.evaluate_dataset(self.eval_data)
                 print(summary)
-                print(per_sample)
                 exit()
                 self.get_important_important_batch(input)
                 files_received+=1
