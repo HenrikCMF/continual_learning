@@ -424,6 +424,7 @@ class IoT_model():
 
     def improve_model(self, data, invert_loss=False,input=-0.1, pdr=0, throughput=None, t_UL=1):
             quantize=False
+            throughput=False
             if throughput:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
                 pruning_level=min(max(-0.84*(t_UL*throughput/8 - 140)/100,0),0.95)

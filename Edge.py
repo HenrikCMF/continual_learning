@@ -36,7 +36,7 @@ class edge_device(TCP_COM):
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['edge_tul']
-        self.energy_thresh=30
+        self.energy_thresh=input
         #self.energy_thresh=self.baseline_energy
         self.energy_ratio=self.energy_thresh/self.baseline_energy
         self.t_UL=self.energy_ratio*self.baseline_tx
@@ -231,11 +231,13 @@ class edge_device(TCP_COM):
                 if ".tflite" in file or '.zip' in file:
                     
                     if np.sum(self.energy_buff)<=self.energy_thresh:
-                        self.received_model(file, only_load=True)
+                        if files_received==0:
+                            self.received_model(file, only_load=False)
                         #print("Receiving time", rec_time)
                         if files_received>0:
                             #self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                             pass
+                        
                     else:
                         while True:
                             try:
@@ -329,5 +331,5 @@ class edge_device(TCP_COM):
     
 
     
-bs=edge_device("received", 1000)
-bs.run(1000)
+#bs=edge_device("received", 1000)
+#bs.run(1000)
