@@ -36,8 +36,8 @@ class edge_device(TCP_COM):
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['edge_tul']
-        self.energy_thresh=input
-        #self.energy_thresh=self.baseline_energy
+        #self.energy_thresh=input
+        self.energy_thresh=self.baseline_energy
         self.energy_ratio=self.energy_thresh/self.baseline_energy
         self.t_UL=self.energy_ratio*self.baseline_tx
         self.inference_batch=0
