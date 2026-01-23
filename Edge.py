@@ -36,8 +36,8 @@ class edge_device(TCP_COM):
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['edge_tul']
-        #self.energy_thresh=input
-        self.energy_thresh=self.baseline_energy
+        self.energy_thresh=10
+        #self.energy_thresh=self.baseline_energy
         self.energy_ratio=self.energy_thresh/self.baseline_energy
         self.t_UL=self.energy_ratio*self.baseline_tx
         self.inference_batch=0
@@ -132,8 +132,8 @@ class edge_device(TCP_COM):
         important_batches=0
 
         #self.throughput=800
-        NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
-        #NUM_BUF_SAMPLES=200
+        #NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
+        NUM_BUF_SAMPLES=200
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
         #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/((self.energy_thresh/220000))
         skip_samples=0
@@ -244,8 +244,7 @@ class edge_device(TCP_COM):
                                 break
                 self.file_Q.task_done()
                 summary = self.model.evaluate_dataset(self.eval_data)
-                print(summary)
-                exit()
+                
                 self.get_important_important_batch(input)
                 files_received+=1
             except queue.Empty:
@@ -253,6 +252,7 @@ class edge_device(TCP_COM):
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
+                print(summary)
                 print("Total energy used: ", np.sum(self.energy_buff))
                 data = {
                     'mse': self.mse_buff,
