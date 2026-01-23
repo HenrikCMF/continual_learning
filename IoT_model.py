@@ -388,8 +388,7 @@ class IoT_model():
         new_data=self.scale_data(np.array(data))
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            print("mse loss input:", input)
-            return input*mse if invert_loss else mse  # Negate the loss to maximize
+            return 0*mse if invert_loss else mse  # Negate the loss to maximize
 
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
