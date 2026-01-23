@@ -70,8 +70,8 @@ class Base_station(TCP_COM):
         #Enable network control
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            #self.rate_kbps=input
-            self.rate_kbps=1000
+            self.rate_kbps=input
+            #self.rate_kbps=1000
             self.burst_kbps=16#input
             #rate_kbps=configs['bandwidth_limit_kbps']
             #burst_kbps=configs['burst_limit_kbps']

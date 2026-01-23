@@ -279,7 +279,7 @@ class IoT_model():
         Trains the initially defined model, with the initial dataset
         """
         batch_size=256
-        epochs=20
+        epochs=200
         X, y = self.prepare_training_data(fit_scaler=True)
         total_steps=int(len(y)/batch_size*epochs)
         autoencoder = self.design_model_architecture()

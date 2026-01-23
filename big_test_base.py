@@ -3,15 +3,15 @@ import numpy as np
 import time
 import csv
 import os
-file_path = "plots/noCL_energy.csv"
+file_path = "plots/noCL_bandwidth.csv"
 #Function for runnning the full test run multiple times but with a changing input for each run
 if not os.path.isfile(file_path):
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["i", "TP", "FP", "size", "measthroughput"])
-start = 10
+start = 100
 stop = 70
-step = 10
+step = 1100
 num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)

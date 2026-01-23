@@ -56,8 +56,8 @@ class edge_device(TCP_COM):
         self.rec_ip=configs['baseip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            #self.rate_kbps=input
-            self.rate_kbps=1000
+            self.rate_kbps=input
+            #self.rate_kbps=1000
             self.burst_kbps=16
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
