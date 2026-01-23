@@ -231,7 +231,7 @@ class edge_device(TCP_COM):
                 if ".tflite" in file or '.zip' in file:
                     
                     if np.sum(self.energy_buff)<=self.energy_thresh:
-                        self.received_model(file)
+                        self.received_model(file, only_load=True)
                         #print("Receiving time", rec_time)
                         if files_received>0:
                             self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
@@ -252,8 +252,8 @@ class edge_device(TCP_COM):
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
-                summary = self.model.evaluate_dataset(self.eval_data)
-                print(summary)
+                #summary = self.model.evaluate_dataset(self.eval_data)
+                #print(summary)
                 print("Total energy used: ", np.sum(self.energy_buff))
                 data = {
                     'mse': self.mse_buff,
@@ -283,7 +283,7 @@ class edge_device(TCP_COM):
         return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences, np.mean(self.throughputs), np.sum(self.energy_buff)
 
         
-    def received_model(self, path):
+    def received_model(self, path, only_load=False):
         """
         Decompresses a received model and loads it into memory.
 
@@ -292,18 +292,19 @@ class edge_device(TCP_COM):
         path: string model path
         --------
         """
-        model_name=str(path).split('/')[-1].split('.')[0]
-        if not os.path.exists(self.model_path):
-            os.makedirs(self.model_path)
-        if '.zip' in path:
-            with zipfile.ZipFile(path, 'r') as zipf:
-                output_folder=str(path).split('/')[0]
-                zipf.extractall(output_folder)
-        if "Q" in model_name:
-            model_name=model_name[1:]
-        destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
-        shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
-        self.total_received_data += os.path.getsize(destination_path)+20
+        if only_load==False:
+            model_name=str(path).split('/')[-1].split('.')[0]
+            if not os.path.exists(self.model_path):
+                os.makedirs(self.model_path)
+            if '.zip' in path:
+                with zipfile.ZipFile(path, 'r') as zipf:
+                    output_folder=str(path).split('/')[0]
+                    zipf.extractall(output_folder)
+            if "Q" in model_name:
+                model_name=model_name[1:]
+            destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
+            shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
+            self.total_received_data += os.path.getsize(destination_path)+20
         self.model.load_model()
     
     def get_previous_X_samples(self, X):
