@@ -243,7 +243,7 @@ class edge_device(TCP_COM):
                             except:
                                 break
                 self.file_Q.task_done()
-                summary = self.model.evaluate_dataset(self.eval_data)
+                
                 
                 self.get_important_important_batch(input)
                 files_received+=1
@@ -252,6 +252,7 @@ class edge_device(TCP_COM):
             except Exception as e:
                 print(e)
             if self.index>=self.len_of_dataset:
+                summary = self.model.evaluate_dataset(self.eval_data)
                 print(summary)
                 print("Total energy used: ", np.sum(self.energy_buff))
                 data = {
