@@ -62,7 +62,7 @@ class IoT_model():
             self.first_run=False
             print(f"Estimated total tensor memory: {total_memory / 1024:.2f} KB")
 
-    def evaluate_dataset_tflite_single(
+    def evaluate_dataset(
         self,
         df: pd.DataFrame,
         feature_cols=None,
