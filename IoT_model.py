@@ -69,17 +69,8 @@ class IoT_model():
         label_col: str = "machine_status",
         positive_label: str = "BROKEN",
         return_per_sample: bool = False,
-        verbose_every: int = 0,  # e.g. 10000 to print progress, 0 = silent
+        verbose_every: int = 0,
     ):
-        """
-        Dataset evaluation that is compatible with a TFLite interpreter expecting batch size 1.
-
-        Decision rule:
-            pred_positive = (mse_val > self.trigger_threshold)
-
-        Ground truth positive:
-            true_positive = (label == positive_label)
-        """
         if feature_cols is None:
             feature_cols = [c for c in df.columns if c != label_col]
 
@@ -91,20 +82,17 @@ class IoT_model():
         y_pred_pos = np.zeros(n, dtype=bool)
         y_true_pos = (y == positive_label)
 
-        # Confusion counts
         tp = fp = fn = tn = 0
 
         for i in range(n):
-            x = X[i]  # shape: (50,)
+            # IMPORTANT: make it 2D so sklearn scaler (and your inference) won't crash
+            x2d = X[i].reshape(1, -1)  # (1, 50)
 
-            # Your inference returns a python list of length 50
-            recon = np.asarray(self.inference_on_model(x), dtype=np.float32)
+            # TFLite inference (expects "one sample", but as 2D is fine: (1,50))
+            recon = np.asarray(self.inference_on_model(x2d), dtype=np.float32).reshape(-1)  # (50,)
 
-            # IMPORTANT:
-            # inference_on_model() internally does scale_data(x) before feeding the model.
-            # To compute the reconstruction error in the same space, we must compare:
-            # scaled_input vs recon
-            x_scaled = np.asarray(self.scale_data(x), dtype=np.float32)
+            # inference_on_model scales internally, so recon is in SCALED space
+            x_scaled = np.asarray(self.scale_data(x2d), dtype=np.float32).reshape(-1)       # (50,)
 
             diff = x_scaled - recon
             mse_val = float(np.mean(diff * diff))
