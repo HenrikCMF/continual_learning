@@ -147,7 +147,7 @@ class IoT_model():
         per_sample["outcome"] = outcome
 
         return summary, per_sample
-    @tf.function(jit_compile=True)
+    #@tf.function(jit_compile=True)
     def inference_on_model(self, data):
         """
         Uses the loaded model to inference on the given data
@@ -357,7 +357,7 @@ class IoT_model():
             return data, combined_labels
 
         return data
-    @tf.function(jit_compile=True)
+    #@tf.function(jit_compile=True)
     def train_model(self, data, invert_loss=False, input=-0.1):
         """
         Function to improve the most recent iteration of the model
