@@ -4,10 +4,10 @@ class network_control():
     def __init__(self, device_type):
         with open("configs.json", "r") as file:
             configs = json.load(file)
-        if device_type=='bs':
-            self.interface=configs['baseNET_INTERFACE']
+        if device_type=='ES':
+            self.interface=configs['ESNET_INTERFACE']
         else:
-            self.interface=configs['edgeNET_INTERFACE']
+            self.interface=configs['iot_deviceNET_INTERFACE']
 
 
     def set_network_conditions(self, rate, burst, latency, p_loss=None, delay=None, jitter=None):

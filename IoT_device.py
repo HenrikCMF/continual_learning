@@ -21,21 +21,21 @@ import subprocess
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
-class edge_device(TCP_COM):
+class iot_device(TCP_COM):
     def __init__(self, REC_FILE_PATH, input):
         """
         Initializes an IoT device object.
 
         Parameters:
         ----------
-        REC_FILE_PATH : string acting as path to folder where received files are to be stored.           
+        REC_FILE_PATH : string acting as path to folder where received files are to be stored.
         input : test parameter.
         --------
         """
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
-        self.baseline_tx=configs['edge_tul']
+        self.baseline_tx=configs['iot_device_tul']
         #self.energy_thresh=input
         self.energy_thresh=self.baseline_energy
         self.energy_ratio=self.energy_thresh/self.baseline_energy
@@ -46,15 +46,15 @@ class edge_device(TCP_COM):
         self.total_sent_data=0
         self.total_received_data=0
         self.num_inferences=0
-        self.device_type="edge"
+        self.device_type="iot_device"
         config = get_string_config()
         self.model_path=config['file_paths']['models_dir']
-        
-        self.local_IP=configs['edgeip']
-        self.edgePORT_TCP=configs['edgePORT_TCP']
-        self.edgePORT_UDP=configs['edgePORT_UDP']
-        self.basePORT=configs['basePORT']
-        self.rec_ip=configs['baseip']
+
+        self.local_IP=configs['iot_device_ip']
+        self.iot_device_PORT_TCP=configs['iot_device_PORT_TCP']
+        self.iot_device_PORT_UDP=configs['iot_device_PORT_UDP']
+        self.ESPORT=configs['ESPORT']
+        self.rec_ip=configs['ESip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
             self.rate_kbps=input
@@ -65,9 +65,9 @@ class edge_device(TCP_COM):
             self.delay_ms=None
             self.jitter_ms=None
             self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
-        edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
+        iot_device_PORT=(self.iot_device_PORT_TCP, self.iot_device_PORT_UDP)
         self.file_Q=queue.Queue()
-        super().__init__(self.local_IP, edgePORT, self.rec_ip, self.basePORT, REC_FILE_PATH, self.device_type, self.file_Q)
+        super().__init__(self.local_IP, iot_device_PORT, self.rec_ip, self.ESPORT, REC_FILE_PATH, self.device_type, self.file_Q)
         self.fault_index=0
         self.filename, self.start_offset=make_dataset(fault_index=self.fault_index, num=1)
         df=pd.read_csv(self.filename)
@@ -285,7 +285,7 @@ class edge_device(TCP_COM):
                 remove_all_avro_files('test_files')
                 self.stop_TCP()
                 Running=False
-                subprocess.run(f"sudo tc qdisc del dev {self.configs['edgeNET_INTERFACE']} root", shell=True)
+                subprocess.run(f"sudo tc qdisc del dev {self.configs['iot_deviceNET_INTERFACE']} root", shell=True)
         return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences, np.mean(self.throughputs), np.sum(self.energy_buff)
 
         
@@ -336,5 +336,5 @@ class edge_device(TCP_COM):
     
 
     
-bs=edge_device("received", 1000)
-bs.run(1000)
+es=iot_device("received", 1000)
+es.run(1000)

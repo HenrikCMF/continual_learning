@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore", module="sklearn")
 #Main File for the server Node
 
 
-class Base_station(TCP_COM):
+class ES_station(TCP_COM):
     #Initialize Server
     def __init__(self, REC_FILE_PATH, input):
         """
@@ -61,14 +61,14 @@ class Base_station(TCP_COM):
         if self.NEW_START:
             #Train the initial model
             self.ml_model.train_initial_model()
-        self.device_type="bs"
+        self.device_type="ES"
         #Load all configs to set up as TCP server.
-        
-        self.local_IP=configs['baseip']
-        self.edgePORT_TCP=configs['edgePORT_TCP']
-        self.edgePORT_UDP=configs['edgePORT_UDP']
-        self.basePORT=configs['basePORT']
-        self.rec_ip=configs['edgeip']
+
+        self.local_IP=configs['ESip']
+        self.iot_device_PORT_TCP=configs['iot_device_PORT_TCP']
+        self.iot_device_PORT_UDP=configs['iot_device_PORT_UDP']
+        self.ESPORT=configs['ESPORT']
+        self.rec_ip=configs['iot_device_ip']
         #Enable network control
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
@@ -79,15 +79,15 @@ class Base_station(TCP_COM):
             #burst_kbps=configs['burst_limit_kbps']
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
-            #delay_ms=configs['base_delay_ms']
+            #delay_ms=configs['ES_delay_ms']
             #jitter_ms=configs['jitter_ms']
             self.delay_ms=None
             self.jitter_ms=None
             self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
-        edgePORT=(self.edgePORT_TCP, self.edgePORT_UDP)
+        iot_device_PORT=(self.iot_device_PORT_TCP, self.iot_device_PORT_UDP)
         self.file_Q=queue.Queue()
         self.configs=configs
-        super().__init__(self.local_IP, self.basePORT, self.rec_ip, edgePORT, REC_FILE_PATH, self.device_type, self.file_Q)
+        super().__init__(self.local_IP, self.ESPORT, self.rec_ip, iot_device_PORT, REC_FILE_PATH, self.device_type, self.file_Q)
     
     def append_to_initial_data(self, data, timestamps, init_data_path):
         """
@@ -173,7 +173,7 @@ class Base_station(TCP_COM):
                     remove_all_avro_files('received')
                     self.stop_TCP()
                     Running=False
-                    subprocess.run(f"sudo tc qdisc del dev {self.configs['baseNET_INTERFACE']} root", shell=True)
+                    subprocess.run(f"sudo tc qdisc del dev {self.configs['ESNET_INTERFACE']} root", shell=True)
                 self.file_Q.task_done()
                 if "ACK" in file:
                     config = get_string_config()
@@ -226,7 +226,7 @@ class Base_station(TCP_COM):
         with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(input_file, arcname=os.path.basename(input_file))
         self.total_data_sent+=os.path.getsize(output_zip)
-        for ip in self.edge_devices:
+        for ip in self.iot_device_devices:
             #self.TAR_IP=ip
             print("Sending model")
             self.send_file(ip, self.TAR_PORT_TCP,output_zip)
@@ -234,5 +234,5 @@ class Base_station(TCP_COM):
             #self.send_file(ip, self.TAR_PORT_TCP,model)
             #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
-bs=Base_station("received", 1000)
-bs.run(1000)
+es=ES_station("received", 1000)
+es.run(1000)

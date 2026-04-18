@@ -147,7 +147,8 @@ class IoT_model():
         per_sample["outcome"] = outcome
 
         return summary, per_sample
-    #@tf.function(jit_compile=True)
+
+
     def inference_on_model(self, data):
         """
         Uses the loaded model to inference on the given data
@@ -281,7 +282,7 @@ class IoT_model():
         Trains the initially defined model, with the initial dataset
         """
         batch_size=256
-        epochs=200
+        epochs=20
         X, y = self.prepare_training_data(fit_scaler=True)
         total_steps=int(len(y)/batch_size*epochs)
         autoencoder = self.design_model_architecture()
@@ -429,7 +430,6 @@ class IoT_model():
 
     def improve_model(self, data, invert_loss=False,input=-0.1, pdr=0, throughput=None, t_UL=1):
             quantize=False
-            throughput=False
             if throughput:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
                 pruning_level=min(max(-0.84*(t_UL*throughput/8 - 140)/100,0),0.95)

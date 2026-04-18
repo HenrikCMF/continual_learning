@@ -27,7 +27,7 @@ class TCP_COM():
         TARGET_HOST : string giving target IP (IP of server if IoT, unused if server)   
         MY_HOST : string giving target PORT (port of server if IoT, port of IoT if server)  
         REC_FILE_PATH: string where received files will end up
-        device: string either "edge" or "base" specifying whether IoT or server
+        device: string either "iot_device" or "ES" specifying whether IoT or server
         file_queue: python queue object to put messages for interthread communication.
         --------
         """
@@ -36,7 +36,7 @@ class TCP_COM():
         self.time_receiving=0
         self.MY_IP=MY_HOST
         self.TAR_IP=TARGET_HOST
-        if device=="edge":
+        if device=="iot_device":
             self.MY_PORT_TCP=MY_PORT[0]
             self.MY_PORT_UDP=MY_PORT[1]
             self.TAR_PORT_TCP=TARGET_PORT
@@ -49,7 +49,7 @@ class TCP_COM():
         self.__TCP_receive(MY_HOST, self.MY_PORT_TCP)
         self.in_path=REC_FILE_PATH
         self.device=device
-        self.edge_devices=[]
+        self.iot_device_devices=[]
         self.PDR=0
         self.MSS=0
         self.model_quantization=32
@@ -197,14 +197,14 @@ class TCP_COM():
                     start=time.time()
                 except socket.timeout:
                     continue
-                if self.device=="edge":
+                if self.device=="iot_device":
                     if addr[0]!=self.TAR_IP:
                         print("not target IP")
                         conn.close()
                         continue
-                elif self.device=="bs":
-                    if addr[0] not in self.edge_devices:
-                        self.edge_devices.append(addr[0])
+                elif self.device=="ES":
+                    if addr[0] not in self.iot_device_devices:
+                        self.iot_device_devices.append(addr[0])
                         print("added", addr[0])
                 try:
                     # Receive file metadata
@@ -230,8 +230,8 @@ class TCP_COM():
 
 
     def measure_PDR(self, num_packets):
-        #Call edge device to listen for UDP packets
-        for ip in self.edge_devices:
+        #Call IoT device to listen for UDP packets
+        for ip in self.iot_device_devices:
             print("PDR measure")
             self.send_open_udp(ip, packet_num=num_packets)
             time.sleep(0.01)

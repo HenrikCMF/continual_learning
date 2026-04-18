@@ -1,4 +1,4 @@
-from Edge import edge_device
+from IoT_device import iot_device
 import numpy as np
 import time
 import csv
@@ -62,8 +62,8 @@ num_steps = int((stop - start) / step) + 1
 for idx in range(num_steps):
     i = round(start + step * idx, 2)
     time.sleep(10)
-    bs=edge_device("received", i)
-    time_transmitting, time_receiving, total_sent_data, total_received_data, num_inferences, throughput, energy = bs.run(i)
+    es=iot_device("received", i)
+    time_transmitting, time_receiving, total_sent_data, total_received_data, num_inferences, throughput, energy = es.run(i)
     #N_s, N_c, A_s = analyze_model_energy_params("models/autoencoder.tflite")
     with open(file_path, mode="a", newline="") as file:
         writer = csv.writer(file)
