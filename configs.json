@@ -16,7 +16,7 @@
     "base_tdl":1,
     "edge_tul":0.4,
     "baseline_rate":1000,
-    "baseline_energy":59,
+    "baseline_energy":60,
     "string_configs": {
         "file_paths": {
             "dataset_path": "datasets/sensor.csv",
