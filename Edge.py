@@ -2,7 +2,7 @@ from TCP_code import TCP_COM
 import time
 import json
 from network_control import network_control
-from utils import make_dataset, generate_avro_schema, remove_all_avro_files, make_evalset
+from utils import make_dataset, generate_avro_schema, remove_all_avro_files, make_evalset, get_string_config
 import pandas as pd
 import zipfile
 import numpy as np
@@ -47,7 +47,8 @@ class edge_device(TCP_COM):
         self.total_received_data=0
         self.num_inferences=0
         self.device_type="edge"
-        self.model_path="models"
+        config = get_string_config()
+        self.model_path=config['file_paths']['models_dir']
         
         self.local_IP=configs['edgeip']
         self.edgePORT_TCP=configs['edgePORT_TCP']
@@ -70,17 +71,17 @@ class edge_device(TCP_COM):
         self.fault_index=0
         self.filename, self.start_offset=make_dataset(fault_index=self.fault_index, num=1)
         df=pd.read_csv(self.filename)
-        self.timestamps=df['timestamp']
-        self.data=df.drop(columns=['timestamp'])
+        self.timestamps=df[config['data_columns']['timestamp_column']]
+        self.data=df.drop(columns=[config['data_columns']['timestamp_column']])
         eval_filename = make_evalset()
         eval_set=pd.read_csv(eval_filename)
-        self.eval_data = eval_set.drop(columns=['timestamp'])
+        self.eval_data = eval_set.drop(columns=[config['data_columns']['timestamp_column']])
         self.index=0
         sensors=np.shape(self.data)[1]
         self.len_of_dataset=np.shape(self.data)[0]
-        self.schema_path="test_files/avro_"+str(sensors)+'.avsc'
+        self.schema_path=config['file_paths']['test_files_dir']+"avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        self.model = IoT_model.IoT_model("test_files/initial_data.csv", 0.2)
+        self.model = IoT_model.IoT_model(os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file']), 0.2)
         self.energy_model=IoT_energy.energy()
         self.configs=configs
         #self.model = mlp_classifier("test_files/initial_data.csv", input)
@@ -99,11 +100,12 @@ class edge_device(TCP_COM):
         s: sample
         t: timestamp
         """
+        config = get_string_config()
         s, t=self.get_sample()    
         if self.inference_batch==0:
-            for_mse=np.array(s.drop('machine_status')).reshape(1,-1)
+            for_mse=np.array(s.drop(config['data_columns']['dataset_label'])).reshape(1,-1)
         else:
-            for_mse=s.drop(columns='machine_status')
+            for_mse=s.drop(columns=config['data_columns']['dataset_label'])
         rare, mse=self.model.check_sample(for_mse)
         #rare=True
         #mse=0
@@ -172,10 +174,11 @@ class edge_device(TCP_COM):
                 important_batches+=1
                 if important_batches==important_batches_tar: #network parameter
                     batch_not_found=False
+                    config = get_string_config()
                     self.sample_buffer=np.array(self.sample_buffer)
                     filename=os.path.join(
-                        'test_files',
-                        str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+'.avro'
+                        config['file_paths']['test_files_dir'],
+                        str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+config['file_extensions']['avro_extension']
                         )
                     #comment
                     AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
@@ -228,7 +231,8 @@ class edge_device(TCP_COM):
                 file, rec_time= self.file_Q.get(timeout=2)
                 
                 print(file)
-                if ".tflite" in file or '.zip' in file:
+                config = get_string_config()
+                if config['file_extensions']['tflite_extension'] in file or config['file_extensions']['zip_extension'] in file:
                     
                     if np.sum(self.energy_buff)<=self.energy_thresh:
                         if files_received==0:
@@ -294,18 +298,19 @@ class edge_device(TCP_COM):
         path: string model path
         --------
         """
+        config = get_string_config()
         if only_load==False:
             model_name=str(path).split('/')[-1].split('.')[0]
             if not os.path.exists(self.model_path):
                 os.makedirs(self.model_path)
-            if '.zip' in path:
+            if config['file_extensions']['zip_extension'] in path:
                 with zipfile.ZipFile(path, 'r') as zipf:
                     output_folder=str(path).split('/')[0]
                     zipf.extractall(output_folder)
             if "Q" in model_name:
                 model_name=model_name[1:]
-            destination_path=os.path.join(self.model_path, self.model.model_name+'.tflite')
-            shutil.move(os.path.join(output_folder, model_name+'.tflite'), destination_path)
+            destination_path=os.path.join(self.model_path, self.model.model_name+config['file_extensions']['tflite_extension'])
+            shutil.move(os.path.join(output_folder, model_name+config['file_extensions']['tflite_extension']), destination_path)
             self.total_received_data += os.path.getsize(destination_path)+20
         self.model.load_model()
     

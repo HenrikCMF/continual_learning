@@ -3,6 +3,7 @@ import json
 import fastavro.schema
 import pandas as pd
 import numpy as np
+from utils import get_string_config
 
 def save_AVRO_default(df2, timestamps, schemapath, accuracy, path, original_size, codec='null'):
 

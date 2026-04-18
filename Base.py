@@ -7,7 +7,7 @@ import IoT_model
 from alternative_iot_models import mlp_classifier
 import AVRO
 import os
-from utils import make_initial_data, remove_all_avro_files
+from utils import make_initial_data, remove_all_avro_files, get_string_config
 import numpy as np
 import zipfile
 import pandas as pd
@@ -44,16 +44,18 @@ class Base_station(TCP_COM):
         self.throughputs=[]
         self.use_PDR=False
         self.NEW_START=True
-        self.faulty_data=os.path.join('test_files','faulty_data.csv')
+        config = get_string_config()
+        self.faulty_data=os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['faulty_data_file'])
         #Fetch only the "Allowed" part of the training data, according to the rules
         if self.NEW_START:
-            make_initial_data("datasets/sensor.csv", 'test_files')
+            make_initial_data(config['file_paths']['dataset_path'], config['file_paths']['test_files_dir'])
             with open(self.faulty_data, 'w') as f:
                 f.write("")
         
-        self.init_data=os.path.join('test_files','initial_data.csv')
+        self.init_data=os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file'])
 
-        self.init_data_columns=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore').columns
+        config = get_string_config()
+        self.init_data_columns=pd.read_csv(self.init_data).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore').columns
         #Load the chosen model
         self.ml_model=IoT_model.IoT_model(self.init_data, 0.2) #Autoencoder
         if self.NEW_START:
@@ -99,9 +101,10 @@ class Base_station(TCP_COM):
         init_data_path : str path to the CSV file where the combined data and timestamps will be appended.
         --------
         """
+        config = get_string_config()
         timestamps=pd.DataFrame(timestamps)
-        timestamps.columns=['timestamp']
-        df2 = pd.concat([timestamps, data], axis=1).drop(columns=["Unnamed: 0"], errors='ignore')
+        timestamps.columns=[config['data_columns']['timestamp_column']]
+        df2 = pd.concat([timestamps, data], axis=1).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
         df2.columns=self.init_data_columns
         df2.to_csv(init_data_path, mode='a', header=False, index=False)
 
@@ -117,16 +120,17 @@ class Base_station(TCP_COM):
         init_data_path : str path to the CSV file where the combined data and timestamps will be appended.
         --------
         """
-        init_data_no_faults=pd.read_csv(self.init_data).drop(columns=["Unnamed: 0"], errors='ignore')
+        config = get_string_config()
+        init_data_no_faults=pd.read_csv(self.init_data).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
         if os.path.getsize(init_data_path) <= 0:
             init_data=pd.DataFrame()
         else:
-            init_data=pd.read_csv(init_data_path, on_bad_lines='skip').drop(columns=["Unnamed: 0"], errors='ignore')
+            init_data=pd.read_csv(init_data_path, on_bad_lines='skip').drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
         timestamps=pd.DataFrame(timestamps)
-        timestamps.columns=['timestamp']
-        df2 = pd.concat([timestamps, data], axis=1).drop(columns=["Unnamed: 0"], errors='ignore')
+        timestamps.columns=[config['data_columns']['timestamp_column']]
+        df2 = pd.concat([timestamps, data], axis=1).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
         df2.columns=init_data_no_faults.columns
-        df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=["Unnamed: 0"], errors='ignore')
+        df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
         df_combined.to_csv(init_data_path)
 
     def run(self, input):
@@ -153,7 +157,8 @@ class Base_station(TCP_COM):
             clients+=1
         if self.use_PDR:
             self.measure_PDR(100)
-        self.distribute_model("models/"+self.ml_model.model_name+".tflite")
+        config = get_string_config()
+        self.distribute_model(os.path.join(config['file_paths']['models_dir'], self.ml_model.model_name + config['file_extensions']['tflite_extension']))
         
         while Running:
             try:
@@ -171,15 +176,16 @@ class Base_station(TCP_COM):
                     subprocess.run(f"sudo tc qdisc del dev {self.configs['baseNET_INTERFACE']} root", shell=True)
                 self.file_Q.task_done()
                 if "ACK" in file:
-                    self.distribute_model("models/"+self.ml_model.model_name+".tflite")
-                if ".avro" in file:
+                    config = get_string_config()
+                    self.distribute_model(os.path.join(config['file_paths']['models_dir'], self.ml_model.model_name + config['file_extensions']['tflite_extension']))
+                if config['file_extensions']['avro_extension'] in file:
                     if self.use_PDR:
                         self.measure_PDR(100)
                     data,timestamps, type, batch_num = AVRO.load_AVRO_file(file)
                     batches = np.array_split(data, batch_num)
                     for i, batch in enumerate(batches):
                         invert_training=False
-                        if batch.iloc[:, -1].eq("BROKEN").any():
+                        if batch.iloc[:, -1].eq(config['data_columns']['fault_label']).any():
                             print("INVERTED TRAINING")
                             invert_training=True
                             TP+=1
@@ -192,7 +198,8 @@ class Base_station(TCP_COM):
                             self.append_to_initial_data(data, timestamps, self.init_data)
                         else:
                             self.append_to_faulty_data(data, timestamps, self.faulty_data)
-                    self.distribute_model("models/"+self.ml_model.model_name+".tflite")
+                    config = get_string_config()
+                    self.distribute_model(os.path.join(config['file_paths']['models_dir'], self.ml_model.model_name + config['file_extensions']['tflite_extension']))
                     #self.rate_kbps-=10
                     #self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
             except queue.Empty:

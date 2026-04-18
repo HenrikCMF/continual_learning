@@ -12,6 +12,18 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
+
+def get_string_config():
+    """
+    Load and return the string configurations from configs.json
+
+    Returns:
+    --------
+    dict: The string_configs section from configs.json
+    """
+    with open("configs.json", "r") as file:
+        configs = json.load(file)
+    return configs.get("string_configs", {})
 def retry_transmission_handler(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -51,8 +63,9 @@ def timed(func):
     return wrapper
 
 def make_initial_data(path, out):
+    config = get_string_config()
     df=pd.read_csv(path)
-    sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
+    sensors_to_drop = config['data_columns']['sensors_to_drop']
     df = df.drop(columns=sensors_to_drop)
 
     sensor_cols = df.columns[df.isnull().any()].tolist()
@@ -61,14 +74,15 @@ def make_initial_data(path, out):
     # If any remaining NaNs, use forward/backward fill
     df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
     df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
-    y=df["machine_status"]
-    X=df.drop(columns=['machine_status'])
-    first_broken_idx = y[y == "BROKEN"].index[0]
-    df.iloc[:first_broken_idx-200].to_csv(os.path.join(out,"initial_data.csv"),index=False)
+    y=df[config['data_columns']['dataset_label']]
+    X=df.drop(columns=[config['data_columns']['dataset_label']])
+    first_broken_idx = y[y == config['data_columns']['fault_label']].index[0]
+    df.iloc[:first_broken_idx-200].to_csv(os.path.join(out,config['file_paths']['initial_data_file']),index=False)
 
 def make_sensor_data(path):
+    config = get_string_config()
     df=pd.read_csv(path)
-    sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
+    sensors_to_drop = config['data_columns']['sensors_to_drop']
     df = df.drop(columns=sensors_to_drop)
 
     sensor_cols = df.columns[df.isnull().any()].tolist()
@@ -77,9 +91,9 @@ def make_sensor_data(path):
     # If any remaining NaNs, use forward/backward fill
     df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
     df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
-    y=df["machine_status"]
-    X=df.drop(columns=['machine_status'])
-    first_broken_idx = y[y == "BROKEN"].index[0]
+    y=df[config['data_columns']['dataset_label']]
+    X=df.drop(columns=[config['data_columns']['dataset_label']])
+    first_broken_idx = y[y == config['data_columns']['fault_label']].index[0]
     df.iloc[first_broken_idx-200:].to_csv("data_to_be_measured.csv",index=False)
 
 class MinMaxScaler:
@@ -128,25 +142,27 @@ def generate_avro_schema(datalength, filename):
         json.dump(schema, f, indent=4)
 
 def make_dataset(fault_index, num):
-    df=pd.read_csv("datasets/sensor.csv")
+    config = get_string_config()
+    df=pd.read_csv(config['file_paths']['dataset_path'])
     #sensors_to_drop = ['Unnamed: 0', 'timestamp','sensor_15', 'sensor_50']
-    sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
+    sensors_to_drop = config['data_columns']['sensors_to_drop']
     df = df.drop(columns=sensors_to_drop)
     sensor_cols = df.columns[df.isnull().any()].tolist()
     df[sensor_cols] = df[sensor_cols].interpolate(method='linear')
     # If any remaining NaNs, use forward/backward fill
     df[sensor_cols] = df[sensor_cols].fillna(method='ffill')
     df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
-    y=df["machine_status"]
-    broken_idx = y[y == "BROKEN"].index[fault_index]
-    filename="test_files/initial_data"+str(num)+".csv"
+    y=df[config['data_columns']['dataset_label']]
+    broken_idx = y[y == config['data_columns']['fault_label']].index[fault_index]
+    filename=config['file_paths']['test_files_dir']+"initial_data"+str(num)+".csv"
     df.iloc[broken_idx-100:].to_csv(filename,index=False)
     return filename, broken_idx-100
 
 def make_evalset():
-    df=pd.read_csv("datasets/sensor.csv")
+    config = get_string_config()
+    df=pd.read_csv(config['file_paths']['dataset_path'])
     #sensors_to_drop = ['Unnamed: 0', 'timestamp','sensor_15', 'sensor_50']
-    sensors_to_drop = ['Unnamed: 0','sensor_15', 'sensor_50']
+    sensors_to_drop = config['data_columns']['sensors_to_drop']
     df = df.drop(columns=sensors_to_drop)
     sensor_cols = df.columns[df.isnull().any()].tolist()
     df[sensor_cols] = df[sensor_cols].interpolate(method='linear')
@@ -155,7 +171,7 @@ def make_evalset():
     df[sensor_cols] = df[sensor_cols].fillna(method='bfill')
     #y=df["machine_status"]
     #broken_idx = y[y == "BROKEN"].index[fault_index]
-    filename="test_files/eval_data"+".csv"
+    filename=config['file_paths']['test_files_dir']+"eval_data"+".csv"
     df.to_csv(filename,index=False)
     return filename
 
@@ -166,15 +182,16 @@ def remove_all_avro_files(path):
 
 
 def make_end_plot(mse,trendline, offset):
-    file_path = "datasets/sensor.csv"
+    config = get_string_config()
+    file_path = config['file_paths']['dataset_path']
     df = pd.read_csv(file_path)
 
     # Ensure 'machine_status' column exists
-    if "machine_status" not in df.columns:
-        raise ValueError("Column 'machine_status' not found in dataset")
+    if config['data_columns']['dataset_label'] not in df.columns:
+        raise ValueError(f"Column '{config['data_columns']['dataset_label']}' not found in dataset")
 
     # Find indices where machine_status is 'BROKEN'
-    broken_indices = df.index[df["machine_status"] == "BROKEN"].tolist()
+    broken_indices = df.index[df[config['data_columns']['dataset_label']] == config['data_columns']['fault_label']].tolist()
     last_index = df.index[-1]
     adjusted_broken_indices = [idx - offset for idx in broken_indices if idx >= offset]
     mse_buf = mse  
@@ -197,9 +214,11 @@ def make_end_plot(mse,trendline, offset):
     plt.show()
 
 def binary_label(y):
-    return np.array([1 if label == 'BROKEN' else 0 for label in y])
+    config = get_string_config()
+    return np.array([1 if label == config['data_columns']['fault_label'] else 0 for label in y])
 
 def inject_faults(x, y, fault_fraction=0.1, decrease_fraction=0.3, decrease_value=0.2):
+    config = get_string_config()
     # Create copies to avoid modifying original data
     x_fault = x.copy()
     y_fault = y.copy()
@@ -221,9 +240,9 @@ def inject_faults(x, y, fault_fraction=0.1, decrease_fraction=0.3, decrease_valu
     for idx in faulty_indices:
         # Mark the sample as faulty in y
         if isinstance(y_fault, pd.Series):
-            y_fault.iloc[idx] = "BROKEN"
+            y_fault.iloc[idx] = config['data_columns']['fault_label']
         else:
-            y_fault[idx] = "BROKEN"
+            y_fault[idx] = config['data_columns']['fault_label']
 
         # Determine the number of features to decrease
         n_decrease = max(1, int(np.ceil(n_features * decrease_fraction)))

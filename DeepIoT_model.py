@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
-from utils import binary_label
+from utils import binary_label, get_string_config
 import _quantize_model as qm
 import os
 import joblib
@@ -51,8 +51,9 @@ class IoT_model():
         Loads whichever autoencoder is currently at the hardcoded modelpath
         """
 
-        self.scaler = joblib.load(os.path.join("models", "scaler.pkl"))
-        tflite_model_path = "models/"+self.model_name+".tflite"
+        config = get_string_config()
+        self.scaler = joblib.load(os.path.join(config['file_paths']['models_dir'], config['file_paths']['scaler_file']))
+        tflite_model_path = os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['tflite_extension'])
 
         self.interpreter = tf.lite.Interpreter(model_path=tflite_model_path, experimental_delegates=[])
 
@@ -121,11 +122,12 @@ class IoT_model():
         Training data X
         Training labels y
         """
+        config = get_string_config()
         def binary_label(y):
-            return np.array([1 if label == 'BROKEN' else 0 for label in y])
-        X=pd.read_csv(self.initial_data).drop(columns=["Unnamed: 0"], errors='ignore')
-        y=X['machine_status']
-        X=X.drop(columns=["timestamp", "machine_status"])
+            return np.array([1 if label == config['data_columns']['fault_label'] else 0 for label in y])
+        X=pd.read_csv(self.initial_data).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
+        y=X[config['data_columns']['dataset_label']]
+        X=X.drop(columns=[config['data_columns']['timestamp_column'], config['data_columns']['dataset_label']])
         if should_inject_faults:
             X, y = inject_faults(X,y, fault_fraction=0.4)
 
@@ -137,7 +139,7 @@ class IoT_model():
             self.scaler.fit(X)
         X=self.scaler.transform(X)
         if fit_scaler:
-            joblib.dump(self.scaler, os.path.join("models", "scaler.pkl"))
+            joblib.dump(self.scaler, os.path.join(config['file_paths']['models_dir'], config['file_paths']['scaler_file']))
         return X, y
 
 
@@ -220,8 +222,9 @@ class IoT_model():
                 batch_size=batch_size,
                 verbose=1
                 )
-        model.save(os.path.join("models", self.model_name+".h5"))
-        self.quantize_model(X,model, os.path.join("models", self.model_name))
+        config = get_string_config()
+        model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
+        self.quantize_model(X,model, os.path.join(config['file_paths']['models_dir'], self.model_name))
 
     
     def combine_new_with_random_old(self, X, y, new, new_labels=None, num=100):
@@ -248,10 +251,11 @@ class IoT_model():
         return data
 
     def combine_faulty_with_random_old(self, new, new_labels=None):
+        config = get_string_config()
         # Load and prepare faulty data
-        X_f = pd.read_csv("test_files/faulty_data.csv").drop(columns=["Unnamed: 0"], errors='ignore')
-        y_f = X_f['machine_status']
-        X_f = X_f.drop(columns=["timestamp", "machine_status"])
+        X_f = pd.read_csv(os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['faulty_data_file'])).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
+        y_f = X_f[config['data_columns']['dataset_label']]
+        X_f = X_f.drop(columns=[config['data_columns']['timestamp_column'], config['data_columns']['dataset_label']])
         y_f=binary_label(y_f)
         #set all labels to BROKEN to ensure more training data
         y_f[:] = 1
@@ -306,8 +310,9 @@ class IoT_model():
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
             return -0.1*mse if invert_loss else mse  # Negate the loss to maximize
 
+        config = get_string_config()
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
-            model = tf.keras.models.load_model(os.path.join("models", self.model_name+".h5"))
+            model = tf.keras.models.load_model(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
         num_epochs = max(5, min(100, int(2000 / len(data))))
 
         if invert_loss==False:
@@ -448,9 +453,10 @@ class IoT_model():
         new_data = self.scale_data(np.array(data))
         compressed_model.fit(new_data, new_data, epochs=2, batch_size=128, verbose=0)
 
+        config = get_string_config()
         # Save and export
-        compressed_model.save(os.path.join("models", self.model_name + ".h5"))
-        self.quantize_model(X, compressed_model, os.path.join("models", self.model_name), quantize=quantize)
+        compressed_model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
+        self.quantize_model(X, compressed_model, os.path.join(config['file_paths']['models_dir'], self.model_name), quantize=quantize)
 
         return 8 if quantize else 32
 

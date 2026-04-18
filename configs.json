@@ -16,5 +16,39 @@
     "base_tdl":1,
     "edge_tul":0.4,
     "baseline_rate":1000,
-    "baseline_energy":59
+    "baseline_energy":59,
+    "string_configs": {
+        "file_paths": {
+            "dataset_path": "datasets/sensor.csv",
+            "test_files_dir": "test_files/",
+            "models_dir": "models/",
+            "faulty_data_file": "faulty_data.csv",
+            "initial_data_file": "initial_data.csv",
+            "results_file": "full_IoTresult.csv",
+            "test_image": "PEPE.jpeg",
+            "scaler_file": "scaler.pkl"
+        },
+        "data_columns": {
+            "dataset_label": "machine_status",
+            "timestamp_column": "timestamp",
+            "fault_label": "BROKEN",
+            "sensors_to_drop": ["Unnamed: 0", "sensor_15", "sensor_50"]
+        },
+        "file_extensions": {
+            "avro_extension": ".avro",
+            "tflite_extension": ".tflite",
+            "zip_extension": ".zip",
+            "h5_extension": ".h5"
+        },
+        "model_files": {
+            "default_model": "autoencoder.h5",
+            "default_tflite_model": "autoencoder.tflite"
+        },
+        "data_metrics": {
+            "mse_metric": "mse",
+            "energy_metric": "energy",
+            "throughput_metric": "throughput",
+            "measured_throughput_metric": "measured_throughput"
+        }
+    }
 }
