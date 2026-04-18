@@ -235,12 +235,10 @@ class iot_device(TCP_COM):
                 if config['file_extensions']['tflite_extension'] in file or config['file_extensions']['zip_extension'] in file:
                     
                     if np.sum(self.energy_buff)<=self.energy_thresh:
-                        if files_received==0:
-                            self.received_model(file, only_load=False)
-                        #print("Receiving time", rec_time)
+                        self.received_model(file, only_load=False)
                         if files_received>0:
-                            #self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
-                            pass
+                            self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
+                            #pass
                         
                     else:
                         while True:

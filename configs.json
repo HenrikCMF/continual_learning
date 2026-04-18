@@ -13,7 +13,7 @@
     "packet_loss_pct":0,
     "ES_delay_ms":250,
     "jitter_ms":50,
-    "ES_tdl":1,
+    "base_tdl":1,
     "iot_device_tul":0.4,
     "baseline_rate":1000,
     "baseline_energy":60,
