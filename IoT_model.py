@@ -281,7 +281,7 @@ class IoT_model():
         Trains the initially defined model, with the initial dataset
         """
         batch_size=256
-        epochs=20
+        epochs=200
         X, y = self.prepare_training_data(fit_scaler=True)
         total_steps=int(len(y)/batch_size*epochs)
         autoencoder = self.design_model_architecture()
@@ -357,68 +357,49 @@ class IoT_model():
             return data, combined_labels
 
         return data
-    @tf.function
+    #@tf.function(jit_compile=True)
     def train_model(self, data, invert_loss=False, input=-0.1):
         """
         Function to improve the most recent iteration of the model
 
         Parameters:
         ----------
-        data : package of most recently received samples
+        data : package of most recently received samples     
         invert_loss: test parameter
         --------
         Returns:
         model: improved tensorflow model
         X : data used to improve the model with
         """
-        # Convert input data to TensorFlow tensor for graph mode
-        data = tf.convert_to_tensor(data, dtype=tf.float32)
-
-        # Prepare training data
+        #data = data.drop(data.columns[-1], axis=1)
         X, y = self.prepare_training_data()
-        X = pd.DataFrame(X)
-        new_data = self.scale_data(data.numpy())  # Convert tensor to numpy for scaling
-
-        # Graph-compatible loss function
-        @tf.function
+        X=pd.DataFrame(X)
+        data=np.array(data)
+        new_data=self.scale_data(np.array(data))
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            return tf.cond(invert_loss,
-                          lambda: 0.0 * mse,
-                          lambda: mse)
+            return 0*mse if invert_loss else mse  # Negate the loss to maximize
 
         config = get_string_config()
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
             model = tf.keras.models.load_model(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
+        num_epochs = max(5, min(100, int(2000 / len(data))))
 
-        # Determine number of epochs using TensorFlow operations
-        data_length = tf.shape(data)[0]
-        base_epochs = tf.cast(2000 / data_length, tf.int32)
-        num_epochs = tf.cond(invert_loss,
-                            lambda: base_epochs // 2,
-                            lambda: base_epochs)
-
-        # Apply minimum and maximum constraints
-        num_epochs = tf.maximum(tf.constant(5, dtype=tf.int32), num_epochs)
-        num_epochs = tf.minimum(tf.constant(100, dtype=tf.int32), num_epochs)
-
-        # Data combination logic (kept outside graph mode for file operations)
-        if invert_loss == False:
-            combined_data = self.combine_new_with_random_old(X, y, new_data)
-        elif os.path.getsize(os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['faulty_data_file'])) > 0:
-            combined_data = self.combine_faulty_with_random_old(new_data)
+        if invert_loss==False:
+            num_epochs=int(num_epochs)
         else:
-            combined_data = new_data
+            num_epochs=int(num_epochs/2)
+        if invert_loss==False:
+            data=self.combine_new_with_random_old(X,y, new_data)
+        elif os.path.getsize("test_files/faulty_data.csv") > 0:
+            data=self.combine_faulty_with_random_old(new_data)
+        else:
+            data=new_data
+        #####
+        batch_size=128
 
-        # Convert combined data to tensor for training
-        combined_data = tf.convert_to_tensor(combined_data, dtype=tf.float32)
-
-        # Model compilation and training
-        batch_size = 128
         model.compile(optimizer="adam", loss=mse_loss)
-        history = model.fit(combined_data, combined_data,
-                          epochs=num_epochs,
-                          batch_size=batch_size)
+        history =model.fit(data, data, epochs=num_epochs, batch_size=batch_size)
         return model, X
 
     
@@ -448,6 +429,7 @@ class IoT_model():
 
     def improve_model(self, data, invert_loss=False,input=-0.1, pdr=0, throughput=None, t_UL=1):
             quantize=False
+            throughput=False
             if throughput:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
                 pruning_level=min(max(-0.84*(t_UL*throughput/8 - 140)/100,0),0.95)
