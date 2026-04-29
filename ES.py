@@ -3,8 +3,6 @@ import json
 import time
 import queue
 from bin.network_control import network_control
-
-from alternative_iot_models import mlp_classifier
 import bin.AVRO as AVRO
 import os
 from bin.utils import make_initial_data, remove_all_avro_files, get_string_config
