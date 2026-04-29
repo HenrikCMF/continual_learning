@@ -1,13 +1,13 @@
-from TCP_code import TCP_COM
+from bin.TCP_code import TCP_COM
 import json
 import time
 import queue
-from network_control import network_control
-import IoT_model
+from bin.network_control import network_control
+
 from alternative_iot_models import mlp_classifier
-import AVRO
+import bin.AVRO as AVRO
 import os
-from utils import make_initial_data, remove_all_avro_files, get_string_config
+from bin.utils import make_initial_data, remove_all_avro_files, get_string_config
 import numpy as np
 import zipfile
 import pandas as pd
@@ -22,27 +22,25 @@ warnings.filterwarnings("ignore", module="sklearn")
 
 class ES_station(TCP_COM):
     #Initialize Server
-    def __init__(self, REC_FILE_PATH, input):
+    def __init__(self, REC_FILE_PATH, bandwidth=1000, energy_budget=60):
         """
         Initializes a server listening and model training object..
 
         Parameters:
         ----------
         REC_FILE_PATH : string acting as path to folder where received files are to be stored.           
-        input : test parameter.
+        Scenario bandwidth and energy budget
         --------
         """
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['base_tdl']
-        #self.energy_thresh=input
-        self.energy_thresh=self.baseline_energy
+        self.energy_thresh=energy_budget
         self.energy_ratio=self.energy_thresh/self.baseline_energy
         self.t_UL=self.energy_ratio*self.baseline_tx
         self.total_data_sent=0
         self.throughputs=[]
-        self.use_PDR=False
         self.NEW_START=True
         config = get_string_config()
         self.faulty_data=os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['faulty_data_file'])
@@ -54,10 +52,14 @@ class ES_station(TCP_COM):
         
         self.init_data=os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file'])
 
-        config = get_string_config()
+
         self.init_data_columns=pd.read_csv(self.init_data).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore').columns
         #Load the chosen model
-        self.ml_model=IoT_model.IoT_model(self.init_data, 0.2) #Autoencoder
+        if config['ablation_settings']['use_DeepIoT']:
+            from bin.DeepIoT_model import IoT_model
+        else:
+            from bin.IoT_model import IoT_model
+        self.ml_model=IoT_model(self.init_data, 0.2)
         if self.NEW_START:
             #Train the initial model
             self.ml_model.train_initial_model()
@@ -72,15 +74,10 @@ class ES_station(TCP_COM):
         #Enable network control
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            self.rate_kbps=input
-            #self.rate_kbps=1000
-            self.burst_kbps=16#input
-            #rate_kbps=configs['bandwidth_limit_kbps']
-            #burst_kbps=configs['burst_limit_kbps']
+            self.rate_kbps=bandwidth
+            self.burst_kbps=16
             self.latency_ms=configs['buffering_latency_ms']
             self.packet_loss_pct=configs['packet_loss_pct']
-            #delay_ms=configs['ES_delay_ms']
-            #jitter_ms=configs['jitter_ms']
             self.delay_ms=None
             self.jitter_ms=None
             self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
@@ -133,14 +130,12 @@ class ES_station(TCP_COM):
         df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
         df_combined.to_csv(init_data_path)
 
-    def run(self, input):
+    def run(self):
         """
         Runs the basic server routine of waiting for samples, using them to improve the model, then transmitting the improved model back.
 
         Parameters:
-        ----------
-        input: test parameter
-        --------
+
         Returns:
         TP: Total number of received packages containing a fault
         FP: Total number of received packages not containing a fault
@@ -155,8 +150,6 @@ class ES_station(TCP_COM):
         while clients<1:
             file, transmission_time = self.file_Q.get(timeout=None, block=True)
             clients+=1
-        if self.use_PDR:
-            self.measure_PDR(100)
         config = get_string_config()
         self.distribute_model(os.path.join(config['file_paths']['models_dir'], self.ml_model.model_name + config['file_extensions']['tflite_extension']))
         
@@ -179,8 +172,7 @@ class ES_station(TCP_COM):
                     config = get_string_config()
                     self.distribute_model(os.path.join(config['file_paths']['models_dir'], self.ml_model.model_name + config['file_extensions']['tflite_extension']))
                 if config['file_extensions']['avro_extension'] in file:
-                    if self.use_PDR:
-                        self.measure_PDR(100)
+
                     data,timestamps, type, batch_num = AVRO.load_AVRO_file(file)
                     batches = np.array_split(data, batch_num)
                     for i, batch in enumerate(batches):
@@ -191,8 +183,8 @@ class ES_station(TCP_COM):
                             TP+=1
                         else:
                             FP+=1
-                        #self.throughput=800
-                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training,input, pdr=self.PDR, throughput=self.throughput, t_UL=self.t_UL)
+
+                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, throughput=self.throughput, t_UL=self.t_UL)
                         self.throughputs.append(self.throughput)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)
@@ -200,14 +192,10 @@ class ES_station(TCP_COM):
                             self.append_to_faulty_data(data, timestamps, self.faulty_data)
                     config = get_string_config()
                     self.distribute_model(os.path.join(config['file_paths']['models_dir'], self.ml_model.model_name + config['file_extensions']['tflite_extension']))
-                    #self.rate_kbps-=10
-                    #self.nc.set_network_conditions(self.rate_kbps, self.burst_kbps, self.latency_ms, self.packet_loss_pct, self.delay_ms, self.jitter_ms)
             except queue.Empty:
-                #print("waiting for data")
                 pass
         return TP, FP, np.mean(self.throughputs)
-            #
-        #self.send_file("307.jpg")
+
 
     def distribute_model(self, model):
         """
@@ -227,12 +215,10 @@ class ES_station(TCP_COM):
             zipf.write(input_file, arcname=os.path.basename(input_file))
         self.total_data_sent+=os.path.getsize(output_zip)
         for ip in self.iot_device_devices:
-            #self.TAR_IP=ip
             print("Sending model")
             self.send_file(ip, self.TAR_PORT_TCP,output_zip)
             
-            #self.send_file(ip, self.TAR_PORT_TCP,model)
-            #self.send_file(ip, self.TAR_PORT_TCP,"models/autoencoder.h5")
 
-es=ES_station("received", 1000)
-es.run(1000)
+if __name__ == "__main__":
+    es=ES_station("received", bandwidth=1000, energy_budget=60)
+    es.run()

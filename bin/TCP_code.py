@@ -7,7 +7,7 @@ from enum import Enum
 import subprocess
 import re
 import numpy as np
-from utils import retry_transmission_handler, threaded
+from bin.utils import retry_transmission_handler, threaded
 import random
 class telegram_type(Enum):
     PDR=1
@@ -229,14 +229,6 @@ class TCP_COM():
         self.RUNNING=False
 
 
-    def measure_PDR(self, num_packets):
-        #Call IoT device to listen for UDP packets
-        for ip in self.iot_device_devices:
-            print("PDR measure")
-            self.send_open_udp(ip, packet_num=num_packets)
-            time.sleep(0.01)
-            self.send_UDP_packets(ip, num_packets=num_packets)
-
     def send_UDP_packets(self, ip, num_packets=100, interval=0.001):
         """
         Sends `num_packets` UDP packets to (host, port) with a small interval between them.
@@ -338,7 +330,6 @@ class TCP_COM():
             # Measure results
             transmission_time = end_time - start_time  # seconds
             throughput_mbps = ((bytes_sent+20) * 8) / ((transmission_time-(RTT*2)) * 1000000)  # bits/sec to Mbps
-            # Optionally store transmission time
             self.time_transmitting += transmission_time
             self.file_Q.put((throughput_mbps,0))
             return None
@@ -358,12 +349,3 @@ class TCP_COM():
 
         rtt = end_rtt - start_rtt  # seconds
         self.file_Q.put((rtt,0))
-#com
-
-if __name__ == "__main__":
-    # Configure your local and target details
-    MY_HOST = "0.0.0.0"   # Listen on all interfaces
-    MY_PORT = 5000        # Port for receiving
-    TARGET_HOST = "127.0.0.1"  # Change to target computer's IP
-    TARGET_PORT = 6000        # Target port for sending
-    COM_obj=TCP_COM(MY_HOST, MY_PORT, TARGET_HOST, TARGET_PORT)

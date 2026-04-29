@@ -1,47 +1,41 @@
-from TCP_code import TCP_COM
+from bin.TCP_code import TCP_COM
 import time
 import json
-from network_control import network_control
-from utils import make_dataset, generate_avro_schema, remove_all_avro_files, make_evalset, get_string_config
+from bin.network_control import network_control
+from bin.utils import make_dataset, generate_avro_schema, remove_all_avro_files, make_evalset, get_string_config
 import pandas as pd
 import zipfile
 import numpy as np
-import AVRO
+import bin.AVRO as AVRO
 import os
 import queue
 import shutil
-import IoT_model
-from alternative_iot_models import mlp_classifier
-import matplotlib.pyplot as plt
 import warnings
 from sklearn.exceptions import ConvergenceWarning
-import threading
-import IoT_energy
+from bin import IoT_energy
 import subprocess
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
 class iot_device(TCP_COM):
-    def __init__(self, REC_FILE_PATH, input):
+    def __init__(self, REC_FILE_PATH, bandwidth=1000, energy_budget=60):
         """
         Initializes an IoT device object.
 
         Parameters:
         ----------
         REC_FILE_PATH : string acting as path to folder where received files are to be stored.
-        input : test parameter.
+        input : scenario bandwidth and energy budget
         --------
         """
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['iot_device_tul']
-        #self.energy_thresh=input
-        self.energy_thresh=self.baseline_energy
+        self.energy_thresh=energy_budget
         self.energy_ratio=self.energy_thresh/self.baseline_energy
         self.t_UL=self.energy_ratio*self.baseline_tx
         self.inference_batch=0
-        self.use_PDR=False
         self.throughputs=[]
         self.total_sent_data=0
         self.total_received_data=0
@@ -57,7 +51,7 @@ class iot_device(TCP_COM):
         self.rec_ip=configs['ESip']
         self.nc=network_control(self.device_type)
         if configs['use_config_network_control']==True:
-            self.rate_kbps=input
+            self.rate_kbps=bandwidth
             #self.rate_kbps=1000
             self.burst_kbps=16
             self.latency_ms=configs['buffering_latency_ms']
@@ -81,13 +75,14 @@ class iot_device(TCP_COM):
         self.len_of_dataset=np.shape(self.data)[0]
         self.schema_path=config['file_paths']['test_files_dir']+"avro_"+str(sensors)+'.avsc'
         generate_avro_schema(sensors, self.schema_path)
-        self.model = IoT_model.IoT_model(os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file']), 0.2)
+        if config['ablation_settings']['use_DeepIoT']:
+            from bin.DeepIoT_model import IoT_model
+        else:
+            from bin.IoT_model import IoT_model
+        self.model = IoT_model(os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file']), 0.2)
         self.energy_model=IoT_energy.energy()
         self.configs=configs
-        #self.model = mlp_classifier("test_files/initial_data.csv", input)
-        #self.model.load_model()
 
-    
 
 
     def analyze_samples(self):
@@ -100,12 +95,12 @@ class iot_device(TCP_COM):
         s: sample
         t: timestamp
         """
-        config = get_string_config()
+        #config = get_string_config()
         s, t=self.get_sample()    
         if self.inference_batch==0:
-            for_mse=np.array(s.drop(config['data_columns']['dataset_label'])).reshape(1,-1)
+            for_mse=np.array(s.drop(self.configs['data_columns']['dataset_label'])).reshape(1,-1)
         else:
-            for_mse=s.drop(columns=config['data_columns']['dataset_label'])
+            for_mse=s.drop(columns=self.configs['data_columns']['dataset_label'])
         rare, mse=self.model.check_sample(for_mse)
         #rare=True
         #mse=0
@@ -116,7 +111,7 @@ class iot_device(TCP_COM):
 
             
 
-    def get_important_important_batch(self, input):
+    def get_important_important_batch(self):
         """
         Iterates through samples until it finds a rare one,keeps a buffer of length N 
         of previous samples and collects future context of length N.
@@ -125,19 +120,16 @@ class iot_device(TCP_COM):
         it serializes the data with avro and transmits it to the server.
 
         Parameters:
-        ----------         
-        input : test parameter.
-        --------
         """
         batch_not_found=True
         important_batches_tar=1
         important_batches=0
 
         #self.throughput=800
-        NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
-        #NUM_BUF_SAMPLES=200
-        #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/(0.000005*60)
-        #skip_samples=((0.79*((1+NUM_BUF_SAMPLES*2*0.65)*1752+(20+1950)*8))/(self.throughput*1000))/((self.energy_thresh/220000))
+        if self.configs['string_configs']['ablation_settings']['Link_adaptation_parts']['IoT_side_adaptation_enabled'] and not(self.configs['string_configs']['ablation_settings']['use_DeepIoT']):
+            NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
+        else:
+            NUM_BUF_SAMPLES=200
         skip_samples=0
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Skipping ", skip_samples)
         time.sleep(0.01)
@@ -174,11 +166,10 @@ class iot_device(TCP_COM):
                 important_batches+=1
                 if important_batches==important_batches_tar: #network parameter
                     batch_not_found=False
-                    config = get_string_config()
                     self.sample_buffer=np.array(self.sample_buffer)
                     filename=os.path.join(
-                        config['file_paths']['test_files_dir'],
-                        str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+config['file_extensions']['avro_extension']
+                        self.configs['string_configs']['file_paths']['test_files_dir'],
+                        str(self.timestamp_buffer[0]).replace(" ", "-").replace(":", "-")+self.configs['string_configs']['file_extensions']['avro_extension']
                         )
                     #comment
                     AVRO.save_AVRO_default(self.sample_buffer, self.timestamp_buffer,self.schema_path, accuracy=10,path=filename, original_size=important_batches, codec='deflate')
@@ -192,15 +183,13 @@ class iot_device(TCP_COM):
         return True
 
 
-    def run(self, input):
+    def run(self):
         """
         Runs the basic IoT routine of checking samples, collecting context, then transmitting 
         the samples and receiving an updated model afterwards.
 
         Parameters:
-        ----------
-        input: test parameter
-        --------
+
         Returns:
         self.time_transmitting: total measured time spent transmitting.
         self.time_receiving: total measured time spent receiving.
@@ -235,8 +224,9 @@ class iot_device(TCP_COM):
                 if config['file_extensions']['tflite_extension'] in file or config['file_extensions']['zip_extension'] in file:
                     
                     if np.sum(self.energy_buff)<=self.energy_thresh:
-                        self.received_model(file, only_load=False)
-                        if files_received>0:
+                        if config['ablation_settings']['CL_enabled'] or files_received==0:
+                            self.received_model(file, only_load=False)
+                        if files_received>0 and config['ablation_settings']['CL_enabled']:
                             self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                             #pass
                         
@@ -249,7 +239,7 @@ class iot_device(TCP_COM):
                 self.file_Q.task_done()
                 
                 
-                self.get_important_important_batch(input)
+                self.get_important_important_batch()
                 files_received+=1
             except queue.Empty:
                 pass
@@ -333,6 +323,6 @@ class iot_device(TCP_COM):
         return sample, timestamp
     
 
-    
-es=iot_device("received", 1000)
-es.run(1000)
+if __name__ == "__main__":
+    es=iot_device("received", bandwidth=1000, energy_budget=60)
+    es.run()

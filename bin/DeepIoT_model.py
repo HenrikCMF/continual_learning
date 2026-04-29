@@ -3,16 +3,29 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
-from utils import binary_label, get_string_config
-import _quantize_model as qm
+from bin.utils import binary_label, get_string_config
+import bin._quantize_model as qm
 import os
 import joblib
 from sklearn.metrics import mean_squared_error
-from utils import inject_faults
+from bin.utils import inject_faults
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
+
+
+def _dense_layers_in_order(model):
+    return [l for l in model.layers if isinstance(l, tf.keras.layers.Dense)]
+
+def _slice_dense_weights(W, b, in_idx=None, out_idx=None):
+    if in_idx is not None:
+        W = W[in_idx, :]
+    if out_idx is not None:
+        W = W[:, out_idx]
+        b = b[out_idx]
+    return W, b
+
 class IoT_model():
     def __init__(self, initial_data, thresh):
         """
@@ -63,92 +76,8 @@ class IoT_model():
             self.first_run=False
             print(f"Estimated total tensor memory: {total_memory / 1024:.2f} KB")
 
-    def evaluate_dataset(
-        self,
-        df: pd.DataFrame,
-        feature_cols=None,
-        label_col: str = "machine_status",
-        positive_label: str = "BROKEN",
-        return_per_sample: bool = False,
-        verbose_every: int = 0,
-    ):
-        if feature_cols is None:
-            feature_cols = [c for c in df.columns if c != label_col]
 
-        X = df[feature_cols].to_numpy(dtype=np.float32, copy=False)  # (N, 50)
-        y = df[label_col].astype(str).to_numpy()
-        n = X.shape[0]
-
-        mse_vals = np.empty(n, dtype=np.float32)
-        y_pred_pos = np.zeros(n, dtype=bool)
-        y_true_pos = (y == positive_label)
-
-        tp = fp = fn = tn = 0
-
-        for i in range(n):
-            # IMPORTANT: make it 2D so sklearn scaler (and your inference) won't crash
-            x2d = X[i].reshape(1, -1)  # (1, 50)
-
-            # TFLite inference (expects "one sample", but as 2D is fine: (1,50))
-            recon = np.asarray(self.inference_on_model(x2d), dtype=np.float32).reshape(-1)  # (50,)
-
-            # inference_on_model scales internally, so recon is in SCALED space
-            x_scaled = np.asarray(self.scale_data(x2d), dtype=np.float32).reshape(-1)       # (50,)
-
-            diff = x_scaled - recon
-            mse_val = float(np.mean(diff * diff))
-
-            mse_vals[i] = mse_val
-            pred_pos = mse_val > self.trigger_threshold
-            y_pred_pos[i] = pred_pos
-
-            true_pos = y_true_pos[i]
-
-            if pred_pos and true_pos:
-                tp += 1
-            elif pred_pos and not true_pos:
-                fp += 1
-            elif (not pred_pos) and true_pos:
-                fn += 1
-            else:
-                tn += 1
-
-            if verbose_every and (i + 1) % verbose_every == 0:
-                print(f"Processed {i+1}/{n} samples...")
-
-        precision = tp / (tp + fp) if (tp + fp) else 0.0
-        recall    = tp / (tp + fn) if (tp + fn) else 0.0
-        f1        = (2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
-        accuracy  = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) else 0.0
-
-        summary = {
-            "threshold": float(self.trigger_threshold),
-            "positive_label": positive_label,
-            "n_samples": int(n),
-            "TP": int(tp), "FP": int(fp), "FN": int(fn), "TN": int(tn),
-            "precision": float(precision),
-            "recall": float(recall),
-            "f1": float(f1),
-            "accuracy": float(accuracy),
-        }
-
-        if not return_per_sample:
-            return summary
-
-        per_sample = df[[label_col]].copy()
-        per_sample["mse"] = mse_vals
-        per_sample["pred_is_broken"] = y_pred_pos
-        per_sample["true_is_broken"] = y_true_pos
-
-        outcome = np.full(n, "TN", dtype=object)
-        outcome[y_pred_pos & y_true_pos] = "TP"
-        outcome[y_pred_pos & ~y_true_pos] = "FP"
-        outcome[~y_pred_pos & y_true_pos] = "FN"
-        per_sample["outcome"] = outcome
-
-        return summary, per_sample
-
-
+        
     def inference_on_model(self, data):
         """
         Uses the loaded model to inference on the given data
@@ -358,8 +287,8 @@ class IoT_model():
             return data, combined_labels
 
         return data
-    #@tf.function(jit_compile=True)
-    def train_model(self, data, invert_loss=False, input=-0.1):
+
+    def train_model(self, data, invert_loss=False):
         """
         Function to improve the most recent iteration of the model
 
@@ -379,7 +308,7 @@ class IoT_model():
         new_data=self.scale_data(np.array(data))
         def mse_loss(y_true, y_pred):
             mse = tf.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-            return 0*mse if invert_loss else mse  # Negate the loss to maximize
+            return -0.1*mse if invert_loss else mse  # Negate the loss to maximize
 
         config = get_string_config()
         with tfmot.quantization.keras.quantize_scope(), tf.keras.utils.custom_object_scope({'mse_loss': mse_loss}):
@@ -428,32 +357,108 @@ class IoT_model():
                 actual_sparsity = np.mean(pruned_kernel == 0)
         return model
 
-    def improve_model(self, data, invert_loss=False,input=-0.1, pdr=0, throughput=None, t_UL=1):
-            quantize=False
-            if throughput:
-                #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
-                pruning_level=min(max(-0.84*(t_UL*throughput/8 - 140)/100,0),0.95)
-                if pruning_level>0.4:
-                    quantize=True
-                    pruning_level=min(max(-3.56*(t_UL*throughput/8 - 48)/100,0),0.8)
-                print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
+    def deepiot_like_compress_to_fixed_widths(
+        self,
+        model: tf.keras.Model,
+        widths=(96, 48, 24, 12, 24, 48, 96),
+        min_units=4,
+    ) -> tf.keras.Model:
+        """
+        DeepIoT-like structured compression for YOUR specific Dense-chain autoencoder:
+        - Prunes neurons (units) in each hidden Dense layer by L1 importance
+        - Rebuilds a smaller dense model with fixed widths (constant baseline)
+        - Copies sliced weights
+        """
+
+        widths = [max(min_units, int(w)) for w in widths]
+
+        # Expect your model to be 8 Dense layers: 7 hidden + output
+        dense_layers = _dense_layers_in_order(model)
+        if len(dense_layers) != 8:
+            raise ValueError(f"Expected 8 Dense layers (7 hidden + output), got {len(dense_layers)}")
+
+        hidden = dense_layers[:-1]  # 7
+        out_layer = dense_layers[-1]
+
+        # Compute keep indices per hidden layer by neuron importance
+        keep = []
+        prev_keep = None
+
+        for i, layer in enumerate(hidden):
+            W, b = layer.get_weights()  # W: [in, out]
+            # If previous layer pruned, restrict to surviving inputs before computing importance
+            if prev_keep is not None:
+                W_eff = W[prev_keep, :]
             else:
-                pruning_level=None
-            #pruning_level=None
-            model, X=self.train_model(data, invert_loss, input=input)
-            if pruning_level:
-                pruned_model = self.manual_prune_weights(model, pruning_level)
-                print("Pruned model")
-            config = get_string_config()
-            model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
-            if pruning_level:
-                self.quantize_model(X,pruned_model, os.path.join(config['file_paths']['models_dir'], self.model_name), quantize=quantize)
-            else:
-                self.quantize_model(X,model, os.path.join(config['file_paths']['models_dir'], self.model_name), quantize=quantize)
-            if quantize:
-                return 8
-            else:
-                return 32
+                W_eff = W
+
+            # Importance of each output neuron = L1 norm of incoming weights (simple, works well)
+            imp = np.sum(np.abs(W_eff), axis=0)  # [out]
+            k = min(widths[i], imp.shape[0])
+            idx = np.argsort(imp)[-k:]
+            idx = np.sort(idx)
+            keep.append(idx)
+            prev_keep = idx
+
+        # Build the smaller architecture (same topology, smaller widths)
+        inputs = tf.keras.Input(shape=(self.n_features,), name="compressed_input")
+        x = inputs
+
+        x = tf.keras.layers.Dense(widths[0], activation="relu", name="enc_128")(x)
+        x = tf.keras.layers.Dense(widths[1], activation="relu", name="enc_64")(x)
+        x = tf.keras.layers.Dense(widths[2], activation="relu", name="enc_32")(x)
+        x = tf.keras.layers.Dense(widths[3], activation="relu", name="enc_16")(x)
+
+        x = tf.keras.layers.Dense(widths[4], activation="relu", name="dec_32")(x)
+        x = tf.keras.layers.Dense(widths[5], activation="relu", name="dec_64")(x)
+        x = tf.keras.layers.Dense(widths[6], activation="relu", name="dec_128")(x)
+
+        outputs = tf.keras.layers.Dense(self.n_features, activation="linear", name="out")(x)
+        compressed = tf.keras.Model(inputs, outputs, name=model.name + "_deepiotlike_fixed")
+        compressed.compile(optimizer="adam", loss="mse")
+
+        # Copy sliced weights layer-by-layer
+        comp_dense = _dense_layers_in_order(compressed)
+
+        prev_in = None
+        for i in range(7):
+            W, b = hidden[i].get_weights()
+            out_idx = keep[i]
+            in_idx = prev_in
+            W2, b2 = _slice_dense_weights(W, b, in_idx=in_idx, out_idx=out_idx)
+            comp_dense[i].set_weights([W2, b2])
+            prev_in = out_idx
+
+        # Final output layer: slice inputs based on last hidden keep, keep all outputs
+        W, b = out_layer.get_weights()
+        W2, b2 = _slice_dense_weights(W, b, in_idx=prev_in, out_idx=None)
+        comp_dense[7].set_weights([W2, b2])
+
+        return compressed
+
+    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None, t_UL=1):
+        quantize = False
+        print("USING DEEP IoT")
+        model, X = self.train_model(data, invert_loss)
+
+        ratio = 0.395  # tune this
+        widths = tuple(max(1, int(round(w * ratio))) for w in (128,64,32,16,32,64,128))
+        compressed_model = self.deepiot_like_compress_to_fixed_widths(
+            model,
+            widths=widths,  # pick once, keep constant across all runs
+        )
+
+        # Optional: quick fine-tune helps after pruning
+        compressed_model.compile(optimizer="adam", loss="mse")
+        new_data = self.scale_data(np.array(data))
+        compressed_model.fit(new_data, new_data, epochs=2, batch_size=128, verbose=0)
+
+        config = get_string_config()
+        # Save and export
+        compressed_model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
+        self.quantize_model(X, compressed_model, os.path.join(config['file_paths']['models_dir'], self.model_name), quantize=quantize)
+
+        return 8 if quantize else 32
 
 """""
     def EECL_comp(self, throughput, model, X):
