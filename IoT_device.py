@@ -133,7 +133,9 @@ class iot_device(TCP_COM):
 
         #self.throughput=800
         if self.configs['string_configs']['ablation_settings']['Link_adaptation_parts']['IoT_side_adaptation_enabled'] and not(self.configs['string_configs']['ablation_settings']['use_DeepIoT']):
-            NUM_BUF_SAMPLES=int(max(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0),60))
+            NUM_BUF_SAMPLES=int(max(4.35*(self.t_UL*self.throughput/8 - 2.88),0))
+            NUM_BUF_SAMPLES=max(NUM_BUF_SAMPLES,60)
+            NUM_BUF_SAMPLES=min(NUM_BUF_SAMPLES,200)
         else:
             NUM_BUF_SAMPLES=200
         skip_samples=0
