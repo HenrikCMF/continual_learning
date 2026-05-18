@@ -30,7 +30,7 @@
         "data_columns": {
             "dataset_label": "attack",
             "timestamp_column": "time",
-            "fault_label": "1",
+            "fault_label": 1,
             "sensors_to_drop": ["attack_P1", "attack_P2", "attack_P3"],
             "delimiter": ";"
         },
