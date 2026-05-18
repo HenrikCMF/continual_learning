@@ -98,12 +98,16 @@ class iot_device(TCP_COM):
         t: timestamp
         """
         #config = get_string_config()
-        s, t=self.get_sample()    
+        print(1.1)
+        s, t=self.get_sample()   
+        print(1.2) 
         if self.inference_batch==0:
+            print(1.3)
             for_mse=np.array(s.drop(self.configs['data_columns']['dataset_label'])).reshape(1,-1)
         else:
+            print(1.4)
             for_mse=s.drop(columns=self.configs['data_columns']['dataset_label'])
-        
+        print(1.5)
         rare, mse=self.model.check_sample(for_mse)
         #rare=True
         #mse=0
