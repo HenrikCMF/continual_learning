@@ -79,10 +79,9 @@ class iot_device(TCP_COM):
             from bin.DeepIoT_model import IoT_model
         else:
             from bin.IoT_model import IoT_model
-        if self.NEW_START:
-            make_initial_data(config['file_paths']['dataset_path'], config['file_paths']['test_files_dir'])
-            with open(self.faulty_data, 'w') as f:
-                f.write("")
+        make_initial_data(config['file_paths']['dataset_path'], config['file_paths']['test_files_dir'])
+        with open(self.faulty_data, 'w') as f:
+            f.write("")
         self.init_data=os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file'])
         self.model = IoT_model(self.init_data, 0.2)
         self.energy_model=IoT_energy.energy()
