@@ -103,7 +103,7 @@ class iot_device(TCP_COM):
             for_mse=np.array(s.drop(self.configs['data_columns']['dataset_label'])).reshape(1,-1)
         else:
             for_mse=s.drop(columns=self.configs['data_columns']['dataset_label'])
-        print("Checking sample")
+        
         rare, mse=self.model.check_sample(for_mse)
         #rare=True
         #mse=0
@@ -137,12 +137,16 @@ class iot_device(TCP_COM):
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Skipping ", skip_samples)
         time.sleep(0.01)
         while batch_not_found:
-            
+            print(1)
             rare, mse, s, t = self.analyze_samples()
+            print(2)
             self.samples_since_last_batch+=1
             #self.energy_buff.append(0)
+            print(3)
             self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
+            print(4)
             self.measured_throughput_buf.append(self.throughput)
+            print(5)
             self.throughput_buf.append(self.rate_kbps)
             
             if rare:
