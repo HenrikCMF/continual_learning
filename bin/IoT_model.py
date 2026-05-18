@@ -226,7 +226,7 @@ class IoT_model():
         encoded = tf.keras.layers.Dense(128, activation="relu")(inputs)
         encoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
         encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(16, activation="relu")(encoded) 
+        encoded = tf.keras.layers.Dense(8, activation="relu")(encoded) 
         decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
         decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
         decoded = tf.keras.layers.Dense(128, activation="relu")(decoded)
