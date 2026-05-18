@@ -2,7 +2,7 @@ from bin.TCP_code import TCP_COM
 import time
 import json
 from bin.network_control import network_control
-from bin.utils import make_dataset, generate_avro_schema, remove_all_avro_files, make_evalset, get_string_config
+from bin.utils import make_dataset, generate_avro_schema, remove_all_avro_files, make_evalset, get_string_config, make_initial_data
 import pandas as pd
 import zipfile
 import numpy as np
@@ -79,7 +79,12 @@ class iot_device(TCP_COM):
             from bin.DeepIoT_model import IoT_model
         else:
             from bin.IoT_model import IoT_model
-        self.model = IoT_model(os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file']), 0.2)
+        if self.NEW_START:
+            make_initial_data(config['file_paths']['dataset_path'], config['file_paths']['test_files_dir'])
+            with open(self.faulty_data, 'w') as f:
+                f.write("")
+        self.init_data=os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file'])
+        self.model = IoT_model(self.init_data, 0.2)
         self.energy_model=IoT_energy.energy()
         self.configs=configs
 
