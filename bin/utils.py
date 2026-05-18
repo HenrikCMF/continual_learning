@@ -160,7 +160,7 @@ def make_dataset(fault_index, num):
 
 def make_evalset():
     config = get_string_config()
-    df=pd.read_csv(config['file_paths']['dataset_path'])
+    df=pd.read_csv(config['file_paths']['dataset_path'], sep=config['data_columns']['delimiter'])
     #sensors_to_drop = ['Unnamed: 0', 'timestamp','sensor_15', 'sensor_50']
     sensors_to_drop = config['data_columns']['sensors_to_drop']
     df = df.drop(columns=sensors_to_drop)
