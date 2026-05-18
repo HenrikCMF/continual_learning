@@ -18,12 +18,16 @@ def save_AVRO_default(df2, timestamps, schemapath, accuracy, path, original_size
          features.append(i)
     measurement_list=[]
 
+    type_map = {field['name']: field['type'] for field in schema['fields']}
     metadata= {"original_size": str(original_size)}
     for i in range(np.shape(df2)[0]):
         try:
             sensor_data= {f"{j}": round(df2[j][i], accuracy) for j in features}
         except:
             sensor_data= {f"{j}": df2[j][i] for j in features}
+        for key, val in sensor_data.items():
+            if type_map.get(key) == 'string' and not isinstance(val, str):
+                sensor_data[key] = str(val)
         sensor_data['timestamp']=timestamps[i]
         measurement_list.append(sensor_data)
     with open(path, "wb") as out:

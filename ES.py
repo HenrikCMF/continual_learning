@@ -175,7 +175,7 @@ class ES_station(TCP_COM):
                     batches = np.array_split(data, batch_num)
                     for i, batch in enumerate(batches):
                         invert_training=False
-                        if batch.iloc[:, -1].eq(config['data_columns']['fault_label']).any():
+                        if batch.iloc[:, -1].eq(str(config['data_columns']['fault_label'])).any():
                             print("INVERTED TRAINING")
                             invert_training=True
                             TP+=1
