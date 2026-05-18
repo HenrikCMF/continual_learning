@@ -149,7 +149,6 @@ class iot_device(TCP_COM):
             self.energy_buff.append(self.energy_model.inference_energy(self.model_quantization))
 
             self.measured_throughput_buf.append(self.throughput)
-            print(5)
             self.throughput_buf.append(self.rate_kbps)
             
             if rare:
@@ -235,23 +234,19 @@ class iot_device(TCP_COM):
                     
                     if np.sum(self.energy_buff)<=self.energy_thresh:
                         if config['ablation_settings']['CL_enabled'] or files_received==0:
-                            print("Loading received mdoel")
                             self.received_model(file, only_load=False)
                         if files_received>0 and config['ablation_settings']['CL_enabled']:
                             self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                             #pass
                         
                     else:
-                        print("Getting samples")
                         while True:
                             try:
                                 self.get_sample()
                             except:
-                                print("Broke after getting samples")
                                 break
                 self.file_Q.task_done()
                 
-                print("Getting batch")
                 self.get_important_important_batch()
                 files_received+=1
             except queue.Empty:
