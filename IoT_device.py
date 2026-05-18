@@ -103,6 +103,7 @@ class iot_device(TCP_COM):
             for_mse=np.array(s.drop(self.configs['data_columns']['dataset_label'])).reshape(1,-1)
         else:
             for_mse=s.drop(columns=self.configs['data_columns']['dataset_label'])
+        print("Checking sample")
         rare, mse=self.model.check_sample(for_mse)
         #rare=True
         #mse=0
@@ -136,7 +137,7 @@ class iot_device(TCP_COM):
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Skipping ", skip_samples)
         time.sleep(0.01)
         while batch_not_found:
-            #for i in range(int(skip_samples)):
+            
             rare, mse, s, t = self.analyze_samples()
             self.samples_since_last_batch+=1
             #self.energy_buff.append(0)
@@ -227,20 +228,23 @@ class iot_device(TCP_COM):
                     
                     if np.sum(self.energy_buff)<=self.energy_thresh:
                         if config['ablation_settings']['CL_enabled'] or files_received==0:
+                            print("Loading received mdoel")
                             self.received_model(file, only_load=False)
                         if files_received>0 and config['ablation_settings']['CL_enabled']:
                             self.energy_buff[-1]+=self.energy_model.receiving_energy(rec_time)
                             #pass
                         
                     else:
+                        print("Getting samples")
                         while True:
                             try:
                                 self.get_sample()
                             except:
+                                print("Broke after getting samples")
                                 break
                 self.file_Q.task_done()
                 
-                
+                print("Getting batch")
                 self.get_important_important_batch()
                 files_received+=1
             except queue.Empty:

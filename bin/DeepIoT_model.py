@@ -203,6 +203,7 @@ class IoT_model():
             mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
         else:
             mse_val = mean_squared_error(self.scale_data(data).T, self.inference_on_model(data))
+        print("MSE: ", mse_val)
         if mse_val>self.trigger_threshold:
             important=True
         return important, mse_val
