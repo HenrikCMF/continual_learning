@@ -334,5 +334,5 @@ class iot_device(TCP_COM):
     
 
 if __name__ == "__main__":
-    es=iot_device("received", bandwidth=1000, energy_budget=300)
+    es=iot_device("received", bandwidth=1000, energy_budget=3000)
     es.run()
