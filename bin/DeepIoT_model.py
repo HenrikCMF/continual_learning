@@ -45,7 +45,7 @@ class IoT_model():
         #print("TFMOT version:", tfmot.__version__)
         self.initial_data=initial_data
         self.scaler=MinMaxScaler()
-        self.prepare_training_data(self, should_inject_faults=False, fit_scaler=True)
+        self.prepare_training_data(should_inject_faults=False, fit_scaler=True)
 
     def load_model(self):
         """
