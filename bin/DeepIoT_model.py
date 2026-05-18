@@ -1,3 +1,5 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -5,7 +7,6 @@ import tensorflow as tf
 import tensorflow_model_optimization as tfmot
 from bin.utils import binary_label, get_string_config
 import bin._quantize_model as qm
-import os
 import joblib
 from sklearn.metrics import mean_squared_error
 from bin.utils import inject_faults
@@ -13,6 +14,7 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
+warnings.filterwarnings("ignore", category=UserWarning, message=".*HDF5.*")
 
 
 def _dense_layers_in_order(model):

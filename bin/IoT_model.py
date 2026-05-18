@@ -1,3 +1,5 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -5,7 +7,6 @@ import tensorflow as tf
 import tensorflow_model_optimization as tfmot
 from bin.utils import binary_label, get_string_config
 import bin._quantize_model as qm
-import os
 import joblib
 from sklearn.metrics import mean_squared_error
 from bin.utils import inject_faults
@@ -13,6 +14,7 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
+warnings.filterwarnings("ignore", category=UserWarning, message=".*HDF5.*")
 class IoT_model():
     def __init__(self, initial_data, thresh):
         """
@@ -274,6 +276,7 @@ class IoT_model():
             mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
         else:
             mse_val = mean_squared_error(self.scale_data(data).T, self.inference_on_model(data))
+        print(mse_val)
         if mse_val>self.trigger_threshold:
             important=True
         return important, mse_val
