@@ -258,6 +258,7 @@ class IoT_model():
         config = get_string_config()
         # Load and prepare faulty data
         X_f = pd.read_csv(os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['faulty_data_file'])).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
+        X_f = X_f.loc[:, ~X_f.columns.str.startswith('Unnamed')]
         y_f = X_f[config['data_columns']['dataset_label']]
         X_f = X_f.drop(columns=[config['data_columns']['timestamp_column'], config['data_columns']['dataset_label']])
         y_f=binary_label(y_f)

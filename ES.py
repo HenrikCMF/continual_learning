@@ -15,6 +15,15 @@ import subprocess
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
+def _label_matches(v, target):
+    sv, st = str(v).strip(), str(target).strip()
+    if sv == st:
+        return True
+    try:
+        return float(sv) == float(st)
+    except (ValueError, TypeError):
+        return False
+
 #Main File for the server Node
 
 
@@ -126,7 +135,7 @@ class ES_station(TCP_COM):
         df2 = pd.concat([timestamps, data], axis=1).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
         df2.columns=init_data_no_faults.columns
         df_combined = pd.concat([init_data, df2], ignore_index=True).drop(columns=config['data_columns']['sensors_to_drop'], errors='ignore')
-        df_combined.to_csv(init_data_path)
+        df_combined.to_csv(init_data_path, index=False)
 
     def run(self):
         """
@@ -175,7 +184,8 @@ class ES_station(TCP_COM):
                     batches = np.array_split(data, batch_num)
                     for i, batch in enumerate(batches):
                         invert_training=False
-                        if batch.iloc[:, -1].eq(str(config['data_columns']['fault_label'])).any():
+                        if batch.iloc[:, -1].apply(lambda v: _label_matches(v, config['data_columns']['fault_label'])).any():
+                            
                             print("INVERTED TRAINING")
                             invert_training=True
                             TP+=1
