@@ -64,7 +64,7 @@ def timed(func):
 
 def make_initial_data(path, out):
     config = get_string_config()
-    df=pd.read_csv(path)
+    df=pd.read_csv(path, sep=config['data_columns']['delimiter'])
     sensors_to_drop = config['data_columns']['sensors_to_drop']
     df = df.drop(columns=sensors_to_drop)
 
@@ -81,7 +81,7 @@ def make_initial_data(path, out):
 
 def make_sensor_data(path):
     config = get_string_config()
-    df=pd.read_csv(path)
+    df=pd.read_csv(path,sep=config['data_columns']['delimiter'])
     sensors_to_drop = config['data_columns']['sensors_to_drop']
     df = df.drop(columns=sensors_to_drop)
 
