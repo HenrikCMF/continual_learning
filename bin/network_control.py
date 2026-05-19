@@ -8,7 +8,14 @@ class network_control():
             self.interface=configs['ESNET_INTERFACE']
         else:
             self.interface=configs['iot_deviceNET_INTERFACE']
+        self.sudo_password = configs.get('sudo_password', '')
 
+    def _tc(self, command, **kwargs):
+        return subprocess.run(
+            f"sudo -S {command}",
+            shell=True, input=self.sudo_password + "\n",
+            text=True, stderr=subprocess.DEVNULL, **kwargs
+        )
 
     def set_network_conditions(self, rate, burst, latency, p_loss=None, delay=None, jitter=None):
         """
@@ -28,32 +35,32 @@ class network_control():
         rate_bits = (rate * 1000)
         burst_bytes = (burst * 1000) // 8
         # Remove any existing rules
-        subprocess.run(f"sudo tc qdisc del dev {self.interface} root", shell=True, stderr=subprocess.DEVNULL)
+        self._tc(f"tc qdisc del dev {self.interface} root")
         # Apply TBF (Token Bucket Filter) for bandwidth limitation
-        tbf_command=f"sudo tc qdisc add dev {self.interface} root handle 1: tbf rate {rate_bits}bit burst {burst_bytes}"
-    
+        tbf_command=f"tc qdisc add dev {self.interface} root handle 1: tbf rate {rate_bits}bit burst {burst_bytes}"
+
         # Only add latency to TBF if specified
         #if latency is not None:
         tbf_command += f" latency {latency}ms"
-        subprocess.run(tbf_command, shell=True)
+        self._tc(tbf_command)
         # Apply Netem for delay and packet loss under TBF
         if p_loss or delay:
-            netem_command = f"sudo tc qdisc add dev {self.interface} parent 1:1 handle 10: netem"
-            
+            netem_command = f"tc qdisc add dev {self.interface} parent 1:1 handle 10: netem"
+
             # Add packet loss if specified
             if p_loss is not None:
                 netem_command += f" loss {p_loss}%"
-            
+
             # Add delay and jitter if specified
             if delay is not None:
                 netem_command += f" delay {delay}ms"
                 if jitter is not None:
                     netem_command += f" {jitter}ms"
-        
-            subprocess.run(netem_command, shell=True)
+
+            self._tc(netem_command)
 
     def reset_network_conditions(self):
         """Removes all traffic control settings from the specified network interface."""
-        subprocess.run(f"sudo tc qdisc del dev {self.interface} root", shell=True)
+        self._tc(f"tc qdisc del dev {self.interface} root")
         print(f"Reset network conditions on {self.interface}.")
     

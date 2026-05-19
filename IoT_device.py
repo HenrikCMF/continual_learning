@@ -13,7 +13,6 @@ import shutil
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 from bin import IoT_energy
-import subprocess
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
@@ -81,7 +80,7 @@ class iot_device(TCP_COM):
             from bin.IoT_model import IoT_model
         make_initial_data(config['file_paths']['dataset_path'], config['file_paths']['test_files_dir'])
         self.init_data=os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file'])
-        self.model = IoT_model(self.init_data, 0.04)#0.2)
+        self.model = IoT_model(self.init_data, 0.02)#0.2)
         self.energy_model=IoT_energy.energy()
         self.configs=configs
 
@@ -283,7 +282,7 @@ class iot_device(TCP_COM):
                 remove_all_avro_files('test_files')
                 self.stop_TCP()
                 Running=False
-                subprocess.run(f"sudo tc qdisc del dev {self.configs['iot_deviceNET_INTERFACE']} root", shell=True)
+                self.nc.reset_network_conditions()
         return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences, np.mean(self.throughputs), np.sum(self.energy_buff)
 
         

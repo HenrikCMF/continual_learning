@@ -173,7 +173,7 @@ class ES_station(TCP_COM):
                     remove_all_avro_files('received')
                     self.stop_TCP()
                     Running=False
-                    subprocess.run(f"sudo tc qdisc del dev {self.configs['ESNET_INTERFACE']} root", shell=True)
+                    self.nc.reset_network_conditions()
                 self.file_Q.task_done()
                 if "ACK" in file:
                     config = get_string_config()
@@ -228,5 +228,6 @@ class ES_station(TCP_COM):
             
 
 if __name__ == "__main__":
+    
     es=ES_station("received", bandwidth=1000, energy_budget=30000)
     es.run()
