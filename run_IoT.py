@@ -1,7 +1,7 @@
 import csv
 from IoT_device import iot_device
 
-bandwidths = [300, 500, 700, 900, 1100]
+bandwidths = [500]
 energy_budget = 220
 results_file = "iot_results.csv"
 
