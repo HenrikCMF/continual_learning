@@ -184,11 +184,13 @@ class ES_station(TCP_COM):
                     batches = np.array_split(data, batch_num)
                     for i, batch in enumerate(batches):
                         invert_training=False
-                        if batch.iloc[:, -1].apply(lambda v: _label_matches(v, config['data_columns']['fault_label'])).any():
-                            
-                            print("INVERTED TRAINING")
+                        fault_matches = batch.iloc[:, -1].apply(lambda v: _label_matches(v, config['data_columns']['fault_label']))
+                        if fault_matches.any():
+                            fault_count = fault_matches.sum()
+                            print(f"INVERTED TRAINING ({fault_count}/{len(batch)} fault labels)")
                             invert_training=True
-                            TP+=1
+                            #TP+=1
+                            TP+=fault_count
                         else:
                             FP+=1
 
@@ -229,5 +231,5 @@ class ES_station(TCP_COM):
 
 if __name__ == "__main__":
     
-    es=ES_station("received", bandwidth=1000, energy_budget=220)
+    es=ES_station("received", bandwidth=1000, energy_budget=30000)
     es.run()
