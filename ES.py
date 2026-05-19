@@ -173,7 +173,7 @@ class ES_station(TCP_COM):
                     remove_all_avro_files('received')
                     self.stop_TCP()
                     Running=False
-                    self.nc.reset_network_conditions()
+                    #self.nc.reset_network_conditions()
                 self.file_Q.task_done()
                 if "ACK" in file:
                     config = get_string_config()

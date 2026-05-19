@@ -1,15 +1,15 @@
 import csv
 from IoT_device import iot_device
 
-bandwidths = [100, 300, 500, 700, 900, 1100]
+bandwidths = [300, 500, 700, 900, 1100]
 energy_budget = 220
 results_file = "iot_results.csv"
 
-with open(results_file, 'w', newline='') as f:
-    csv.writer(f).writerow([
-        'bandwidth_kbps', 'total_energy', 'time_transmitting_s', 'time_receiving_s',
-        'total_sent_kb', 'total_received_kb', 'num_inferences', 'avg_throughput_kbps'
-    ])
+#with open(results_file, 'w', newline='') as f:
+#    csv.writer(f).writerow([
+#        'bandwidth_kbps', 'total_energy', 'time_transmitting_s', 'time_receiving_s',
+#        'total_sent_kb', 'total_received_kb', 'num_inferences', 'avg_throughput_kbps'
+#    ])
 
 for bw in bandwidths:
     device = iot_device("received", bandwidth=bw, energy_budget=energy_budget)

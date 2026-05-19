@@ -282,7 +282,7 @@ class iot_device(TCP_COM):
                 remove_all_avro_files('test_files')
                 self.stop_TCP()
                 Running=False
-                self.nc.reset_network_conditions()
+                #self.nc.reset_network_conditions()
         return self.time_transmitting, self.time_receiving, self.total_sent_data, self.total_received_data, self.num_inferences, np.mean(self.throughputs), np.sum(self.energy_buff)
 
         
