@@ -1,7 +1,7 @@
 import csv
 from IoT_device import iot_device
-
-bandwidths = [500]
+import time
+bandwidths = [700,900,1100]
 energy_budget = 220
 results_file = "iot_results.csv"
 
@@ -12,6 +12,7 @@ results_file = "iot_results.csv"
 #    ])
 
 for bw in bandwidths:
+    time.sleep(10)
     device = iot_device("received", bandwidth=bw, energy_budget=energy_budget)
     time_tx, time_rx, sent, received, inferences, avg_tp, total_energy = device.run()
     with open(results_file, 'a', newline='') as f:

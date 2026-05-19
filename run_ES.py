@@ -1,7 +1,7 @@
 import csv
 from ES import ES_station
 
-bandwidths = [500]
+bandwidths = [700,900,1100]
 energy_budget = 220
 results_file = "es_results.csv"
 
