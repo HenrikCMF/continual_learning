@@ -81,7 +81,7 @@ class iot_device(TCP_COM):
             from bin.IoT_model import IoT_model
         make_initial_data(config['file_paths']['dataset_path'], config['file_paths']['test_files_dir'])
         self.init_data=os.path.join(config['file_paths']['test_files_dir'], config['file_paths']['initial_data_file'])
-        self.model = IoT_model(self.init_data, 0.02)#0.2)
+        self.model = IoT_model(self.init_data, 0.03)#0.2)
         self.energy_model=IoT_energy.energy()
         self.configs=configs
 
