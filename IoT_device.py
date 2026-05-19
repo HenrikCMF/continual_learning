@@ -321,8 +321,8 @@ class iot_device(TCP_COM):
         X: int number of samples to be fetched
         --------
         """
-        sample=self.data.iloc[self.index-X:self.index].values.tolist()
-        timestamp=self.timestamps.iloc[self.index-X:self.index].tolist()
+        sample=self.data.iloc[self.index-X-1:self.index-1].values.tolist()
+        timestamp=self.timestamps.iloc[self.index-X-1:self.index-1].tolist()
         return sample, timestamp
 
     def get_sample(self):

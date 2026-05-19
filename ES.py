@@ -187,7 +187,7 @@ class ES_station(TCP_COM):
                         fault_matches = batch.iloc[:, -1].apply(lambda v: _label_matches(v, config['data_columns']['fault_label']))
                         if fault_matches.any():
                             fault_count = fault_matches.sum()
-                            print(f"INVERTED TRAINING ({fault_count}/{len(batch)} fault labels)")
+                            #print(f"INVERTED TRAINING ({fault_count}/{len(batch)} fault labels)")
                             invert_training=True
                             #TP+=1
                             TP+=fault_count
