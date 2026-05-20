@@ -449,11 +449,11 @@ class IoT_model():
                 pruning_level=None
             #pruning_level=None
             model, X=self.train_model(data, invert_loss, input=input)
+            model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
             if pruning_level and config['ablation_settings']['Link_adaptation_parts']['Pruning_enabled']:
                 pruned_model = self.manual_prune_weights(model, pruning_level)
-                print("Pruned model")
             
-            model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
+            
             if pruning_level:
                 self.quantize_model(X,pruned_model, os.path.join(config['file_paths']['models_dir'], self.model_name), quantize=quantize)
             else:
