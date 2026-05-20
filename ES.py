@@ -66,7 +66,7 @@ class ES_station(TCP_COM):
             from bin.DeepIoT_model import IoT_model
         else:
             from bin.IoT_model import IoT_model
-        self.ml_model=IoT_model(self.init_data, 0.2)
+        self.ml_model=IoT_model(self.init_data, 0.03)
         if self.NEW_START:
             #Train the initial model
             self.ml_model.train_initial_model()

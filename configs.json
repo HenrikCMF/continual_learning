@@ -17,10 +17,10 @@
     "base_tdl":1,
     "iot_device_tul":0.4,
     "baseline_rate":1000,
-    "baseline_energy":60,
+    "baseline_energy":284,
     "string_configs": {
         "file_paths": {
-            "dataset_path": "datasets/sensor.csv",
+            "dataset_path": "datasets/HAI.csv",
             "test_files_dir": "test_files/",
             "models_dir": "models/",
             "faulty_data_file": "faulty_data.csv",
@@ -29,11 +29,11 @@
             "scaler_file": "scaler.pkl"
         },
         "data_columns": {
-            "dataset_label": "machine_status",
-            "timestamp_column": "timestamp",
-            "fault_label": "BROKEN",
-            "sensors_to_drop": ["Unnamed: 0", "sensor_15", "sensor_50"],
-            "delimiter": ","
+            "dataset_label": "attack",
+            "timestamp_column": "time",
+            "fault_label": 1,
+            "sensors_to_drop": ["attack_P1", "attack_P2", "attack_P3"],
+            "delimiter": ";"
         },
         "file_extensions": {
             "avro_extension": ".avro",
