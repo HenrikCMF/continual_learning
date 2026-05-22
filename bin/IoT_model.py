@@ -433,15 +433,15 @@ class IoT_model():
                 actual_sparsity = np.mean(pruned_kernel == 0)
         return model
 
-    def improve_model(self, data, invert_loss=False, throughput=None, t_UL=1):
+    def improve_model(self, data, invert_loss=False, throughput=None, t_DL=1):
             quantize=False
             config = get_string_config()
             if throughput:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
-                pruning_level=min(max(-0.8*(t_UL*throughput/8 - 139.2)/100,0),0.95)
+                pruning_level=min(max(-0.8*(t_DL*throughput/8 - 139.2)/100,0),0.95)
                 if pruning_level>0.4:
                     quantize=True
-                    pruning_level=min(max(-3.57*(t_UL*throughput/8 - 44.4)/100,0),0.5)
+                    pruning_level=min(max(-3.57*(t_DL*throughput/8 - 44.4)/100,0),0.5)
                     if config['ablation_settings']['Link_adaptation_parts']['Quantization_enabled']==False:
                         quantize=False
                 print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)

@@ -42,10 +42,10 @@ class ES_station(TCP_COM):
         with open("configs.json", "r") as file:
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
-        self.baseline_tx=configs['base_tdl']
+        self.baseline_rx=configs['base_tdl']
         self.energy_thresh=energy_budget
         self.energy_ratio=self.energy_thresh/self.baseline_energy
-        self.t_UL=self.energy_ratio*self.baseline_tx
+        self.t_DL=self.energy_ratio*self.baseline_rx
         self.total_data_sent=0
         self.throughputs=[]
         self.NEW_START=True
@@ -194,7 +194,7 @@ class ES_station(TCP_COM):
                         else:
                             FP+=1
 
-                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, throughput=self.throughput, t_UL=self.t_UL)
+                        self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, throughput=self.throughput, t_DL=self.t_DL)
                         self.throughputs.append(self.throughput)
                         if invert_training==False:
                             self.append_to_initial_data(data, timestamps, self.init_data)

@@ -31,9 +31,11 @@ class iot_device(TCP_COM):
             configs = json.load(file)
         self.baseline_energy=configs['baseline_energy']
         self.baseline_tx=configs['iot_device_tul']
+        self.baseline_rx=configs['base_tdl']
         self.energy_thresh=energy_budget
         self.energy_ratio=self.energy_thresh/self.baseline_energy
         self.t_UL=self.energy_ratio*self.baseline_tx
+        self.t_DL=self.energy_ratio*self.baseline_rx
         self.inference_batch=0
         self.throughputs=[]
         self.total_sent_data=0
@@ -96,23 +98,26 @@ class iot_device(TCP_COM):
         s: sample
         t: timestamp
         """
-        #config = get_string_config()
-
         s, t=self.get_sample()   
-
-
-
         for_mse=np.array(s.drop(self.configs['string_configs']['data_columns']['dataset_label'])).reshape(1,-1)
-
-
-
         rare, mse=self.model.check_sample(for_mse)
-        #rare=True
-        #mse=0
         self.num_inferences+=1
         self.mse_buff.append(mse)
         return rare, mse, s, t
 
+    def select_threshold(self, throughput):
+        #Estimated received pruning level
+        pruning_level=min(max(-0.8*(self.t_DL*throughput/8 - 139.2)/100,0),0.5)
+        if pruning_level>0.4:
+            pruning_level=min(max(-3.57*(self.t_DL*throughput/8 - 44.4)/100,0),0.5)
+        
+        if pruning_level<0.1:
+            threshold=0.03
+        elif pruning_level<0.25:
+            threshold=0.05
+        else:
+            threshold=0.2
+        return threshold
 
             
 
@@ -138,9 +143,13 @@ class iot_device(TCP_COM):
             NUM_BUF_SAMPLES=min(NUM_BUF_SAMPLES,200)
         else:
             NUM_BUF_SAMPLES=200
+        if self.configs['string_configs']['ablation_settings']['Link_adaptation_parts']['vary_th']:
+            self.model.trigger_threshold=self.select_threshold(self.throughput)
+        else:
+            self.model.trigger_threshold=0.2
         skip_samples=0
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Skipping ", skip_samples)
-        time.sleep(0.01)
+        #time.sleep(0.01)
         while batch_not_found:
 
             rare, mse, s, t = self.analyze_samples()
