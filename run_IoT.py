@@ -5,11 +5,11 @@ bandwidths = [300,500,700,900,1100]
 energy_budget = 284
 results_file = "iot_results.csv"
 
-#with open(results_file, 'w', newline='') as f:
-#    csv.writer(f).writerow([
-#        'bandwidth_kbps', 'total_energy', 'time_transmitting_s', 'time_receiving_s',
-#        'total_sent_kb', 'total_received_kb', 'num_inferences', 'avg_throughput_kbps'
-#    ])
+with open(results_file, 'w', newline='') as f:
+    csv.writer(f).writerow([
+        'bandwidth_kbps', 'total_energy', 'time_transmitting_s', 'time_receiving_s',
+        'total_sent_kb', 'total_received_kb', 'num_inferences', 'avg_throughput_kbps'
+    ])
 
 for bw in bandwidths:
     time.sleep(10)
