@@ -158,7 +158,7 @@ class IoT_model():
         encoded = tf.keras.layers.Dense(128, activation="relu")(inputs)
         encoded = tf.keras.layers.Dense(64, activation="relu")(encoded)
         encoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
-        encoded = tf.keras.layers.Dense(16, activation="relu")(encoded) 
+        encoded = tf.keras.layers.Dense(8, activation="relu")(encoded) 
         decoded = tf.keras.layers.Dense(32, activation="relu")(encoded)
         decoded = tf.keras.layers.Dense(64, activation="relu")(decoded)
         decoded = tf.keras.layers.Dense(128, activation="relu")(decoded)
@@ -412,7 +412,7 @@ class IoT_model():
         x = tf.keras.layers.Dense(widths[0], activation="relu", name="enc_128")(x)
         x = tf.keras.layers.Dense(widths[1], activation="relu", name="enc_64")(x)
         x = tf.keras.layers.Dense(widths[2], activation="relu", name="enc_32")(x)
-        x = tf.keras.layers.Dense(widths[3], activation="relu", name="enc_16")(x)
+        x = tf.keras.layers.Dense(widths[3], activation="relu", name="enc_8")(x)
 
         x = tf.keras.layers.Dense(widths[4], activation="relu", name="dec_32")(x)
         x = tf.keras.layers.Dense(widths[5], activation="relu", name="dec_64")(x)
@@ -441,13 +441,13 @@ class IoT_model():
 
         return compressed
 
-    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None, t_UL=1):
+    def improve_model(self, data, invert_loss=False, pdr=0, throughput=None, t_DL=1):
         quantize = False
         print("USING DEEP IoT")
         model, X = self.train_model(data, invert_loss)
 
         ratio = 0.395  # tune this
-        widths = tuple(max(1, int(round(w * ratio))) for w in (128,64,32,16,32,64,128))
+        widths = tuple(max(1, int(round(w * ratio))) for w in (128,64,32,8,32,64,128))
         compressed_model = self.deepiot_like_compress_to_fixed_widths(
             model,
             widths=widths,  # pick once, keep constant across all runs
