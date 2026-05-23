@@ -115,7 +115,7 @@ class iot_device(TCP_COM):
         if pruning_level>0.4:
             threshold=0.2
         else:
-            threshold=0.02*(75**pruning_level)
+            threshold=0.02*(70**pruning_level)
         return threshold
 
 
