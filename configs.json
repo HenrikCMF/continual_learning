@@ -53,7 +53,7 @@
         },
         "ablation_settings": {
             "CL_enabled": true,
-            "use_DeepIoT": false,
+            "use_DeepIoT": true,
             "Link_adaptation_parts":
             {
                 "IoT_side_adaptation_enabled":false,
