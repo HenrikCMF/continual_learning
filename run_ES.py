@@ -1,12 +1,12 @@
 import csv
 from ES import ES_station
 
-bandwidths = [100,300,500,700,900,1100]
+bandwidths = [500,700,900,1100]
 energy_budget = 284
 results_file = "es_results_final2.csv"
 
-with open(results_file, 'w', newline='') as f:
-    csv.writer(f).writerow(['bandwidth_kbps', 'TP', 'FP', 'avg_throughput_kbps'])
+#with open(results_file, 'w', newline='') as f:
+#    csv.writer(f).writerow(['bandwidth_kbps', 'TP', 'FP', 'avg_throughput_kbps'])
 
 for bw in bandwidths:
     es = ES_station("received", bandwidth=bw, energy_budget=energy_budget)
