@@ -59,7 +59,7 @@
                 "IoT_side_adaptation_enabled":false,
                 "Quantization_enabled": false,
                 "Pruning_enabled":false,
-                "vary_th":true
+                "vary_th":false
             }
         }
     }

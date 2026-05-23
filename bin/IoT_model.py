@@ -364,7 +364,7 @@ class IoT_model():
 
         return data
     #@tf.function(jit_compile=True)
-    def train_model(self, data, invert_loss=False, input=-0.1):
+    def train_model(self, data, invert_loss=False):
         """
         Function to improve the most recent iteration of the model
 
@@ -392,7 +392,7 @@ class IoT_model():
         num_epochs = max(5, min(100, int(2000 / len(data))))
 
         if invert_loss==False:
-            num_epochs=0#int(num_epochs)
+            num_epochs=1#int(num_epochs)
         else:
             num_epochs=int(num_epochs/2)
         if invert_loss==False:
@@ -435,8 +435,9 @@ class IoT_model():
 
     def improve_model(self, data, invert_loss=False, throughput=None, t_DL=1):
             quantize=False
+            pruning_level=False
             config = get_string_config()
-            if throughput:
+            if throughput and config['ablation_settings']['Link_adaptation_parts']['Pruning_enabled']:
                 #pruning_level=min(max(-0.84*(throughput/8 - 140)/100,0),0.95)
                 pruning_level=min(max(-0.8*(t_DL*throughput/8 - 125)/100,0),0.95)
                 if pruning_level>0.4:
@@ -448,7 +449,7 @@ class IoT_model():
             else:
                 pruning_level=None
             #pruning_level=None
-            model, X=self.train_model(data, invert_loss, input=input)
+            model, X=self.train_model(data, invert_loss)
             model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
             if pruning_level and config['ablation_settings']['Link_adaptation_parts']['Pruning_enabled']:
                 pruned_model = self.manual_prune_weights(model, pruning_level)
