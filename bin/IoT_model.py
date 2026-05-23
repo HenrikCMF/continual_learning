@@ -392,7 +392,7 @@ class IoT_model():
         num_epochs = max(5, min(100, int(2000 / len(data))))
 
         if invert_loss==False:
-            num_epochs=int(num_epochs)
+            num_epochs=0#int(num_epochs)
         else:
             num_epochs=int(num_epochs/2)
         if invert_loss==False:
