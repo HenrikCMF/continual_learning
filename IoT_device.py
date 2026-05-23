@@ -115,7 +115,7 @@ class iot_device(TCP_COM):
         if pruning_level>0.4:
             threshold=0.2
         else:
-            threshold=0.02*(40**pruning_level)
+            threshold=0.02*(75**pruning_level)
         return threshold
 
 
@@ -344,5 +344,5 @@ class iot_device(TCP_COM):
     
 
 if __name__ == "__main__":
-    es=iot_device("received", bandwidth=900, energy_budget=284)
+    es=iot_device("received", bandwidth=700, energy_budget=284)
     es.run()
