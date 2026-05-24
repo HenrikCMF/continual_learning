@@ -1,7 +1,7 @@
 import csv
 from IoT_device import iot_device
 import time
-bandwidths = [500,700,900,1100]
+bandwidths = [900,1100]
 energy_budget = 284
 results_file = "dhawk_IoT.csv"
 
