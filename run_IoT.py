@@ -1,9 +1,9 @@
 import csv
 from IoT_device import iot_device
 import time
-bandwidths = [900,1100]
+bandwidths = [100,300,500,700,900,1100]
 energy_budget = 284
-results_file = "dhawk_IoT.csv"
+results_file = "SML_IoT.csv"
 
 #with open(results_file, 'w', newline='') as f:
 #    csv.writer(f).writerow([
