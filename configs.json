@@ -52,7 +52,7 @@
             "measured_throughput_metric": "measured_throughput"
         },
         "ablation_settings": {
-            "CL_enabled": false,
+            "CL_enabled": true,
             "use_DeepIoT": false,
             "Link_adaptation_parts":
             {
