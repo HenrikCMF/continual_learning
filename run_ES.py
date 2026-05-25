@@ -1,16 +1,16 @@
 import csv
 from ES import ES_station
 
-bandwidths = [900,1100]
-energy_budget = 284
-results_file = "SML_ES.csv"
+bandwidths = 1000
+energy_budget = [47,94,142,189,236,284]
+results_file = "SML_energy_ES.csv"
 
 #with open(results_file, 'w', newline='') as f:
 #    csv.writer(f).writerow(['bandwidth_kbps', 'TP', 'FP', 'avg_throughput_kbps'])
 
-for bw in bandwidths:
-    es = ES_station("received", bandwidth=bw, energy_budget=energy_budget)
+for e in energy_budget:
+    es = ES_station("received", bandwidth=bandwidths, energy_budget=energy_budget)
     TP, FP, avg_throughput = es.run()
     with open(results_file, 'a', newline='') as f:
-        csv.writer(f).writerow([bw, TP, FP, avg_throughput])
-    print(f"[run_ES] bw={bw} kbps done — TP={TP}, FP={FP}, avg_throughput={avg_throughput:.1f} kbps")
+        csv.writer(f).writerow([e, TP, FP, avg_throughput])
+    print(f"[run_ES] bw={bandwidths} kbps done — TP={TP}, FP={FP}, avg_throughput={avg_throughput:.1f} kbps")
