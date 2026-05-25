@@ -3,7 +3,7 @@ from ES import ES_station
 
 bandwidths = 1000
 energy_budget = [47,94,142,189,236,284]
-results_file = "Hawk_energy_ES.csv"
+results_file = "acord_energy_ES.csv"
 
 with open(results_file, 'w', newline='') as f:
     csv.writer(f).writerow(['bandwidth_kbps', 'TP', 'FP', 'avg_throughput_kbps'])
