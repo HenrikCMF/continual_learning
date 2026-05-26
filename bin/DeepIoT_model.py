@@ -320,10 +320,10 @@ class IoT_model():
             model = tf.keras.models.load_model(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
         num_epochs = max(5, min(100, int(2000 / len(data))))
 
-        if invert_loss==False:
+        if invert_loss:
             num_epochs=1#int(num_epochs)
         else:
-            num_epochs=int(num_epochs/2)
+            num_epochs=int(num_epochs)
         if invert_loss==False:
             data=self.combine_new_with_random_old(X,y, new_data)
         elif os.path.getsize("test_files/faulty_data.csv") > 0:
@@ -445,8 +445,8 @@ class IoT_model():
         quantize = False
         print("USING DEEP IoT")
         model, X = self.train_model(data, invert_loss)
-
-        ratio = 0.395  # tune this
+        model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
+        ratio = 0.395
         widths = tuple(max(1, int(round(w * ratio))) for w in (128,64,32,8,32,64,128))
         compressed_model = self.deepiot_like_compress_to_fixed_widths(
             model,
@@ -460,7 +460,7 @@ class IoT_model():
 
         config = get_string_config()
         # Save and export
-        compressed_model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
+        #compressed_model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
         self.quantize_model(X, compressed_model, os.path.join(config['file_paths']['models_dir'], self.model_name), quantize=quantize)
 
         return 8 if quantize else 32

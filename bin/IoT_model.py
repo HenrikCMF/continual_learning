@@ -394,7 +394,7 @@ class IoT_model():
         if invert_loss:
             num_epochs=1#int(num_epochs)
         else:
-            num_epochs=int(num_epochs/2)
+            num_epochs=int(num_epochs)
         if invert_loss==False:
             data=self.combine_new_with_random_old(X,y, new_data)
         elif os.path.getsize("test_files/faulty_data.csv") > 0:
