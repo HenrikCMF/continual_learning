@@ -391,7 +391,7 @@ class IoT_model():
             model = tf.keras.models.load_model(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
         num_epochs = max(5, min(100, int(2000 / len(data))))
 
-        if invert_loss==False:
+        if invert_loss:
             num_epochs=1#int(num_epochs)
         else:
             num_epochs=int(num_epochs/2)
