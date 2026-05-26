@@ -2,8 +2,8 @@ import csv
 from ES import ES_station
 
 bandwidths = 1000
-energy_budget = [236,284]#[47,94,142,189,236,284]
-results_file = "dhawk_energy_ES.csv"
+energy_budget = [47,94,142,189,236,284]
+results_file = "dhawk_energy_ES_2.csv"
 
 #with open(results_file, 'w', newline='') as f:
 #    csv.writer(f).writerow(['bandwidth_kbps', 'TP', 'FP', 'avg_throughput_kbps'])

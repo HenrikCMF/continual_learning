@@ -2,8 +2,8 @@ import csv
 from IoT_device import iot_device
 import time
 bandwidths = 1000
-energy_budget = [236,284]#[47,94,142,189,236,284]
-results_file = "dhawk_energy_IoT.csv"
+energy_budget = [47,94,142,189,236,284]
+results_file = "dhawk_energy_IoT_2.csv"
 
 #with open(results_file, 'w', newline='') as f:
 #    csv.writer(f).writerow([

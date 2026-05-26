@@ -146,7 +146,7 @@ class iot_device(TCP_COM):
         if self.configs['string_configs']['ablation_settings']['Link_adaptation_parts']['vary_th']:
             self.model.trigger_threshold=self.select_threshold(self.throughput)
         else:
-            self.model.trigger_threshold=0.03#0.2
+            self.model.trigger_threshold=0.05#0.03#0.2
         
         skip_samples=0
         print("Throughput ", self.throughput, "NUMSAMPLES: ", NUM_BUF_SAMPLES, "Skipping ", skip_samples, "Threshold ", self.model.trigger_threshold)
