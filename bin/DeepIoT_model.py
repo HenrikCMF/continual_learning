@@ -205,7 +205,7 @@ class IoT_model():
             mse_val = max(mean_squared_error(self.scale_data(data).T, self.inference_on_model(data)))
         else:
             mse_val = mean_squared_error(self.scale_data(data).T, self.inference_on_model(data))
-        #print("MSE: ", mse_val)
+        print("MSE: ", mse_val)
         if mse_val>self.trigger_threshold:
             important=True
         return important, mse_val
@@ -335,7 +335,7 @@ class IoT_model():
 
         model.compile(optimizer="adam", loss=mse_loss)
         history =model.fit(data, data, epochs=num_epochs, batch_size=batch_size)
-        return model, X
+        return model, X, data
 
     
     def manual_prune_weights(self, model, sparsity=0.9):
@@ -442,9 +442,10 @@ class IoT_model():
         return compressed
 
     def improve_model(self, data, invert_loss=False, pdr=0, throughput=None, t_DL=1):
+        config = get_string_config()
         quantize = False
         print("USING DEEP IoT")
-        model, X = self.train_model(data, invert_loss)
+        model, X, data = self.train_model(data, invert_loss)
         model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
         ratio = 0.395
         widths = tuple(max(1, int(round(w * ratio))) for w in (128,64,32,8,32,64,128))
@@ -455,10 +456,9 @@ class IoT_model():
 
         # Optional: quick fine-tune helps after pruning
         compressed_model.compile(optimizer="adam", loss="mse")
-        new_data = self.scale_data(np.array(data))
-        compressed_model.fit(new_data, new_data, epochs=2, batch_size=128, verbose=0)
+        compressed_model.fit(data, data, epochs=4, batch_size=128, verbose=0)
 
-        config = get_string_config()
+        
         # Save and export
         #compressed_model.save(os.path.join(config['file_paths']['models_dir'], self.model_name + config['file_extensions']['h5_extension']))
         self.quantize_model(X, compressed_model, os.path.join(config['file_paths']['models_dir'], self.model_name), quantize=quantize)
