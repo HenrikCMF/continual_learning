@@ -22,7 +22,7 @@ if screen=="energy":
             ])
         print(f"[run_IoT] bw={bandwidths} kbps done — energy={total_energy:.2f}, inferences={inferences}")
 elif screen=="bandwidth":
-    bandwidths = [100,300,500,700,1000]
+    bandwidths = [900,1100]#[100,300,500,700,900,1100]
     energy_budget = 284
 
     for b in bandwidths:

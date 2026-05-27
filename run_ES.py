@@ -16,7 +16,7 @@ if screen=="energy":
         print(f"[run_ES] bw={bandwidths} kbps done — TP={TP}, FP={FP}, avg_throughput={avg_throughput:.1f} kbps")
 
 elif screen=="bandwidth":
-    bandwidths = [100,300,500,700,1000]
+    bandwidths = [900,1100]#[100,300,500,700,900,1100]
     energy_budget = 284
     for b in bandwidths:
         es = ES_station("received", bandwidth=b, energy_budget=energy_budget)
