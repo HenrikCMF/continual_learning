@@ -6,7 +6,7 @@ screen="energy"#energy|bandwidth
 #    csv.writer(f).writerow([
 #        'bandwidth_kbps', 'total_energy', 'time_transmitting_s', 'time_receiving_s',
 #        'total_sent_kb', 'total_received_kb', 'num_inferences', 'avg_throughput_kbps'])
-results_file = "acord_energy_IoT_3.csv"
+results_file = "hawk_energy_IoT_3.csv"
 if screen=="energy":
     bandwidths = 1000
     energy_budget = [47,94,142,189,236,284]
