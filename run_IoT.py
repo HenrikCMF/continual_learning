@@ -6,7 +6,7 @@ screen="bandwidth"#energy|bandwidth
 #    csv.writer(f).writerow([
 #        'bandwidth_kbps', 'total_energy', 'time_transmitting_s', 'time_receiving_s',
 #        'total_sent_kb', 'total_received_kb', 'num_inferences', 'avg_throughput_kbps'])
-results_file = "hawk_bandwidth_IoT_3.csv"
+results_file = "acord_bandwidth_IoT_full.csv"
 if screen=="energy":
     bandwidths = 1000
     energy_budget = [47,94,142,189,236,284]
@@ -22,8 +22,8 @@ if screen=="energy":
             ])
         print(f"[run_IoT] bw={bandwidths} kbps done — energy={total_energy:.2f}, inferences={inferences}")
 elif screen=="bandwidth":
-    bandwidths = [900,1100]#[100,300,500,700,900,1100]
-    energy_budget = 284
+    bandwidths = [100,300,500,700,900,1100]
+    energy_budget = 60
 
     for b in bandwidths:
         time.sleep(10)
