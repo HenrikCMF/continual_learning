@@ -57,7 +57,7 @@
             "Link_adaptation_parts":
             {
                 "IoT_side_adaptation_enabled":true,
-                "Quantization_enabled": false,
+                "Quantization_enabled": true,
                 "Pruning_enabled":true,
                 "vary_th":false
             }

@@ -12,6 +12,7 @@ import pandas as pd
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 import subprocess
+import csv
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 warnings.filterwarnings("ignore", module="sklearn")
 
@@ -151,6 +152,7 @@ class ES_station(TCP_COM):
         Running=True
         TP=0
         FP=0
+        episodes=[]
         start=time.time()
         #Wait for X clients:
         clients=0
@@ -187,13 +189,12 @@ class ES_station(TCP_COM):
                         fault_matches = batch.iloc[:, -1].apply(lambda v: _label_matches(v, config['data_columns']['fault_label']))
                         if fault_matches.any():
                             fault_count = fault_matches.sum()
-                            #print(f"INVERTED TRAINING ({fault_count}/{len(batch)} fault labels)")
                             invert_training=True
-                            #TP+=1
                             TP+=fault_count
+                            episodes.append(1)
                         else:
                             FP+=1
-
+                            episodes.append(0)
                         self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, throughput=self.throughput, t_DL=self.t_DL)
                         self.throughputs.append(self.throughput)
                         if invert_training==False:
@@ -204,6 +205,10 @@ class ES_station(TCP_COM):
                     self.distribute_model(os.path.join(config['file_paths']['models_dir'], self.ml_model.model_name + config['file_extensions']['tflite_extension']))
             except queue.Empty:
                 pass
+        with open('episodes.csv', 'w', newline='') as f:
+            writer = csv.writer(f)
+            for ep in episodes:
+                writer.writerow([ep])
         return TP, FP, np.mean(self.throughputs)
 
 
@@ -231,5 +236,5 @@ class ES_station(TCP_COM):
 
 if __name__ == "__main__":
     
-    es=ES_station("received", bandwidth=700, energy_budget=284)
+    es=ES_station("received", bandwidth=500, energy_budget=60)
     es.run()
