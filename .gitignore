@@ -16,4 +16,5 @@ faulty_data.csv
 *.tflite
 *.h5
 *.zip
+*.png
 models/

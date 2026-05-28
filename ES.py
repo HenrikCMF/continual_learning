@@ -236,5 +236,5 @@ class ES_station(TCP_COM):
 
 if __name__ == "__main__":
     
-    es=ES_station("received", bandwidth=500, energy_budget=60)
+    es=ES_station("received", bandwidth=500, energy_budget=284)
     es.run()
