@@ -184,17 +184,19 @@ class ES_station(TCP_COM):
 
                     data,timestamps, type, batch_num = AVRO.load_AVRO_file(file)
                     batches = np.array_split(data, batch_num)
+                    timestamp_batches = np.array_split(timestamps, batch_num)
                     for i, batch in enumerate(batches):
                         invert_training=False
+                        mid_ts = timestamp_batches[i][len(timestamp_batches[i]) // 2]
                         fault_matches = batch.iloc[:, -1].apply(lambda v: _label_matches(v, config['data_columns']['fault_label']))
                         if fault_matches.any():
                             fault_count = fault_matches.sum()
                             invert_training=True
                             TP+=fault_count
-                            episodes.append(1)
+                            episodes.append((1, mid_ts))
                         else:
                             FP+=1
-                            episodes.append(0)
+                            episodes.append((0, mid_ts))
                         self.ml_model.improve_model(batch.drop(batch.columns[-1], axis=1), invert_training, throughput=self.throughput, t_DL=self.t_DL)
                         self.throughputs.append(self.throughput)
                         if invert_training==False:
@@ -208,7 +210,7 @@ class ES_station(TCP_COM):
         with open('episodes.csv', 'w', newline='') as f:
             writer = csv.writer(f)
             for ep in episodes:
-                writer.writerow([ep])
+                writer.writerow(ep)
         return TP, FP, np.mean(self.throughputs)
 
 
@@ -236,5 +238,5 @@ class ES_station(TCP_COM):
 
 if __name__ == "__main__":
     
-    es=ES_station("received", bandwidth=500, energy_budget=284)
+    es=ES_station("received", bandwidth=500, energy_budget=60)
     es.run()
