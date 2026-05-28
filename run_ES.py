@@ -1,7 +1,7 @@
 import csv
 from ES import ES_station
 screen="bandwidth"#energy|bandwidth
-results_file = "acord_pump_bandwidth_ES_nodown.csv"
+results_file = "acord_pump_bandwidth_ES_noquant.csv"
 #with open(results_file, 'w', newline='') as f:
 #    csv.writer(f).writerow(['bandwidth_kbps', 'TP', 'FP', 'avg_throughput_kbps'])
 if screen=="energy":
