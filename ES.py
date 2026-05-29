@@ -187,7 +187,7 @@ class ES_station(TCP_COM):
                     timestamp_batches = np.array_split(timestamps, batch_num)
                     for i, batch in enumerate(batches):
                         invert_training=False
-                        mid_ts = timestamp_batches[i][len(timestamp_batches[i]) // 2]
+                        mid_ts = timestamp_batches[i].iloc[len(timestamp_batches[i]) // 2]
                         fault_matches = batch.iloc[:, -1].apply(lambda v: _label_matches(v, config['data_columns']['fault_label']))
                         if fault_matches.any():
                             fault_count = fault_matches.sum()
@@ -238,5 +238,5 @@ class ES_station(TCP_COM):
 
 if __name__ == "__main__":
     
-    es=ES_station("received", bandwidth=500, energy_budget=60)
+    es=ES_station("received", bandwidth=1000, energy_budget=60)
     es.run()
