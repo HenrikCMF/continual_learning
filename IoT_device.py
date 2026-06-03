@@ -108,9 +108,9 @@ class iot_device(TCP_COM):
     def select_threshold(self, throughput):
         #Estimated received pruning level
         quantized=0
-        pruning_level=min(max(-0.8*(self.t_DL*throughput/8 - 125)/100,0),0.5) #-139.2
+        pruning_level=min(max(-0.9*(self.t_DL*throughput/8 - 136)/100,0),0.95)
         if pruning_level>0.4:
-            pruning_level=min(max(-3.57*(self.t_DL*throughput/8 - 44.4)/100,0),0.5)
+            pruning_level=min(max(-5.55*(self.t_DL*throughput/8 - 42)/100,0),0.4)
             quantized=1
         if pruning_level>0.4:
             threshold=0.2

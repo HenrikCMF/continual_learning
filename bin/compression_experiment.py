@@ -62,7 +62,7 @@ def main():
     X, _ = ml_model.prepare_training_data()
     X_df = pd.DataFrame(X)
 
-    sparsity_levels = [round(0.1 * i, 1) for i in range(1, 10)]  # 0.1 to 0.9
+    sparsity_levels = [round(0.1 * i, 1) for i in range(1, 6)]  # 0.1 to 0.9
 
     results = []
 
