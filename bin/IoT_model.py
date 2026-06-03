@@ -442,7 +442,7 @@ class IoT_model():
                 pruning_level=min(max(-0.8*(t_DL*throughput/8 - 125)/100,0),0.95)
                 if pruning_level>0.4 and config['ablation_settings']['Link_adaptation_parts']['Quantization_enabled']:
                     quantize=True
-                    pruning_level=min(max(-3.57*(t_DL*throughput/8 - 44.4)/100,0),0.5)
+                    pruning_level=min(max(-3.57*(t_DL*throughput/8 - 44.4)/100,0),0.4)
                 print("THROUGHPUT: ", throughput, "PRUNING: ", pruning_level, "Quantize, ", quantize)
             else:
                 pruning_level=None
