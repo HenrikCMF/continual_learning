@@ -1,12 +1,12 @@
 import csv
 from IoT_device import iot_device
 import time
-screen="bandwidth"#energy|bandwidth
+screen="energy"#energy|bandwidth
  #with open(results_file, 'w', newline='') as f:
 #    csv.writer(f).writerow([
 #        'bandwidth_kbps', 'total_energy', 'time_transmitting_s', 'time_receiving_s',
 #        'total_sent_kb', 'total_received_kb', 'num_inferences', 'avg_throughput_kbps'])
-results_file = "IoT_results_acord_bandwidth.csv"
+results_file = "IoT_results_acord_energy2.csv"
 if screen=="energy":
     bandwidths = 1000
     energy_budget = [28, 85,142,199,255,312]
@@ -23,7 +23,7 @@ if screen=="energy":
         print(f"[run_IoT] bw={bandwidths} kbps done — energy={total_energy:.2f}, inferences={inferences}")
 elif screen=="bandwidth":
     bandwidths = [100,300,500,700,900,1100]
-    energy_budget = 60
+    energy_budget = 284
 
     for b in bandwidths:
         time.sleep(10)

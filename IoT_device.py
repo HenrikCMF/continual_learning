@@ -110,9 +110,9 @@ class iot_device(TCP_COM):
         quantized=0
         pruning_level=min(max(-0.9*(self.t_DL*throughput/8 - 136)/100,0),0.95)
         if pruning_level>0.4:
-            pruning_level=min(max(-5.55*(self.t_DL*throughput/8 - 42)/100,0),0.4)
+            pruning_level=min(max(-5.55*(self.t_DL*throughput/8 - 42)/100,0),0.5)
             quantized=1
-        if pruning_level>0.4:
+        if pruning_level>0.45:
             threshold=0.2
         else:
             threshold=0.03*(20**pruning_level)#50
