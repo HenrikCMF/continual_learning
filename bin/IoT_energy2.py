@@ -5,9 +5,9 @@ class energy():
         self.xi_R = 0.33   # Receive power in Watts
         self.xi_T = 0.79   # Transmit power in Watts
         # Model architecture params (from analyzer or manual estimate)
-        self.N_s = 34298       # Total weights + biases
-        self.N_c = 33792       # Total MAC operations
-        self.A_s = 506         # Total activations
+        self.N_s = 36611       # Total weights + biases
+        self.N_c = 36096       # Total MAC operations
+        self.A_s = 515         # Total activations
         # Quantization bits
         self.b_q = 32
         self.b_max = 16
